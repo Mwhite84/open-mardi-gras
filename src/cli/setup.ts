@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -98,6 +98,6 @@ function main(): void {
   }
 }
 
-if (process.argv[1] !== undefined && resolve(process.argv[1]) === __filename) {
+if (process.argv[1] !== undefined && realpathSync(resolve(process.argv[1])) === __filename) {
   main()
 }
