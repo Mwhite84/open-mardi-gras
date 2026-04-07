@@ -23,12 +23,10 @@ Steps:
    bd update <epic-id> --body-file=$1
    ```
 
-4. Ensure the spec file and beads state are committed before proceeding.
-   The spec file will be deleted at the end, so uncommitted changes would
-   be lost:
+4. Ensure the spec file is committed before proceeding.
    ```
    bd dolt commit
-   git add $1 .beads/
+   git add $1
    git status
    ```
    If there are uncommitted changes, commit them now:
@@ -76,9 +74,3 @@ Steps:
       criteria. Ensure the review bead blocks on everything.
 
 11. Present the final structure for my review.
-
-12. After I confirm the structure, remove the spec file:
-    ```
-    git rm $1
-    ```
-    The spec content is preserved in the epic body and in git history.

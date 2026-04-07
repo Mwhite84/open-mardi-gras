@@ -53,5 +53,4 @@ using the `--parent <epic-id>` flag.
 
 ### Spec content preservation
 The spec content is embedded in the epic body via `--body-file`. The full spec
-is also preserved in git history. This means the spec file itself is redundant
-after decomposition.
+is also preserved in git history.
