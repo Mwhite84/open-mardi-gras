@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0 - 2026-04-07
+
+### Changed
+
+- Update workflow files for beads 1.0.0 (`6179920`)
+
+### Fixed
+
+- Fix `npx` setup silently failing due to symlink path mismatch (`59dc8c8`)
+
 ## 0.3.1 - 2026-03-17
 
 ### Fixed
