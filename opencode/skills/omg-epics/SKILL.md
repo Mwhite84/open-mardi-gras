@@ -26,8 +26,8 @@ The argument order matters: `bd dep add A B` means "A depends on B" (B blocks A)
 ## Epic Lifecycle
 
 ```
-bd create "<Feature>" -t epic -p 1 --spec-id "<spec-path>" --body-file=<spec-path> --json  # Create epic linked to spec
-bd list --spec "<spec-path>" --json                                   # Find epic by spec file path
+bd create "<Feature>" -t epic -p 1 --spec-id "@<spec-path>" --body-file=<spec-path> --json  # Create epic linked to spec
+bd list --spec "@<spec-path>" --json                                  # Find epic by spec file path
 bd update <epic-id> --body-file=<spec-path>                           # Sync epic body from spec
 bd ready --parent <epic-id> --json                                    # Find ready children
 bd mol progress <epic-id>                                             # Completion %, rate, ETA

@@ -13,7 +13,7 @@ bd create "Title" -d "description" --type task --priority 2 --json
 
 - Use `--body-file=<path>` for long descriptions (up to 64 KB)
 - Use `-d "markdown content"` for inline descriptions
-- Use `--spec-id "<spec-path>"` to link an epic to its spec file
+- Use `--spec-id "@<spec-path>"` to link an epic to its spec file (the `@` prefix is required so opencode file autocomplete matches)
 - Use `--parent <epic-id>` to create a child under an epic
 - 4 rich-text fields: description (`-d`), design (`--design`),
   acceptance criteria (`--acceptance`), notes (`--notes`)
@@ -54,7 +54,7 @@ bd ready --json                        # Unblocked work
 bd ready --parent <epic> --json        # Scoped to an epic
 bd show <id> --json                    # Full issue details
 bd list --status open --json           # All open issues
-bd list --spec "<spec-path>" --json    # Find epic by spec file path
+bd list --spec "@<spec-path>" --json   # Find epic by spec file path
 bd blocked --json                      # Blocked issues
 ```
 

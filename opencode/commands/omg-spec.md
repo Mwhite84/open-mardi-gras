@@ -15,7 +15,7 @@ Once you understand the requirements:
    Create the directory if it doesn't exist.
 2. Create an epic to track the spec:
    ```
-   bd create "Spec: <feature>" -t epic --spec-id "<spec-path>" --body-file=<spec-path> --json
+   bd create "Spec: <feature>" -t epic --spec-id "@<spec-path>" --body-file=<spec-path> --json
    ```
 3. Tell me the epic ID and suggest next steps:
    - `/omg-spec-refine <spec-path>` to tighten the spec

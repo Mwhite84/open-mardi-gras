@@ -46,9 +46,9 @@ when the review is complete.
 
 ### Epic and spec relationship
 Epics are created during spec writing (`/omg-spec`) or tracking (`/omg-spec-track`).
-The epic's `spec_id` field stores the spec file path, and the epic body contains
-the full spec content. You can look up an epic by its spec path:
-`bd list --spec "<spec-path>" --json`. Child tasks are created under the epic
+The epic's `spec_id` field stores the spec file path prefixed with `@` (e.g.,
+`@specs/feature.md`), and the epic body contains the full spec content. You can
+look up an epic by its spec path: `bd list --spec "@<spec-path>" --json`. Child tasks are created under the epic
 using the `--parent <epic-id>` flag.
 
 ### Spec content preservation
