@@ -1,0 +1,67 @@
+{
+  "version": "1",
+  "bank": {
+    "reflect_mission": null,
+    "retain_mission": null,
+    "retain_extraction_mode": "concise",
+    "retain_custom_instructions": null,
+    "retain_chunk_size": 3000,
+    "enable_observations": true,
+    "enable_auto_consolidation": true,
+    "observations_mission": null,
+    "disposition_skepticism": null,
+    "disposition_literalism": null,
+    "disposition_empathy": null,
+    "entity_labels": null,
+    "entities_allow_free_form": true,
+    "retain_default_strategy": null,
+    "retain_strategies": null,
+    "retain_chunk_batch_size": 100,
+    "mcp_enabled_tools": null,
+    "consolidation_llm_batch_size": 8,
+    "consolidation_source_facts_max_tokens": 4096,
+    "consolidation_source_facts_max_tokens_per_observation": 256,
+    "max_observations_per_scope": -1,
+    "reflect_source_facts_max_tokens": -1,
+    "llm_gemini_safety_settings": null,
+    "recall_budget_function": "fixed",
+    "recall_budget_fixed_low": 100,
+    "recall_budget_fixed_mid": 300,
+    "recall_budget_fixed_high": 1000,
+    "recall_budget_adaptive_low": 0.025,
+    "recall_budget_adaptive_mid": 0.075,
+    "recall_budget_adaptive_high": 0.25,
+    "recall_budget_min": 20,
+    "recall_budget_max": 2000
+  },
+  "mental_models": [
+    {
+      "id": "example-mental-model",
+      "name": "Example Mental Model",
+      "source_query": "Example source query for generating this mental model.",
+      "tags": [],
+      "max_tokens": 2048,
+      "trigger": {
+        "mode": "full",
+        "refresh_after_consolidation": false,
+        "fact_types": null,
+        "exclude_mental_models": false,
+        "exclude_mental_model_ids": null,
+        "tags_match": null,
+        "tag_groups": null,
+        "include_chunks": null,
+        "recall_max_tokens": null,
+        "recall_chunks_max_tokens": null
+      }
+    }
+  ],
+  "directives": [
+    {
+      "name": "Example Directive",
+      "content": "Example directive content.",
+      "priority": 0,
+      "is_active": true,
+      "tags": []
+    }
+  ]
+}

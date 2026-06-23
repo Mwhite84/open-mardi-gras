@@ -1,84 +1,37 @@
 ---
-description: Decompose a spec into child tasks under its epic with dependencies
+description: Mint the epic from a spec and decompose it into child tasks with dependencies
 agent: omg-decomposer
 ---
 
-Decompose the specification at `$1` into child tasks under an epic.
+Decompose the specification at `$1` into an epic with child tasks.
 
-Steps:
+Use the `omg-epics` and `omg-commands` skills for the mechanics — minting the
+epic, creating ADR beads, creating children, wiring dependencies, the review bead
+pattern, validation, and the refinement passes. Carry out the decomposition end
+to end, observing these command-specific gates:
 
-1. Read the spec file at `$1` thoroughly.
-
-2. Find the existing epic for this spec:
-   ```
-   bd list --spec "$1" --json
-   ```
-   If no epic exists, ask me whether I want to create one. If I confirm:
-   ```
-   bd create "<Feature>" -t epic -p 1 --spec-id "$1" --body-file=$1 --json
-   ```
-
-3. Sync the epic body to match the current spec file content:
-   ```
-   bd update <epic-id> --body-file=$1
-   ```
-
-4. Ensure the spec file and beads state are committed before proceeding.
-   The spec file will be deleted at the end, so uncommitted changes would
-   be lost:
-    ```
-    bd dolt commit
-    git add $1 .beads/
-    git status
-    ```
-   If there are uncommitted changes, commit them now:
-   ```
-   git commit -S -m "Sync spec and beads state before decomposition"
-   ```
-
-5. Create child tasks under the epic with rich markdown descriptions:
-   ```
-   bd create "<Task title>" -t task --parent <epic-id> -d "..." --json
-   ```
-   Use `--body-file` for long descriptions or `-d` with full markdown for
-   shorter ones.
-
-6. Wire blocking dependencies between children:
-   ```
-   bd dep add <dependent-child> <dependency-child>
-   ```
-
-7. Create a final "Code review" bead as a child of the epic:
-   ```
-   bd create "Code review: <feature>" -t task --parent <epic-id> --json
-   ```
-   - Blocked by ALL other child beads
-   - Description:
-     ```
-     Invoke the reviewer agent (@omg-reviewer) to perform a thorough code
-     review of all changes in this epic. The reviewer will file beads for
-     every finding using discovered-from links. Close this bead only when
-     the review is complete.
-     ```
-
-8. Validate the dependency graph: `bd swarm validate <epic-id>`
-
-9. Show the structure: `bd dep tree <epic-id>`
-
-10. Run 4 refinement passes:
-    - Pass 1: Description completeness — can an agent implement each bead
-      without asking questions? If not, add the missing context.
-    - Pass 2: Dependency correctness — missing ordering constraints?
-      Unnecessary ones blocking parallelism? Fix them.
-    - Pass 3: Scope sizing — split anything too large, merge anything too
-      small.
-    - Pass 4: Final polish — proofread titles, descriptions, acceptance
-      criteria. Ensure the review bead blocks on everything.
-
-11. Present the final structure for my review.
-
-12. After I confirm the structure, remove the spec file:
-    ```
-    git rm $1
-    ```
-    The spec content is preserved in the epic body and in git history.
+- **Mint the epic from the spec.** The epic does not exist before this command —
+  nothing upstream creates a bead. Read the spec's stable `id` from its
+  frontmatter and create the epic with that as its `spec_id`, splitting the spec
+  frontmatter into `--metadata` and the stripped body into the description per
+  the `omg-epics` skill. Confirm with me before creating it.
+- **Create ADR beads for this spec.** Scan the shared docs tree
+  (!`.opencode/skills/doc-templates/scripts/resolve-workflow.sh docs_root`)
+  for ADR files (`id` starting `adr.`) whose `produced_for` frontmatter equals the
+  spec's `id`. For each, mint a bead (its `spec_id` is the ADR's own `id`) and link
+  it to the epic with a `relates-to` edge — not `parent-child`. If there are no
+  such ADRs, there are no ADR beads; that is fine.
+- **Sync both sides before creating children.** The decomposition must start from
+  a clean, recorded state:
+  - Git: if `$1`, any ADR files, or `.beads/` have uncommitted changes, commit
+    them with a signed commit (`git commit -S`).
+  - Beads: run `bd dolt commit` for any pending changes, then `bd dolt pull` and
+    `bd dolt push`, so the Dolt remote and local state agree before the children
+    exist.
+- **Present the structure and wait.** When the epic, ADR beads, children,
+  dependencies, review bead, validation, and refinement passes are done, show me
+  the final structure and stop for my review.
+- **Sync both sides after I approve.** Run `bd dolt commit && bd dolt push`, and
+  if `.beads/` changed in git, commit it with a signed commit. The spec and ADR
+  files stay in the repo — they are the durable artifacts; the epic body carries a
+  synced copy of the spec.
