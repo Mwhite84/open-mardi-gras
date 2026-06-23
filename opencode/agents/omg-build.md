@@ -102,6 +102,37 @@ git log -p <base>..<current>
 2. Do NOT implement against the contradiction
 3. Continue with other ready beads
 
+## Worktree & Branch Discipline
+
+All implementation work happens on a **feature branch in a worktree** — never directly on `main`.
+
+### Lifecycle
+
+1. **Create a worktree** before touching any code:
+   ```bash
+   git worktree add projects/worktrees/worktree-<bead-id> -b feat/<bead-id>-<short-description>
+   cd projects/worktrees/worktree-<bead-id>
+   ```
+2. **Work entirely inside the worktree.** Do not touch the main working tree.
+3. **Validate before merging.** All quality gates (build, lint, test) must pass inside the worktree.
+4. **Merge to main** only after validation:
+   ```bash
+   cd <repo-root>
+   git merge feat/<bead-id>-<short-description> --no-ff
+   ```
+5. **Clean up** after merge:
+   ```bash
+   git worktree remove projects/worktrees/worktree-<bead-id>
+   git branch -d feat/<bead-id>-<short-description>
+   ```
+
+### Hard Rules
+
+- **Never commit directly to `main`.** Feature branch only.
+- **Never force-push to `main`.** If you're considering it, stop and ask.
+- **Never push a feature branch to remote main.** Merge locally, then push `main`.
+- **One worktree per epic/bead.** Don't reuse worktrees across separate features.
+
 ## Quality Standards
 
 - Code must compile/build successfully.
