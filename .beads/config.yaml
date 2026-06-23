@@ -41,5 +41,4 @@ issue-prefix: "omg"
 # - github.org
 # - github.repo
 
-sync:
-  git-remote: true
+sync.remote: "git+ssh://git@gitlab.brandondennis.me/toady00/open-mardi-gras.git"
