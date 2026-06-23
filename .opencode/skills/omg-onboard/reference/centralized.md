@@ -45,10 +45,10 @@ Attempt the write; if refused, emit the content and the destination path.
 
 The centralized repo owns the single `hindsight.md` at its root — the prose tagging
 intent every authoring agent (here and in every satellite) reads. If it is absent,
-do **not** invent tags: tell the user the `hindsight-guidance` skill authors it
-(oc-smith can run it, interviewing the bank). Treat authoring it as the immediate
-follow-up to onboarding — the docs lane is not fully live until it exists, because
-agents need it to fill the `hindsight` block.
+do **not** invent tags: tell the user to run **`/omg-hindsight-setup`**, which
+routes the hindsight architect to author it against the live bank. Treat authoring
+it as the immediate follow-up to onboarding — the docs lane is not fully live until
+it exists, because agents need it to fill the `hindsight` block.
 
 ## 5. No beads
 
@@ -71,7 +71,7 @@ bash "$NID" spec.onboard-probe.scratch    # expect ...0001 (no file created)
 
 # c) hindsight.md present
 G="$(bash "$RES" hindsight.guidance)"; [ -f "$G" ] && echo "hindsight.md: $G" \
-  || echo "hindsight.md MISSING — author it via hindsight-guidance: $G"
+  || echo "hindsight.md MISSING — run /omg-hindsight-setup to author it: $G"
 
 # d) bank reachable
 hindsight bank list >/dev/null 2>&1 && echo "bank: reachable" || echo "bank: UNREACHABLE"
@@ -80,6 +80,6 @@ hindsight bank list >/dev/null 2>&1 && echo "bank: reachable" || echo "bank: UNR
 ## 7. After onboarding
 
 The hub is ready to author platform-wide docs and to be the center satellites point
-at. The natural next steps are: author `hindsight.md` (if missing), then write the
-first platform spec/ADR; and onboard the first satellite (`/omg-onboard satellite`
-from that repo, pointing `central_repo` here).
+at. The natural next steps are: run `/omg-hindsight-setup` (if `hindsight.md` is
+missing), then write the first platform spec/ADR; and onboard the first satellite
+(`/omg-onboard satellite` from that repo, pointing `central_repo` here).

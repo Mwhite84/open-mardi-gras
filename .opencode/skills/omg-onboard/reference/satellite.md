@@ -9,8 +9,9 @@ it belongs to and its own folder name.
 
 - Read this repo's `.workflow.yaml` (may be absent or partial).
 - Read `.beads/metadata.json` / `config.yaml` (beads may already be set up).
-- Read `opencode.json` for existing `references` and
-  `permission.external_directory`.
+- Read the project `opencode.json` — it may be at the worktree root
+  (`opencode.json`) **or** at `.opencode/opencode.json`; check both — for existing
+  `references` and `permission.external_directory`.
 - Establish **where the central repo is.** If `.workflow.yaml` already has
   `central_repo`, use it. Otherwise ask the user for the path to the centralized
   docs repo (relative to this repo, absolute, or `~/`). It must contain a
@@ -50,7 +51,9 @@ the content and the destination path.
 
 This is the permission plumbing that lets the satellite read and **write** the
 central tree. It is the most-forgotten step and the most likely first-run break.
-Merge into the existing `opencode.json` (do not drop keys already there):
+Merge into the **existing** `opencode.json` — at the worktree root *or*
+`.opencode/opencode.json`, whichever the repo uses — and do not drop keys already
+there. If neither exists, create `.opencode/opencode.json`:
 
 ```json
 {

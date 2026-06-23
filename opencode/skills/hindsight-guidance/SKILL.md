@@ -111,6 +111,39 @@ Cross-read the two: the template tells you what the dimensions *should* be and
 what they mean; the tag list tells you what is *live* and where reality has
 drifted. Note meaningful drift to the owner rather than encoding it as intent.
 
+### Existing documents as a third reality check
+
+Ask the owner whether the project already has documents whose `hindsight`
+frontmatter sets a tagging convention to honor — a directory of specs/ADRs already
+tagged a certain way. If so, read those frontmatter tags. They are a third
+reality-check source, with a specific role:
+
+- They show the convention **in practice** — what authors have actually been
+  stamping — which may differ from both the bank template and the live tag list.
+- They are *evidence of intent*, not authority. The bank still owns the legal
+  vocabulary; existing frontmatter shows what the repo has been doing with it.
+
+Treat a directory the owner names as the convention to hold the guidance to (or to
+deliberately diverge from, with their agreement) — not as noise to overwrite.
+
+### Reconcile before writing — never silently blend
+
+You now have up to three views: the bank's declared vocabulary (authority), what
+is actually tagged (the live `tag list` and existing frontmatter), and any current
+`hindsight.md`. **Before you synthesize, reconcile them:**
+
+- **If they agree**, proceed to synthesis.
+- **If they conflict** — the docs are tagged one way and the bank says another, an
+  existing `hindsight.md` disagrees with the bank, or the live tags use a dimension
+  the template does not — **stop. Surface the specific conflict to the owner**
+  (name the dimension, the differing values, and where each comes from), state your
+  recommendation, and ask how to proceed. Do **not** produce an amalgamation that
+  splits the difference: a blended vocabulary matching neither source looks
+  authoritative while being wrong, and it is the owner's call which source wins.
+
+Reconciliation is a decision point, not a merge step. Make the conflict legible and
+let the owner choose; then synthesize from the reconciled result.
+
 These are read-only. Do not run create/update/delete/clear/retain/import
 commands against a production bank.
 

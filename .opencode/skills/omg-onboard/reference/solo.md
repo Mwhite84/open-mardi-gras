@@ -36,9 +36,10 @@ if refused, emit the content and the destination path.
 
 ## 4. The `hindsight.md`
 
-A solo repo owns its `hindsight.md` at the root. If absent, route to the
-`hindsight-guidance` skill (oc-smith can run it) rather than inventing tags. It is
-the immediate follow-up — agents need it to fill the `hindsight` block.
+A solo repo owns its `hindsight.md` at the root. If absent, tell the user to run
+**`/omg-hindsight-setup`** (it routes the hindsight architect to author it against
+the live bank) rather than inventing tags. It is the immediate follow-up — agents
+need it to fill the `hindsight` block.
 
 ## 5. Beads
 
@@ -62,7 +63,7 @@ done
 
 bash "$NID" spec.onboard-probe.scratch          # expect ...0001 (no file created)
 G="$(bash "$RES" hindsight.guidance)"; [ -f "$G" ] && echo "hindsight.md: $G" \
-  || echo "hindsight.md MISSING — author via hindsight-guidance: $G"
+  || echo "hindsight.md MISSING — run /omg-hindsight-setup to author it: $G"
 hindsight bank list >/dev/null 2>&1 && echo "bank: reachable" || echo "bank: UNREACHABLE"
 bd ready >/dev/null 2>&1 && echo "bd ready: OK" || echo "bd ready: FAILED"
 ```
@@ -72,7 +73,7 @@ no boundary is crossed.
 
 ## 7. After onboarding
 
-The repo is ready: author `hindsight.md` if missing, then start a spec with
-`/omg-spec`. If a second repo ever arrives, the migration path is to promote this
+The repo is ready: run `/omg-hindsight-setup` if `hindsight.md` is missing, then
+start a spec with `/omg-spec`. If a second repo ever arrives, the migration path is to promote this
 repo (or a new docs repo) to `centralized` and re-onboard the code repos as
 `satellite` — but that is a later decision, not a thing to pre-build.

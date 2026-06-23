@@ -26,9 +26,13 @@ answers is a defect. Before any question, gather:
 2. **`.beads/metadata.json`** and **`.beads/config.yaml`** — does a beads DB
    exist, and in what `dolt_mode` (`jq -r '.dolt_mode' .beads/metadata.json`)?
    `server` vs `embedded` changes the beads setup and the workers' sync discipline.
-3. **`opencode.json`** (project, at the worktree root) — existing `references` and
-   `permission.external_directory` entries. A satellite needs these; check what is
-   already there before proposing more.
+3. **The project `opencode.json`** — existing `references` and
+   `permission.external_directory` entries. opencode reads it from **either**
+   `opencode.json` at the worktree root **or** `.opencode/opencode.json`; check
+   both, and write to whichever the repo already uses (default to
+   `.opencode/opencode.json` if neither exists, to keep config together with the
+   other `.opencode/` files). A satellite needs these; check what is already there
+   before proposing more.
 4. **The mode argument** the command passed (`solo` | `centralized` | `satellite`).
    If it contradicts an existing `.workflow.yaml` `mode`, stop and reconcile with
    the user — do not silently switch a repo's role.
@@ -102,9 +106,9 @@ timeout while committing config — if it appears to hang, verify with
 - **`solo` / `centralized`** define their own `hindsight` block in `.workflow.yaml`
   (`url`, `bank`). Ask for these if discovery did not find them. They also need a
   **`hindsight.md`** at the repo root (the tagging-intent doc). If it is absent,
-  do not invent tags — tell the user the `hindsight-guidance` skill authors it
-  (oc-smith can run it), and treat that as a follow-up step, not something you
-  fabricate here.
+  do not invent tags — tell the user to run **`/omg-hindsight-setup`**, which
+  routes the hindsight architect to author it against the live bank. Treat that as
+  the explicit next step, not something you fabricate here.
 - **`satellite`** must **not** define a `hindsight` block — it inherits the central
   bank. If discovery finds one in a satellite's `.workflow.yaml`, that is the error
   the resolver rejects; remove it. The satellite does not get its own

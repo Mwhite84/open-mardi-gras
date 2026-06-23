@@ -111,9 +111,8 @@ the project's **`hindsight.md`**. So when you fill this block:
    tag vocabulary; do not derive tags mechanically from the `type` field (there
    is no `type → memory_type` rule).
 3. If the resolver errors or the resolved `hindsight.md` does not exist, the
-   project's docs lane is not set up — tell the user that **oc-smith** can author
-   it via the `hindsight-guidance` skill (the interview that produces it). Do not
-   guess a tag vocabulary in its absence.
+   project's docs lane is not set up — tell the user to run **`/omg-hindsight-setup`**
+   to author it against the live bank. Do not guess a tag vocabulary in its absence.
 
 The block shape:
 
