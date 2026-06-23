@@ -326,13 +326,49 @@ Example strategy patterns:
 Tags are visibility and retrieval filters. Metadata is for provenance and UI
 linking, not filtering.
 
-For shared banks, always establish a small required tag set for writers:
+For shared banks, always establish a small required tag set for writers. For an
+**engineering/product documentation bank** (specs, ADRs, design docs — the
+common case this skill serves), recommend these four as the spine, keeping each
+on its own independent axis:
 
-- `source:<system>` for where the memory came from
-- `domain:<domain>` for broad area
-- `memory_type:<type>` for shape
-- `scope:<scope>` or `visibility:<tier>` when access matters
-- A subject tag such as `user:<id>`, `company:<id>`, `repo:<name>`, `service:<name>`, or `customer:<id>` when applicable
+- `source:<origin>` — **provenance**: how the memory originated and how far to
+  trust it. Name the *origin*, never a tool: `source:authored` (a design/decision
+  record authored here — durable belief), `source:document-ingest` (a
+  source-of-record document preserved as fact), `source:voice-memo` (owner
+  opinion), `source:harness-conversation` (a distilled agent session). This is the
+  axis the reflect layer uses to separate fact from opinion. **Do not invent a
+  value from a tool or repo name** (e.g. never `source:canon`) — that names
+  nothing durable.
+- `domain:<bounded-context>` — **the bounded context** (Domain-Driven Design
+  sense): the product/platform area the memory is *about* — `domain:notifications`,
+  `domain:subscriptions`, `domain:platform`. When documents carry a dotted id
+  (`type.domain.topic.NNNN`), this value is the second id segment, stamped
+  mechanically.
+- `discipline:<function>` — **the functional discipline**: *who owns the work /
+  what kind of work it is* — `discipline:engineering`, `discipline:product`,
+  `discipline:business`. This is a separate axis from `domain:`; a
+  `domain:notifications` spec is `discipline:engineering`. Keeping them distinct is
+  deliberate — folding discipline into `domain` is the conflation
+  `adr.platform.tag-taxonomy.0001` exists to prevent.
+- `memory_type:<shape>` — the **shape** of the memory: `memory_type:adr`,
+  `memory_type:spec`, `memory_type:design-doc`, `memory_type:prd`.
+
+Plus, when they apply: `scope:<scope>`/`visibility:<tier>` for access, and a
+subject tag such as `repo:<name>`, `service:<name>`, `company:<id>`, or
+`user:<id>`.
+
+**Be opinionated, then scale to the project.** Recommend all four axes by default
+for an engineering/product bank — they are the dimensions most such projects want
+to filter on. For a *small* project with a single bounded context and a single
+discipline, `domain:`/`discipline:` filter nothing, so drop them and keep
+`source:`/`memory_type:`. For a *large* platform, expect more values per axis (many
+bounded contexts, several disciplines) and consider additional subject axes
+(`team:`, `service:`, `env:`). The four-axis spine is the default, not a mandate —
+right-size it to how many distinctions the project actually needs to recall on.
+
+Non-engineering banks (personal, support, research, observability) use their own
+natural vocabularies; the four-axis spine above is specific to authored
+engineering/product documentation. The archetypes below show each.
 
 Prefer strict tag matching for partitioned data:
 
@@ -353,13 +389,25 @@ for fields the writer already knows and should stamp deterministically, such as
 paths, commit hashes, or ingestion job IDs. Those belong in integration tags or
 metadata.
 
-Good entity label dimensions:
+Good entity label dimensions (engineering/product documentation bank):
 
-- `domain`: business, product, engineering, infrastructure, operations, finance, legal, research
-- `memory_type`: mission, vision, adr, design-doc, spec, user-journey, feature, runbook, decision, risk, open-question, incident, research-note
+- `domain` (the **bounded context** — what the memory is about): platform,
+  notifications, subscriptions, web, analysis, market-data, … For a dotted-id
+  project these are the id second-segment values.
+- `discipline` (the **functional discipline** — who owns the work): engineering,
+  product, business, infrastructure, operations, finance, legal, research,
+  marketing, strategy.
+- `source` (**provenance**): authored, document-ingest, voice-memo,
+  harness-conversation. (Writer-stamped deterministically — see the note below on
+  not using entity labels for fields the writer already knows.)
+- `memory_type`: mission, vision, adr, design-doc, spec, prd, user-journey,
+  feature, runbook, decision, risk, open-question, incident, research-note
 - `status`: proposed, accepted, deprecated, active, blocked, resolved
-- `system`: platform, web-app, analysis-engine, market-data, infra
-- `infra`: aws, terraform, kubernetes, flux, postgres, redis
+
+`domain` and `discipline` are **distinct dimensions**, not synonyms — a
+`domain:notifications` memory is `discipline:engineering`. Other banks may need
+different dimensions entirely (`system`, `infra`, `sector`, `env`); choose the
+ones the bank will actually filter on.
 
 Use controlled enum values when possible. Free-text labels are less reliable
 because wording may drift.
@@ -385,13 +433,13 @@ to actual tags.
 Examples:
 
 - Company-level scope: `["company:stacked-chips"]`
-- Domain-level scope for a product memory: `["domain:product"]`
-- Combined company/domain scope: `["company:stacked-chips", "domain:product"]`
+- Bounded-context scope for a notifications memory: `["domain:notifications"]`
+- Combined company/context scope: `["company:stacked-chips", "domain:notifications"]`
 - Repo-level scope: `["repo:main-app"]`
 
-If the user wants both company-wide and domain-specific observations, recommend
+If the user wants both company-wide and context-specific observations, recommend
 custom `observation_scopes` on retained items, such as
-`[["company:stacked-chips"], ["domain:product"], ["company:stacked-chips", "domain:product"]]`.
+`[["company:stacked-chips"], ["domain:notifications"], ["company:stacked-chips", "domain:notifications"]]`.
 
 - `combined`: best for simple single-subject banks.
 - `per_tag`: best when individual tags represent independent subjects, such as user, team, service, or project.
@@ -594,7 +642,7 @@ Mental model tag guidance:
 - Use the fewest tags needed to scope source memories and visibility.
 - In bank templates, omitted mental model `tags` and `tags: []` both import as untagged. Prefer omitting `tags` in minimal templates when the model should be untagged.
 - Remember that tagged mental models may only be visible to recall/reflect calls whose tag filters match them. If the model should be available during broad untagged reflection, leave `tags` empty or ensure integrations pass matching recall/reflect tags intentionally.
-- Prefer one broad subject tag such as `domain:product` over many `memory_type:*` tags when the model should synthesize several memory types.
+- Prefer one broad subject tag such as `domain:notifications` (a bounded context) over many `memory_type:*` tags when the model should synthesize several memory types within one area.
 - Do not tag a model with multiple alternative memory types such as `memory_type:mission`, `memory_type:vision`, and `memory_type:decision` unless source memories are expected to carry all of them together.
 - If the model should read an OR set of tags, use `trigger.tag_groups` or another supported filter mechanism from the current template schema instead of stacking tags as if they were descriptive metadata.
 - If tag filters are too restrictive, leave `tags` empty and make the `source_query` precise, or create multiple narrower mental models.
@@ -664,31 +712,39 @@ Common tags: `customer:<id>`, `user:<id>`, `account:<id>`,
 ### Company, Product, Or Platform Builder
 
 Default to one company/platform bank when the user needs to move fluidly across
-business, product, engineering, infrastructure, and operations.
+business, product, engineering, infrastructure, and operations. **This is the
+archetype the four-axis spine (`source:`/`domain:`/`discipline:`/`memory_type:`)
+is built for** — recommend it here by default.
 
 - Bank: company, product, or platform name.
-- Use tags for business domains, product areas, repos, services, infrastructure, source systems, and agent profiles.
+- Use `domain:` for the **bounded contexts** (the product/platform areas:
+  `notifications`, `subscriptions`, `web`, `platform`), `discipline:` for **who
+  owns the work** (`engineering`, `product`, `business`, `infrastructure`,
+  `operations`), and `source:`/`memory_type:` for provenance and shape. Add
+  `repo:`/`service:` subject tags as needed.
 - Add a personal bank for private preferences and individual operating style when needed.
 - Add separate research or observability banks later if those streams become large or noisy.
-- Do not split business, product, engineering, and infrastructure into separate banks unless the user rarely needs to reason across them or has hard access boundaries.
+- Do not split the disciplines into separate banks unless the user rarely needs to reason across them or has hard access boundaries.
 
-Common tags: `domain:business`, `domain:product`, `domain:engineering`,
-`domain:infrastructure`, `repo:<name>`, `service:<name>`,
-`source:<system>`, `agent_profile:<name>`, `memory_type:adr`,
-`memory_type:spec`, `memory_type:user-journey`, `memory_type:runbook`,
-`memory_type:risk`.
+Common tags: `source:authored`, `domain:notifications`, `domain:subscriptions`,
+`domain:platform` (bounded contexts); `discipline:engineering`,
+`discipline:product`, `discipline:business`, `discipline:infrastructure`
+(disciplines); `repo:<name>`, `service:<name>`, `memory_type:adr`,
+`memory_type:spec`, `memory_type:design-doc`, `memory_type:prd`,
+`memory_type:user-journey`, `memory_type:runbook`, `memory_type:risk`.
 
 ### Multi-Service Engineering Platform
 
 Prefer one platform bank when cross-service reasoning matters.
 
-- Use tags for services, repos, bounded contexts, teams, environments, ADRs, specs, incidents, and runbooks.
+- Use tags for services, repos, bounded contexts (`domain:`), teams, environments, ADRs, specs, incidents, and runbooks.
 - Use separate service banks only when service-level isolation or retrieval quality matters more than cross-service reasoning.
 - Use mental models for platform architecture, service ownership, ADR summaries, and active risks.
 
-Common tags: `service:<name>`, `repo:<name>`, `team:<name>`,
-`bounded-context:<name>`, `env:prod`, `env:staging`, `memory_type:adr`,
-`memory_type:incident`, `memory_type:runbook`, `memory_type:decision`.
+Common tags: `domain:<bounded-context>` (the service's context), `service:<name>`,
+`repo:<name>`, `team:<name>`, `discipline:engineering`, `env:prod`, `env:staging`,
+`memory_type:adr`, `memory_type:incident`, `memory_type:runbook`,
+`memory_type:decision`.
 
 ### Research, Analysis, Or Knowledge Corpus
 
