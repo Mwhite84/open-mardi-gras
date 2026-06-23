@@ -1,2 +1,5 @@
-specs:
-  directory: specs
+mode: solo
+docs_base: docs
+hindsight:
+  url: https://hindsight-api.brandondennis.me
+  bank: omg
