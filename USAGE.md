@@ -71,8 +71,24 @@ under one collision-free identity scheme.
 
 ### Step 0 — Install the instruments
 
-Install the OMG family globally or per-project (see this repo's README for the
-install command). Restart opencode so it loads the agents, commands, and skills.
+> **Pre-release notice.** The `rearchitect` branch is a pre-release experiment
+> that will likely be merged back into `master` in the future. For now it is
+> **not** published to npm, so installing directly from the git branch (below) is
+> the **only** proper way to install this pre-release. Once it lands on `master`
+> and is published, the plain `npx @toady00/open-mardi-gras setup` command will be
+> the way to install.
+
+Run the setup command in your project to copy the OMG family — the agents,
+commands, and skills — into your `.opencode/` directory. Point `npx` at the git
+branch; npm builds it on install:
+
+```
+npx 'github:Toady00/open-mardi-gras#rearchitect' setup
+```
+
+Re-run it after upgrading to pick up new versions of the workflow files. Then
+restart opencode so it loads the agents, commands, and skills. See this repo's
+README for installing the plugin itself.
 
 ### Step 1 — Set up Hindsight memory
 

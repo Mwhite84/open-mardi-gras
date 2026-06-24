@@ -31,7 +31,8 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "clean": "rm -rf dist/",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run clean",
     "dev": "tsc -p tsconfig.build.json --watch"
   },
   "engines": {
@@ -58,12 +59,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/toady00/open-mardis-gras.git"
+    "url": "git+https://github.com/Toady00/open-mardi-gras.git"
   },
   "bugs": {
-    "url": "https://github.com/toady00/open-mardis-gras/issues"
+    "url": "https://github.com/Toady00/open-mardi-gras/issues"
   },
-  "homepage": "https://github.com/toady00/open-mardis-gras#readme",
+  "homepage": "https://github.com/Toady00/open-mardi-gras#readme",
   "peerDependencies": {
     "@opencode-ai/plugin": ">=1.0.0",
     "@opencode-ai/sdk": ">=1.0.0"

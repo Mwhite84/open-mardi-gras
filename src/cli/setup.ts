@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs"
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, realpathSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -54,11 +54,6 @@ export function setup(): void {
     }
   }
 
-  // Write .workflow.yaml
-  const workflowPath = resolve(process.cwd(), ".workflow.yaml")
-  writeFileSync(workflowPath, "specs:\n  directory: docs/specs\n", "utf-8")
-  console.log(`  wrote:  .workflow.yaml`)
-
   // Read package version
   let version = "unknown"
   try {
@@ -78,10 +73,10 @@ export function setup(): void {
   }
 
   console.log(`\nNext steps:`)
-  console.log(`  Add BeadsPlugin() to your opencode config:`)
-  console.log(``)
-  console.log(`    import { BeadsPlugin } from '@toady00/open-mardi-gras'`)
-  console.log(`    export default { plugins: [BeadsPlugin()] }`)
+  console.log(`  1. Open opencode in this project.`)
+  console.log(`  2. Run /omg-hindsight-setup to set up the project's Hindsight memory.`)
+  console.log(`  3. Run /omg-onboard {solo|centralized|satellite} to wire up the rest`)
+  console.log(`     of the workflow (it will create the proper .workflow.yaml).`)
 }
 
 function main(): void {
@@ -93,7 +88,7 @@ function main(): void {
     console.error("Usage: @toady00/open-mardi-gras setup")
     console.error("")
     console.error("Commands:")
-    console.error("  setup  Copy workflow files to .opencode/ and create .workflow.yaml")
+    console.error("  setup  Copy workflow files (commands, agents, skills) into .opencode/")
     process.exit(1)
   }
 }
