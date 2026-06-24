@@ -8,6 +8,10 @@ permission:
     "**/*.md": allow
   bash: ask
   webfetch: allow
+  skill:
+    "doc-templates": allow
+    "omg-commands": allow
+    "hindsight-cli": allow
 ---
 
 # Implementation Writer

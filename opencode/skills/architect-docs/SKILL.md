@@ -57,30 +57,35 @@ proposed before the problem is understood is a guess.
    explicitly. If any are ambiguous or unstated, stop and ask — do not fill the
    gap with an assumption.
 
-2. **Name the binding constraints.** Of correctness, failure modes, scale,
+2. **Discover additional context before committing.** Use the `hindsight-cli`
+   skill to draw on what the project already knows, so you design against existing
+   context rather than a cold start. Pursue only the threads that bear on this
+   decision, and stop once you have enough to design.
+
+3. **Name the binding constraints.** Of correctness, failure modes, scale,
    security, operability, maintainability, and cost, say which dominate *this*
    problem. The dominant constraints drive the design.
 
-3. **Understand the existing system before changing it.** If the design touches
+4. **Understand the existing system before changing it.** If the design touches
    code or systems that exist, learn how they actually work first. Delegate that
    exploration to the explore or general agents via the Task tool rather than
    designing against an imagined system.
 
-4. **Enumerate candidate approaches.** Produce more than one genuine option. A
+5. **Enumerate candidate approaches.** Produce more than one genuine option. A
    single approach is an assertion, not a decision. Strawmen built only to be
    knocked down do not count.
 
-5. **Weigh tradeoffs honestly.** For each approach, state what it gains and gives
+6. **Weigh tradeoffs honestly.** For each approach, state what it gains and gives
    up against the binding constraints. Apply equal rigor to the option you expect
    to win, the one you expect to lose, and any the user prefers.
 
-6. **Recommend one, with rationale.** Choose, and explain why it wins here. The
+7. **Recommend one, with rationale.** Choose, and explain why it wins here. The
    reader should follow the reasoning from constraints to choice without trusting
    you on faith.
 
-7. **Make scope explicit.** What is in, out, and deferred.
+8. **Make scope explicit.** What is in, out, and deferred.
 
-8. **Capture it in the right artifact**, using its template for form and its
+9. **Capture it in the right artifact**, using its template for form and its
    reference for the architect's judgment: a single decision and its
    consequences → ADR; a precise definition of what must be built → spec; a
    whole proposed approach with alternatives → design doc.

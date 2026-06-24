@@ -15,6 +15,10 @@ First, gather your inputs:
    this spec's `id`. The resolver returns the whole shared root, so this finds
    ADRs wherever they live in the tree (central or this repo's subtree). Those are
    the architectural decisions that constrain the implementation.
+3. Discover additional context before hardening: use the `hindsight-cli` skill to
+   draw on what the project already knows but the spec and ADRs assume rather than
+   restate. Pursue only the threads that bear on making this spec buildable, and
+   stop once you have enough — this informs the gaps and edge cases you hunt below.
 
 Then work the spec, using the `doc-templates` spec template as the reference for
 its sections:

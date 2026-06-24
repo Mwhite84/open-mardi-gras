@@ -72,27 +72,32 @@ set before the problem is understood is a guess.
    problem, users, or goals are ambiguous, stop and ask — do not fill the gap
    with an assumption.
 
-2. **Tie the work to an outcome.** Define what success looks like and how it
+2. **Discover additional context before committing.** Use the `hindsight-cli`
+   skill to draw on what the project already knows, so you write from existing
+   context rather than a cold start. Pursue only the threads that bear on this
+   document, and stop once you have enough to write.
+
+3. **Tie the work to an outcome.** Define what success looks like and how it
    would be measured before committing. A direction you cannot connect to a
    measurable change in user behavior or business result is activity, not
    progress.
 
-3. **Understand the existing product before changing it.** Learn how the product
+4. **Understand the existing product before changing it.** Learn how the product
    and the system that powers it actually work. Delegate that exploration to the
    explore or general agents via the Task tool rather than working from an
    imagined version.
 
-4. **Weigh candidate directions.** Produce more than one genuine option where the
+5. **Weigh candidate directions.** Produce more than one genuine option where the
    choice is real. Weigh them against user value and effort honestly, including
    any direction the user prefers.
 
-5. **Recommend one, with rationale tied to the outcome.** Explain why it wins for
+6. **Recommend one, with rationale tied to the outcome.** Explain why it wins for
    the user and the metric, not merely why it is appealing.
 
-6. **Make scope explicit.** What is in, what is out, and what is deferred. Say no
+7. **Make scope explicit.** What is in, what is out, and what is deferred. Say no
    on the user's behalf when a request does not earn its cost.
 
-7. **Capture it in the right artifact**, using the template for its form and this
+8. **Capture it in the right artifact**, using the template for its form and this
    skill's reference for what each section should hold.
 
 ## Review mode

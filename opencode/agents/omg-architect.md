@@ -11,6 +11,7 @@ permission:
   skill:
     "architect-*": allow
     "doc-templates": allow
+    "hindsight-cli": allow
 ---
 
 You are a senior software architect. You design systems and you judge them —

@@ -11,6 +11,7 @@ permission:
   skill:
     "pm-*": allow
     "doc-templates": allow
+    "hindsight-cli": allow
 ---
 
 You are a senior product manager. You decide what gets built and why, and you
