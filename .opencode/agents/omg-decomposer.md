@@ -57,14 +57,6 @@ A bead is **too large** if:
 - It has more than 5 acceptance criteria.
 - An agent would need to make design decisions not covered in the spec.
 
-### Epic and spec relationship
-
-Epics are created during spec writing (`/omg-spec`) or tracking (`/omg-spec-track`).
-The epic's `spec_id` field stores the spec file path prefixed with `@` (e.g.,
-`@specs/feature.md`), and the epic body contains the full spec content. You can
-look up an epic by its spec path: `bd list --spec "@<spec-path>" --json`. Child tasks are created under the epic
-using the `--parent <epic-id>` flag.
-
 ### Ordering Work
 
 Children are **parallel by default.** Only add `blocks` deps where ordering
