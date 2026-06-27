@@ -6,7 +6,7 @@ title: "Multi-Repo Canon: A Mode-Keyed Workflow Seam for Centralized Docs Across
 status: draft
 domain: platform
 created_at: 2026-06-22T03:42:10Z
-updated_at: 2026-06-22T03:48:00Z
+updated_at: 2026-06-27T22:54:49Z
 hindsight:
   strategy: design-record
   tags:
@@ -435,11 +435,16 @@ the origin rather than a defunct tool.
   connection lives once, in the centralized repo, inherited by satellites through
   `mode` + `central_repo`. Changing the bank or URL is a one-place edit.
 
-- **Gained: a clean author/build split.** Pure product/architecture authoring
-  (PM, architect) runs in the centralized repo; anything that must read code
-  (decomposer, builder, implementation-writer, foreman) runs satellite-side with
-  local beads. The line is "must it read code?" — and it falls naturally out of
-  the topology.
+- **Gained: a clean placement split on one test — "must this work read a
+  codebase?"** Work that reads a specific repo's code runs satellite-side and
+  lands in that satellite's lane: not only the build chain (decomposer,
+  implementation-writer, builder, foreman) but **PM spec authoring and architect
+  spec-review when the spec or ADR is *for that code repo*** — judging a feature's
+  value-in-context or its buildability is squarely reading code. Only
+  cross-cutting work that reads **no single codebase** — platform-wide PRDs,
+  cross-cutting ADRs, journey maps — runs centrally. So PM and architect appear on
+  *both* sides; the split is "needs a codebase vs. cross-cutting," not
+  "authoring vs. build," and it falls naturally out of the topology.
 
 - **Accepted: per-repo install is a human, multi-setting step.** Root config
   files are outside the agents' edit scope, so onboarding a repo means a human

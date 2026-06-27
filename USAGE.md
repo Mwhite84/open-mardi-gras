@@ -169,10 +169,22 @@ root file directly, it hands you the exact content and where to place it. If
 ## Journey 2 — From spec to delivered feature
 
 The delivery flow is a pipeline of commands. In **solo** mode it all happens in the
-one repo. In a **platform**, the *thinking* (PM, architect) happens in the
-**centralized** repo and the *building* (harden, decompose, foreman) happens in the
-relevant **satellite** — but the documents always live in the central tree, so both
-sides see the same artifacts by `id`.
+one repo. In a **platform**, the rule for *where you run a step* is one question:
+**does this work need to read a codebase?** If it does — and authoring or reviewing
+a spec **for a particular code repo** does, because value-in-context and
+buildability can't be judged without seeing that repo's code — you run it in that
+**satellite**, and its documents land in the satellite's lane. Only *cross-cutting*
+work that reads **no single codebase** (a platform-wide PRD, a cross-cutting ADR)
+runs in the **centralized** repo. Either way the documents live under the one shared
+docs tree, so every repo sees them by `id`.
+
+> **The common case is a feature for one code repo: run the whole pipeline —
+> `/omg-spec` through `/omg-build` — in that satellite.** The "run it centrally"
+> notes below apply only when the spec or ADR is genuinely platform-wide and tied to
+> no single codebase. Running a satellite feature's `/omg-spec` or `/omg-spec-review`
+> from the centralized repo is the classic mistake: the resolver then places the
+> document in the central lane (`docs/platform/…`) instead of the satellite's lane,
+> splitting a spec from its ADRs.
 
 ### Step 1 — Write the spec (Product Manager)
 
@@ -186,8 +198,10 @@ vagueness before writing anything. Then it writes a spec, judging it for **user
 value and scope** (buildability is the architect's job, next). The spec gets a
 stable `id` and is placed automatically at `<docs_base>/spec/<id>.md`.
 
-> Platform: run this in the **centralized** repo. The spec lands in the central
-> tree.
+> Platform: run this **in the satellite** that will build the feature — its spec is
+> for that codebase, so it lands in the satellite's lane (`docs/<name>/spec/`). Run
+> it in the **centralized** repo only for a genuinely platform-wide spec tied to no
+> single code repo (then it lands in `docs/platform/spec/`).
 
 ### Step 2 — Architectural review (Architect)
 
@@ -206,8 +220,10 @@ won't manufacture an ADR.
 Iterate `/omg-spec` ↔ `/omg-spec-review` until the product and architecture
 questions are settled.
 
-> Platform: still in the **centralized** repo. ADRs land in the central tree
-> alongside the spec.
+> Platform: run this in the **same repo as the spec** — for a satellite feature,
+> the satellite. Any ADR the review writes lands in that same lane, beside its spec,
+> because both are authored from the same repo. (A review of a platform-wide spec
+> runs centrally, and its ADR lands in `docs/platform/adr/`.)
 
 ### Step 3 — Harden into an implementation contract (Implementation Writer)
 
@@ -220,10 +236,12 @@ spec as plain requirements, then drives out gaps, contradictions, edge cases, an
 missing acceptance criteria — until a coding agent could build it **with no chance
 to ask a follow-up question**. Run it as many times as needed.
 
-> **Platform: switch to the satellite repo now.** Hardening and everything after it
-> needs to see the actual codebase, so it runs in the **satellite** that will build
-> the feature. Because the satellite references the central tree, it reads the spec
-> and ADRs by `id` from there.
+> **Platform:** for a satellite feature you are already in the satellite (you have
+> been since `/omg-spec`), and you stay there for hardening and everything after —
+> it must read the actual codebase. Because the satellite references the central
+> tree, it reads the spec and ADRs by `id` from the shared docs tree regardless of
+> which lane they live in. (If you authored a platform-wide spec centrally, switch
+> to the satellite that will build it now.)
 
 ### Step 4 — Decompose into work (Decomposer)
 
@@ -290,8 +308,8 @@ actually happened.
 |---|---|---|---|
 | `/omg-hindsight-setup` | hindsight architect | Design/apply the bank; author `hindsight.md` | centralized only |
 | `/omg-onboard <mode>` | onboarder | Wire the repo into the workflow + verify | every repo |
-| `/omg-spec <idea>` | product manager | Write a spec from the problem | centralized |
-| `/omg-spec-review <spec>` | architect | Review for buildability; write ADRs | centralized |
+| `/omg-spec <idea>` | product manager | Write a spec from the problem | satellite (centralized only if platform-wide) |
+| `/omg-spec-review <spec>` | architect | Review for buildability; write ADRs | satellite (centralized only if platform-wide) |
 | `/omg-spec-harden <spec>` | implementation writer | Turn the spec into a buildable contract | satellite |
 | `/omg-decompose <spec>` | decomposer | Mint the epic + child beads | satellite |
 | `/omg-build <epic>` | foreman | Build + review the epic, write & ship the build report | satellite |
