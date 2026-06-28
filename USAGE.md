@@ -256,6 +256,42 @@ the structure and waits for your approval before finalizing.
 
 > Platform: in the **satellite**, against that repo's local beads database.
 
+### Step 4.5 — Plan test verification (Test Planner) — *optional*
+
+```
+/omg-test-plan <epic-id>
+```
+
+**This step is optional.** Skip it and the epic builds exactly as it does today —
+tests appear only if a builder happens to write them or the reviewer files a
+finding. Run it and verification becomes deliberate, planned work in the graph,
+on the same footing as everything else. Run it after `/omg-decompose` and before
+(or alongside) `/omg-build`; not running it changes nothing.
+
+Routes to the **test planner** — a read-only planner distinct from the agent that
+*writes* tests. Over an already-decomposed epic it does two things in one run:
+
+- **Plans verification over the build graph.** It reasons, per build bead, about
+  what verification would actually increase confidence, and wires that as test
+  beads the foreman builds like any other work — or records an explicit "no test
+  needed, because…" decision where a test would not earn its keep. It plans
+  *justified* confidence, not a test per bead.
+- **Arms the findings loop.** It updates the epic's review bead so that *future*
+  reviewer-surfaced fixes get their verification planned **before** the fix is
+  built — closing the gap where the riskiest (flagged) changes are the least
+  likely to get deliberate coverage.
+
+Re-running is safe and useful: the planner surveys what already exists and
+**converges** — it plans only newly-unplanned work and never double-wires — so you
+can run it again after the graph grows (new beads, new findings) to plan the new
+reality.
+
+> Whether to run it is per-epic and per-invocation — there is no global "test
+> mode" and no config flag. The decision is simply whether you type the command.
+
+> Platform: in the **satellite**, against that repo's local beads database — the
+> same place you decomposed and will build.
+
 ### Step 5 — Build it all (Foreman)
 
 ```
@@ -312,6 +348,7 @@ actually happened.
 | `/omg-spec-review <spec>` | architect | Review for buildability; write ADRs | satellite (centralized only if platform-wide) |
 | `/omg-spec-harden <spec>` | implementation writer | Turn the spec into a buildable contract | satellite |
 | `/omg-decompose <spec>` | decomposer | Mint the epic + child beads | satellite |
+| `/omg-test-plan <epic>` | test planner | Optionally plan verification beads and arm the findings loop | satellite |
 | `/omg-build <epic>` | foreman | Build + review the epic, write & ship the build report | satellite |
 
 In **solo** mode, every row runs in the one repo.
@@ -322,6 +359,9 @@ In **solo** mode, every row runs in the one repo.
   change — config loads at startup.
 - **Start in `one_agent` build mode** to prove a workflow end to end before trying
   `multi_agents`.
+- **Test planning is opt-in.** Run `/omg-test-plan <epic-id>` after decomposition
+  when you want planned verification beads in the build graph. Skip it when you
+  want the existing build/review flow unchanged.
 - **Satellite write failures** almost always mean the external-directory **write**
   permission is missing — a read reference isn't enough. Re-run `/omg-onboard
   satellite`; its verification catches this.
