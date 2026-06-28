@@ -25,10 +25,15 @@
  * makes every shell resolve the same backend the primary does.
  */
 
-import type { Plugin, PluginInput } from "@opencode-ai/plugin"
+import type { Plugin } from "@opencode-ai/plugin"
 import { createPluginLogger } from "../logging.js"
 
-type Shell = PluginInput["$"]
+type ShellCommand = {
+  quiet(): Promise<unknown>
+  text(): Promise<string>
+}
+
+type Shell = (strings: TemplateStringsArray, ...values: unknown[]) => ShellCommand
 
 /**
  * Collect every BEADS_* environment variable from the given source
@@ -87,6 +92,8 @@ Always use --json flag for structured output when parsing results.
 
 export function BeadsPlugin(): Plugin {
   return async ({ client, $ }) => {
+    const shell = $ as unknown as Shell
+
     /**
      * Cached beads context per session. Populated on first LLM call
      * (via system.transform) and refreshed after compaction.
@@ -147,7 +154,7 @@ export function BeadsPlugin(): Plugin {
 
         // Fetch and cache beads context on first call per session
         if (!sessionContextCache.has(sessionID)) {
-          const context = await fetchBeadsContext($, logger)
+          const context = await fetchBeadsContext(shell, logger)
           if (context) {
             sessionContextCache.set(sessionID, context)
             await logger("info", "BeadsPlugin: cached beads context for session")
@@ -182,7 +189,7 @@ export function BeadsPlugin(): Plugin {
         // is on or beads isn't initialized.
         if (event.type === "session.idle") {
           try {
-            await $`bd dolt commit`.quiet()
+            await shell`bd dolt commit`.quiet()
           } catch (err) {
             await logger(
               "warn",
