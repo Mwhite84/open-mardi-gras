@@ -1,6 +1,6 @@
 ---
 description: Crafts and refines opencode agents, skills, commands, and prompts. Use when creating or editing anything under .opencode/ — agent personas, skill runbooks, slash commands, or prompt wording.
-mode: primary
+mode: all
 color: "#ff5fff"
 permission:
   edit:
