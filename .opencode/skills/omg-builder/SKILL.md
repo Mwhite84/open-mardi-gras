@@ -11,8 +11,7 @@ lifecycle from claim to close; the foreman owns dispatch and the epic. The raw
 discovered-work flags. For dependency operations, load `omg-epics`. This skill is
 the per-bead procedure on top of them.
 
-The foreman hands you a **bead id** and the **dolt mode** (`server` or
-`embedded`). Both shape what follows.
+The foreman hands you a **bead id**. That is your bead to build, claim to close.
 
 ## The procedure
 
@@ -43,11 +42,7 @@ The foreman hands you a **bead id** and the **dolt mode** (`server` or
 6. **Close with a reason that says what you did.**
    `bd close <id> --reason "..." --json`. The close reason is the *what*; the
    step-5 comment is the *why it differs / what was learned*.
-7. **Sync per the dolt mode.** In **`server`** mode, your `bd` writes already
-   landed on the server — do **nothing** else (no `bd dolt commit/push/pull`; push
-   errors in server mode). In **`embedded`** mode, follow the project's sync
-   discipline. See the foreman skill's `reference/dolt-sync.md` if unsure.
-8. **Report back to the foreman** with a short summary of what you did, so it can
+7. **Report back to the foreman** with a short summary of what you did, so it can
    decide the next move. The durable record is your bead comment (step 5); this
    return is the convenience copy.
 
@@ -68,7 +63,5 @@ The foreman hands you a **bead id** and the **dolt mode** (`server` or
   If it is worth raising, it is worth a bead, filed the moment you see it.
 - **Closing without a reason.** The close reason is the record of what happened;
   an empty one erases the trail.
-- **Running forbidden sync.** In `server` mode, never `bd dolt commit/push/pull` —
-  it is wrong and push errors.
 - **Untracked work.** Everything runs through beads. No TodoWrite, no markdown
   TODO lists.

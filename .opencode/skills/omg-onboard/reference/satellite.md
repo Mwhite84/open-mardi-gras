@@ -91,8 +91,7 @@ A satellite tracks work locally. If `.beads/` is absent or empty:
   `bd init --server --server-host <host> --server-user <user> --remote ""` with the
   host/user the user confirms (the same server the rest of the platform uses).
 
-Confirm the mode: `jq -r '.dolt_mode' .beads/metadata.json`. The satellite's workers
-respect this (`server` → no `bd dolt commit/push/pull`).
+Confirm the mode: `jq -r '.dolt_mode' .beads/metadata.json`.
 
 ## 6. Verify (run every check; report pass/fail with the command)
 

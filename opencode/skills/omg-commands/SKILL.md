@@ -227,19 +227,3 @@ bd comment <id> --file notes.txt       # Read comment text from a file
 bd comments <id>                       # List comments (oldest first)
 bd comments <id> --json                # List as JSON
 ```
-
-## Sync
-
-These apply only in **`embedded`** Dolt mode (local file-backed Dolt):
-
-```
-bd dolt pull                           # Pull from Dolt remote before starting work
-bd dolt commit                         # Commit pending beads changes
-bd dolt push                           # Push to Dolt remote (if configured)
-```
-
-In **`server`** mode (beads talks to a remote Dolt server) these are wrong — every
-`bd` write lands on the server immediately, and `bd dolt push` actively errors.
-Detect the mode from `.beads/metadata.json` (`jq -r '.dolt_mode' .beads/metadata.json`)
-and skip all three when it is `server`. See the `omg-foreman` skill's
-`reference/dolt-sync.md` for the full discipline.
