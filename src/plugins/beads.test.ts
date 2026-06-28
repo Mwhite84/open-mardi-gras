@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from "bun:test"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { BeadsPlugin } from "./beads.js"
+import { BeadsPlugin, collectBeadsEnv } from "./beads.js"
 
 function createMockShell(primeOutput = "mock beads context") {
   const commitCalls: number[] = []
@@ -61,6 +61,7 @@ describe("BeadsPlugin", () => {
     expect(hooks).toBeDefined()
     expect(hooks["experimental.chat.system.transform"]).toBeDefined()
     expect(hooks.event).toBeDefined()
+    expect(hooks["shell.env"]).toBeDefined()
     // Should NOT have chat.message (we moved to system.transform)
     expect(hooks["chat.message"]).toBeUndefined()
   })
@@ -325,6 +326,113 @@ describe("BeadsPlugin", () => {
 
       // Second call should not invoke shell again (cached empty)
       expect(callCount).toBe(callsAfterFirst)
+    })
+  })
+
+  describe("collectBeadsEnv", () => {
+    it("collects only BEADS_* vars with defined values", () => {
+      const result = collectBeadsEnv({
+        BEADS_DOLT_SERVER_HOST: "beads.example.com",
+        BEADS_DOLT_PASSWORD: "secret",
+        BEADS_DIR: "/path/.beads",
+        PATH: "/usr/bin",
+        HOME: "/home/user",
+        BEADS_UNSET: undefined,
+      })
+
+      expect(result).toEqual({
+        BEADS_DOLT_SERVER_HOST: "beads.example.com",
+        BEADS_DOLT_PASSWORD: "secret",
+        BEADS_DIR: "/path/.beads",
+      })
+      expect(result.PATH).toBeUndefined()
+      expect(result.HOME).toBeUndefined()
+      expect("BEADS_UNSET" in result).toBe(false)
+    })
+
+    it("returns empty object when no BEADS_* vars present", () => {
+      expect(collectBeadsEnv({ PATH: "/usr/bin" })).toEqual({})
+    })
+  })
+
+  describe("shell.env", () => {
+    it("forwards all BEADS_* vars into the shell environment", async () => {
+      const { client } = createMockClient()
+      const { $ } = createMockShell()
+      const plugin = BeadsPlugin()
+      const hooks = await plugin({
+        client,
+        $,
+        directory: "/tmp",
+      } as unknown as PluginInput)
+
+      const original = { ...process.env }
+      try {
+        process.env.BEADS_DOLT_SERVER_HOST = "beads.example.com"
+        process.env.BEADS_DOLT_PASSWORD = "secret"
+        process.env.BEADS_DIR = "/path/.beads"
+
+        const env: Record<string, string> = {}
+        await hooks["shell.env"]!(
+          { cwd: "/tmp" } as any,
+          { env },
+        )
+
+        expect(env.BEADS_DOLT_SERVER_HOST).toBe("beads.example.com")
+        expect(env.BEADS_DOLT_PASSWORD).toBe("secret")
+        expect(env.BEADS_DIR).toBe("/path/.beads")
+      } finally {
+        for (const k of ["BEADS_DOLT_SERVER_HOST", "BEADS_DOLT_PASSWORD", "BEADS_DIR"]) {
+          if (original[k] === undefined) delete process.env[k]
+          else process.env[k] = original[k]
+        }
+      }
+    })
+
+    it("does not overwrite a value the shell already carries", async () => {
+      const { client } = createMockClient()
+      const { $ } = createMockShell()
+      const plugin = BeadsPlugin()
+      const hooks = await plugin({
+        client,
+        $,
+        directory: "/tmp",
+      } as unknown as PluginInput)
+
+      const original = { ...process.env }
+      try {
+        process.env.BEADS_DOLT_SERVER_HOST = "from-process"
+
+        const env: Record<string, string> = {
+          BEADS_DOLT_SERVER_HOST: "already-set",
+        }
+        await hooks["shell.env"]!(
+          { cwd: "/tmp" } as any,
+          { env },
+        )
+
+        // Existing value preserved, not clobbered by the primary's env
+        expect(env.BEADS_DOLT_SERVER_HOST).toBe("already-set")
+      } finally {
+        if (original.BEADS_DOLT_SERVER_HOST === undefined)
+          delete process.env.BEADS_DOLT_SERVER_HOST
+        else process.env.BEADS_DOLT_SERVER_HOST = original.BEADS_DOLT_SERVER_HOST
+      }
+    })
+
+    it("does not throw when no BEADS_* vars are present", async () => {
+      const { client } = createMockClient()
+      const { $ } = createMockShell()
+      const plugin = BeadsPlugin()
+      const hooks = await plugin({
+        client,
+        $,
+        directory: "/tmp",
+      } as unknown as PluginInput)
+
+      const env: Record<string, string> = {}
+      const result = await hooks["shell.env"]!({ cwd: "/tmp" } as any, { env })
+      expect(result).toBeUndefined()
     })
   })
 })
