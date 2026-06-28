@@ -21,6 +21,13 @@ bd dolt commit        # Commit pending beads changes
 bd dolt push          # Push beads to remote (if configured)
 ```
 
+## Known bd Remote State
+
+- `bd dolt push || true` can fail non-fatally if the local SQL-only remote
+  points at the vestigial `git+ssh://git@gitlab.brandondennis.me/...` URL and
+  the CLI Dolt directory under `.beads/dolt/` is missing. In that state,
+  continue with the required `git push` and do not retry Dolt SSH pushes.
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
