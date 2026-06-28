@@ -21,17 +21,12 @@ to end, observing these command-specific gates:
   spec's `id`. For each, mint a bead (its `spec_id` is the ADR's own `id`) and link
   it to the epic with a `relates-to` edge — not `parent-child`. If there are no
   such ADRs, there are no ADR beads; that is fine.
-- **Sync both sides before creating children.** The decomposition must start from
-  a clean, recorded state:
-  - Git: if `$1`, any ADR files, or `.beads/` have uncommitted changes, commit
-    them with a signed commit (`git commit -S`).
-  - Beads: run `bd dolt commit` for any pending changes, then `bd dolt pull` and
-    `bd dolt push`, so the Dolt remote and local state agree before the children
-    exist.
+- **Commit before creating children.** The decomposition must start from a clean,
+  recorded state: if `$1`, any ADR files, or `.beads/` have uncommitted changes,
+  commit them with a signed commit (`git commit -S`).
 - **Present the structure and wait.** When the epic, ADR beads, children,
   dependencies, review bead, validation, and refinement passes are done, show me
   the final structure and stop for my review.
-- **Sync both sides after I approve.** Run `bd dolt commit && bd dolt push`, and
-  if `.beads/` changed in git, commit it with a signed commit. The spec and ADR
-  files stay in the repo — they are the durable artifacts; the epic body carries a
-  synced copy of the spec.
+- **Commit after I approve.** If `.beads/` changed in git, commit it with a signed
+  commit. The spec and ADR files stay in the repo — they are the durable
+  artifacts; the epic body carries a synced copy of the spec.

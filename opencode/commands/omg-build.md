@@ -6,15 +6,12 @@ then: /omg-ensure-work-finished
 
 Run epic `$1` from its ready queue all the way to shipped memory.
 
-Two settings govern how you work — use these values, do not re-derive them:
+This setting governs how you work — use this value, do not re-derive it:
 
 - **build mode:** `!`yq -r '.build.mode // "one_agent"' .workflow.yaml 2>/dev/null || echo one_agent`` —
   one of `one_agent` (one builder reused across beads via `task_id`),
   `one_agent_fresh_contexts` (one builder at a time, fresh context each bead), or
   `multi_agents` (fan out one builder per ready bead, concurrent; experimental).
-- **dolt mode:** `!`jq -r '.dolt_mode // "embedded"' .beads/metadata.json 2>/dev/null || echo embedded`` —
-  `server` (every `bd` write lands immediately; never run `bd dolt commit/push/pull`)
-  or `embedded` (follow the sync discipline). Pass this to every worker.
 
 Drive the work with the `omg-foreman` skill end to end:
 

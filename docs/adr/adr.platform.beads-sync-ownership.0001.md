@@ -7,7 +7,7 @@ status: accepted
 domain: platform
 produced_for: spec.platform.test-planning.0001
 created_at: 2026-06-28T00:06:29Z
-updated_at: 2026-06-28T00:11:32Z
+updated_at: 2026-06-28T01:34:19Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -83,6 +83,39 @@ mode-aware place that owns deployment-specific beads behavior. The mode-specific
 sync instructions scattered across skills are duplicating — and contradicting, in
 server mode — guidance that belongs with that owner.
 
+**The trigger is not confined to the worker layer.** The same mode-specific
+`bd dolt` sequence is embedded at the *orchestration* layer too: the
+`omg-foreman` skill and its `reference/dolt-sync.md` spell out the commit/push
+discipline, the foreman *agent persona* narrates `dolt_mode` plumbing, and the
+`omg-decompose.md` and `omg-build.md` command gates run `bd dolt commit &&
+bd dolt push` after their approval/handoff points. These are the orchestration
+counterparts of the worker's trailing-sync steps, carrying the identical
+deployment knowledge in the identical wrong layer. The principle that the worker
+layer obeys binds them no less.
+
+**Why the three sync steps land where they do.** Splitting the `bd dolt`
+sequence into its parts makes plain that none of the three belongs in an
+orchestration or agent instruction:
+
+- **Commit is already plugin-owned and continuous.** The plugin runs
+  `bd dolt commit` on every `session.idle` event, wrapping any failure as a
+  logged no-op. Commit therefore happens continuously regardless of what any
+  instruction says — so the foreman's and commands' explicit commit steps are
+  pure redundancy with a step the plugin already guarantees.
+- **Pull is the user's responsibility, not an agent's.** Pulling remote beads
+  state is a deliberate act the user takes when they choose to take on others'
+  changes; it is not something an agent or orchestrator should perform on the
+  user's behalf, so it does not belong in their instructions at all.
+- **Push is the only step with a ripple effect — and its cost is accepted.** If
+  an agent does not push, the sole consequence is that collaborators and the
+  user's *other* devices do not see the work *immediately*. This is the same
+  risk profile as a developer who does not `git push` their working branch
+  often, and it affects **embedded mode only** — in server mode every write
+  lands on the server as it happens, so there is nothing to push. The team
+  weighed this and judged the push *latency* an acceptable cost, not a
+  correctness hazard. This tradeoff is recorded so a future reader knows the
+  push-latency consequence was considered and accepted, not overlooked.
+
 The binding constraints here are **correctness** (an instrument must not tell an
 agent to run a command that errors in the deployment it is running in) and
 **maintainability** (one mode-aware place to state sync discipline, instead of N
@@ -147,7 +180,8 @@ plugin discharges this ownership is its own concern and not fixed by this ADR.
 ## Decision
 
 **The `BeadsPlugin` is the single owner of beads sync discipline. Agent and skill
-instructions own task semantics only.** Concretely:
+instructions own task semantics only — at both the worker and the orchestration
+layer.** Concretely:
 
 1. **Task semantics → agent/skill instructions.** Where a kick-off command is
    needed, the skill names the specific command (`bd ready`, `bd show <id>`,
@@ -161,27 +195,43 @@ instructions own task semantics only.** Concretely:
    the form *"after closing, also `bd dolt push`"* no longer lives in any skill or
    agent.
 
-3. **The rule future instruments follow:** an instrument **does not hardcode
-   `bd dolt` sync commands and does not branch on `dolt_mode` for sync; sync is
-   plugin-owned.** An instrument is written to be **mode-agnostic** — it carries
-   no `server` vs. `embedded` sync branch, and it relies on the plugin to make
-   sync correct for whatever deployment it runs in. This rule serves **both**
-   embedded and server mode; the decision pins neither.
+3. **Orchestration steps are covered too, not just worker task-steps.** The
+   foreman and the command-level sync gates are orchestrators, but they hold no
+   privileged exemption: they shed their agent-facing `bd dolt` sync
+   instructions and their `dolt_mode` plumbing exactly as workers do. The
+   commit step is dropped because the plugin already commits continuously on
+   `session.idle`; the pull step is dropped because pulling is the user's
+   deliberate act, not the orchestrator's; the push step is dropped because its
+   only consequence is embedded-mode propagation *latency*, an accepted cost
+   (see Context and Consequences). An orchestrator carries task semantics only.
+
+4. **The rule every instrument follows — worker or orchestrator:** an instrument
+   **does not hardcode `bd dolt` sync commands and does not branch on
+   `dolt_mode` for sync; sync is plugin-owned.** An instrument is written to be
+   **mode-agnostic** — it carries no `server` vs. `embedded` sync branch, and it
+   relies on the plugin to make sync correct for whatever deployment it runs in.
+   This rule serves **both** embedded and server mode; the decision pins neither.
 
 This decision **records ownership** — that the plugin, not the instruments, owns
-sync discipline. *How* the plugin discharges that ownership is an implementation
-detail beneath this boundary and is deliberately left open; it may change without
-revisiting this decision.
+sync discipline, across both the worker and orchestration layers. *How* the
+plugin discharges that ownership is an implementation detail beneath this
+boundary and is deliberately left open; it may change without revisiting this
+decision.
 
 ## Consequences
 
 ### What changes
 
-- **Skills shed their trailing sync instructions.** The mode-specific sync steps
-  and "forbidden sync" warnings in instruments such as `omg-builder`,
-  `omg-commands`, and `omg-decompose` become redundant with the plugin-owned,
-  PRIME-injected guidance. Their removal is **consequent future work named here,
-  not executed by this ADR** (see Scope Boundary).
+- **Instruments shed their trailing sync instructions — workers and
+  orchestrators alike.** The mode-specific sync steps and "forbidden sync"
+  warnings in worker instruments (`omg-builder`, `omg-commands`) and in
+  orchestration instruments (the `omg-foreman` skill and its
+  `reference/dolt-sync.md`, the foreman agent persona's `dolt_mode` narration,
+  and the `omg-decompose.md` / `omg-build.md` command gates) become redundant
+  with the plugin-owned sync guidance. The worker layer has already been
+  migrated; the orchestration layer is the next pass. These edits are carried
+  out as **migration work tracked separately, not performed by this ADR** (see
+  Scope Boundary).
 - **The plugin becomes the authoritative source** of mode-aware sync guidance,
   formalizing the direction it already embodies.
 - **New instruments are born clean.** The upcoming `omg-test-planner`
@@ -207,10 +257,22 @@ revisiting this decision.
 
 ### Costs, risks, and new constraints accepted
 
-- **A workflow-wide skill migration is now implied.** Existing instruments still
-  carry the old per-mode sync instructions. They must be migrated to shed them.
-  This is **future work this ADR creates but does not perform**; until it is
-  done, the duplication persists in those legacy instruments.
+- **A workflow-wide migration is in progress, not merely implied.** Existing
+  instruments still carry the old per-mode sync instructions, and this decision
+  is now being executed across the whole workflow rather than fenced off. The
+  worker layer (`omg-builder`, `omg-commands`) is done; the orchestration layer
+  is the remaining pass. The edits themselves are **migration work tracked and
+  performed separately, not by this ADR**; until the orchestration pass lands,
+  the duplication persists in those legacy orchestration instruments.
+- **Embedded-mode push latency is an accepted cost.** Because no instrument
+  instructs a `bd dolt push` after a write, in **embedded** mode work is not
+  propagated to collaborators or the user's other devices until a push happens —
+  the same latency a developer accepts when they do not `git push` their branch
+  often. The team weighed this and accepted it: it is a propagation-*latency*
+  cost, not a correctness hazard, and it is bounded — the plugin's continuous
+  `session.idle` commit means no work is *lost* locally; only its remote
+  visibility is delayed until a (user-initiated) push. In **server** mode the
+  cost does not arise at all, since every write lands on the server immediately.
 - **Correctness is coupled to the plugin's guidance being right.** With the sync
   decision centralized, an agent's persistence behavior is only as correct as the
   guidance the plugin provides. Wrong or stale guidance misguides every agent at
@@ -229,13 +291,28 @@ revisiting this decision.
 
 ## Scope Boundary
 
-This ADR **records the ownership decision** and makes the `omg-test-planner`
-born-clean under it. It does **not** execute the workflow-wide refactor that
-strips the old per-mode sync instructions from existing skills and commands
-(`omg-builder`, `omg-commands`, `omg-decompose`, the `omg-foreman` sync
-reference, and others). That migration is named here as consequent future work
-and must be planned and tracked separately. **This ADR is not a license to
-rewrite every skill now.**
+**This decision is being executed across the whole workflow** — both the worker
+and the orchestration layer fall under it. The earlier boundary that fenced off
+the workflow-wide migration as deferred future work no longer holds: the team
+has decided to carry it out. The migration proceeds in passes:
+
+- **Worker layer — done.** The `omg-builder` and `omg-commands` skills have
+  already been migrated to shed their per-mode sync instructions.
+- **Orchestration layer — next.** The remaining edits are the `omg-foreman`
+  skill, the foreman's `reference/dolt-sync.md`, the **foreman agent persona**
+  line that narrates `dolt_mode` plumbing, and the command gates in
+  `omg-decompose.md` and `omg-build.md`. The foreman **agent persona is
+  explicitly in scope** for this change — the general fence around editing
+  personas is lifted for this specific migration.
+
+The distinction this section still holds is between *recording* and *doing*: this
+ADR **records the decision** (including that the migration is to be performed and
+how far it reaches). It does **not** itself perform the edits to those skills,
+commands, and personas — those are carried out as **migration work, tracked
+separately**, by the instrument-editing agent (oc-smith), not by this document.
+What changed from the prior boundary is the *verdict* — the migration is to be
+done, across the workflow — not the division of labor: the ADR decides, the
+migration work executes.
 
 ## Related Documents
 
@@ -246,7 +323,11 @@ rewrite every skill now.**
 - `src/plugins/beads.ts` — the `BeadsPlugin` this ADR names as the owner of sync
   discipline. Its implementation is its own concern and may change without
   revisiting this decision.
-- `opencode/skills/omg-builder/SKILL.md`, `opencode/skills/omg-commands/SKILL.md`,
-  `opencode/commands/omg-decompose.md`, `opencode/skills/omg-foreman/reference/dolt-sync.md`
-  — the instruments that today embed the per-mode sync discipline this decision
-  retires from the task layer.
+- The instruments that embed the per-mode sync discipline this decision retires
+  from the task layer. The **worker** instruments
+  (`opencode/skills/omg-builder/SKILL.md`, `opencode/skills/omg-commands/SKILL.md`)
+  have already been migrated. The **orchestration** instruments are the remaining
+  pass: `opencode/skills/omg-foreman/SKILL.md`,
+  `opencode/skills/omg-foreman/reference/dolt-sync.md`, the foreman agent persona
+  (the `dolt_mode`-narrating line), and the command gates
+  `opencode/commands/omg-decompose.md` and `opencode/commands/omg-build.md`.

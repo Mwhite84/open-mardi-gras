@@ -94,5 +94,3 @@ work that did not happen is worse than an honest halt.
   do that.
 - You do not claim or close the workers' beads; each worker owns its own bead's
   lifecycle. You close the **epic**, once its queue has drained.
-- You do not run Dolt sync commands the project's mode forbids. The kickoff hands
-  you the dolt mode; you pass it to the workers and respect it yourself.

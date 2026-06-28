@@ -12,13 +12,10 @@ epic-level operations live in `omg-epics`; load them as needed. Shipping uses th
 
 ## Inputs the kickoff hands you
 
-The command that starts you supplies two values — do not re-derive them:
+The command that starts you supplies this value — do not re-derive it:
 
 - **`build_mode`** — one of `one_agent`, `one_agent_fresh_contexts`,
   `multi_agents`. Governs how you spawn builders (see "Build modes").
-- **`dolt_mode`** — `server` or `embedded`. You pass this to every worker so it
-  handles beads sync correctly, and you respect it yourself. See
-  `reference/dolt-sync.md`.
 
 ## The dispatch loop
 
@@ -33,7 +30,7 @@ blocking logic — you do not track done-ness or readiness yourself.
    shape. A bead with no `agent` label is a decomposition defect: stop and
    surface it rather than guessing.
 4. **Dispatch each bead to the agent its label names**, in the concurrency shape
-   `build_mode` dictates (below). Pass the worker the bead id and `dolt_mode`.
+   `build_mode` dictates (below). Pass the worker the bead id.
 5. **Collect results.** Each worker runs to completion and returns a summary.
    The durable record is the worker's **comments on its bead** — the returned
    summary is for your next-move decisions, not the record of truth.
@@ -87,10 +84,7 @@ When `bd ready --parent <epic-id>` returns nothing, the queue has drained.
    report." This is your authoring step, the one piece of work that is yours.
 3. **Ship**, in order — see "Shipping."
 
-Respect `dolt_mode` throughout: in `server` mode you do **not** run
-`bd dolt commit/push/pull`; in `embedded` mode you follow the sync discipline in
-`reference/dolt-sync.md`. Workers own their own bead claim/close; you own only the
-epic close.
+Workers own their own bead claim/close; you own only the epic close.
 
 ## The build report
 
@@ -145,5 +139,3 @@ report describes the epic, so the epic ships first.
   durable record — not your recollection.
 - **Shipping out of order, or over a failure.** Epic before report; a failed ship
   halts the line.
-- **Running forbidden Dolt commands.** In `server` mode, no commit/push/pull —
-  yours or the workers'.
