@@ -1,16 +1,14 @@
 # Changelog
 
-## 0.4.1 - 2026-06-28
-
-### Changed
-
-- Updated bundled workflow commands and docs for current beads and spec workflows.
-- Updated model names used by bundled workflow assets.
-- Migrated local beads tracking to the remote Dolt server configuration.
+## 0.4.2 - 2026-06-28
 
 ### Fixed
 
-- Restored plugin parity between packaged `opencode/` assets and local workflow files.
+- Forward `BEADS_*` environment variables into subagent shells so `bd` commands use the same backend as the primary session.
+
+## 0.4.1 - 2026-06-28 [YANKED]
+
+Yanked because it contained no user-facing changes.
 
 ## 0.4.0 - 2026-04-07
 
