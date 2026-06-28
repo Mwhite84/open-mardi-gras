@@ -40,9 +40,13 @@ bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --claim  # Claim work
 bd close <id>         # Complete work
-bd dolt commit        # Commit pending beads changes
-bd dolt push          # Push beads to remote (if configured)
 ```
+
+## bd Sync
+
+- Do not run `bd dolt push` for this repo's normal workflow. This project no
+  longer uses embedded Dolt server sync for beads; commit bead metadata and use
+  the normal `git push` path instead.
 
 ## Landing the Plane (Session Completion)
 
@@ -56,7 +60,6 @@ bd dolt push          # Push beads to remote (if configured)
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd dolt push || true  # push beads to Dolt remote if configured
    git push
    git status  # MUST show "up to date with origin"
    ```

@@ -25,10 +25,38 @@
  * makes every shell resolve the same backend the primary does.
  */
 
-import type { Plugin, PluginInput } from "@opencode-ai/plugin"
+import type { Plugin } from "@opencode-ai/plugin"
 import { createPluginLogger } from "../logging.js"
 
-type Shell = PluginInput["$"]
+type ShellCommand = {
+  quiet(): Promise<unknown>
+  text(): Promise<string>
+}
+
+type Shell = (strings: TemplateStringsArray, ...values: unknown[]) => ShellCommand
+
+/**
+ * Collect every BEADS_* environment variable from the given source
+ * (the primary OpenCode process environment). Returns a plain record
+ * of only the defined string values.
+ *
+ * This deliberately forwards ALL `BEADS_*` vars, not just BEADS_DOLT_*:
+ * other setups carry connection details (host, port, password, database,
+ * actor, etc.) across the full prefix, and a remote password belongs in an
+ * env var rather than committed config. Forwarding the whole prefix keeps
+ * subagent shells in lockstep with the primary without enumerating keys.
+ */
+export function collectBeadsEnv(
+  source: Record<string, string | undefined> = process.env,
+): Record<string, string> {
+  const result: Record<string, string> = {}
+  for (const [key, value] of Object.entries(source)) {
+    if (key.startsWith("BEADS_") && value !== undefined) {
+      result[key] = value
+    }
+  }
+  return result
+}
 
 /**
  * Collect every BEADS_* environment variable from the given source
@@ -87,6 +115,8 @@ Always use --json flag for structured output when parsing results.
 
 export function BeadsPlugin(): Plugin {
   return async ({ client, $ }) => {
+    const shell = $ as unknown as Shell
+
     /**
      * Cached beads context per session. Populated on first LLM call
      * (via system.transform) and refreshed after compaction.
@@ -147,7 +177,7 @@ export function BeadsPlugin(): Plugin {
 
         // Fetch and cache beads context on first call per session
         if (!sessionContextCache.has(sessionID)) {
-          const context = await fetchBeadsContext($, logger)
+          const context = await fetchBeadsContext(shell, logger)
           if (context) {
             sessionContextCache.set(sessionID, context)
             await logger("info", "BeadsPlugin: cached beads context for session")
@@ -182,7 +212,7 @@ export function BeadsPlugin(): Plugin {
         // is on or beads isn't initialized.
         if (event.type === "session.idle") {
           try {
-            await $`bd dolt commit`.quiet()
+            await shell`bd dolt commit`.quiet()
           } catch (err) {
             await logger(
               "warn",

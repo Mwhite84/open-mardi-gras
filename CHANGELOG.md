@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.2 - 2026-06-28
+
+### Fixed
+
+- Forward `BEADS_*` environment variables into subagent shells so `bd` commands use the same backend as the primary session.
+
+## 0.4.1 - 2026-06-28 [YANKED]
+
+Yanked because it contained no user-facing changes.
+
 ## 0.4.0 - 2026-04-07
 
 ### Changed
