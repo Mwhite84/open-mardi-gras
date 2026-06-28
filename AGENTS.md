@@ -10,6 +10,29 @@ this repo. This plugin under development will be installed via npm pacakge.
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
+## Beads / Dolt Pitfalls
+
+- The remote Dolt server (`beads.brandondennis.me:3307`) is **multi-tenant**:
+  it hosts several databases for different repos — `beads_omg` (this repo),
+  `beads_monolith` (a monolith app), and `beads_tf` (a terraform repo), among
+  possibly others. These are all **legitimate, active databases**, not cruft.
+- `bd doctor` reports the sibling databases (`beads_monolith`, `beads_tf`) under
+  a **"Phantom Databases"** warning and suggests "Restart Dolt server to flush
+  phantom entries" (GH#2051). This is a **false positive**: bd assumes one
+  database per server and misclassifies legitimate siblings as phantoms. Do NOT
+  act on this warning — never delete those databases, and never restart the
+  shared remote server to "flush" them. Restarting would disrupt the other
+  repos that depend on it.
+- `bd` resolves its Dolt backend by precedence: `BEADS_DOLT_*` env vars →
+  `metadata.json` → `config.yaml`. The connection (host/port/password) lives in
+  `BEADS_*` environment variables, NOT in committed config. If those env vars
+  are absent, `bd` falls back to `127.0.0.1:0` (a non-existent local server) and
+  every command fails — historically with confusing schema errors like
+  `no such column: replacement_seq` when an old local standalone store existed.
+  `BeadsPlugin`'s `shell.env` hook forwards all `BEADS_*` vars into every shell
+  OpenCode spawns (primary and subagent) so dispatched subagents resolve the
+  same backend the primary does. Without it, subagent `bd` calls fail.
+
 ## Quick Reference
 
 ```bash
