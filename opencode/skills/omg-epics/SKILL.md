@@ -107,6 +107,92 @@ Every epic should have a final "Code review" bead:
   comes ready again. The review bead closes only when a pass completes with no
   epic-scoped findings outstanding.
 
+## Test-planning wiring
+
+This is the wiring the `omg-test-planner` uses to plan verification over a built
+epic and to arm the findings loop. The decomposer mints a **plain** review bead
+`R`; the planner, when the operator runs `/omg-test-plan`, both plans the build
+graph and rewrites `R`'s body to the canonical block below. The mechanics live
+here; the planner's *judgment* lives in its persona.
+
+Names: **`R`** = the epic's review bead; **`x`** = a finding's fix bead
+(`agent=omg-builder`); **`y`** = the planner-summons bead
+(`agent=omg-test-planner`); **`z`** = a planned test bead (`agent=omg-tester`).
+
+### Summons-bead hard rules
+
+When the reviewer files an epic-scoped build finding against a test-aware `R`, it
+files `x` **and** `y` and wires them:
+
+- **`y` is a real child bead** — `bd create … --parent <epic>`, **no
+  `--ephemeral`** — `agent=omg-test-planner`, `discovered-from:<R>`. It must be
+  real because `bd ready` hides ephemeral beads and the foreman dispatches only
+  real beads off the ready queue; an ephemeral `y` would never be surfaced, and
+  its fix `x` would block forever. This is the deadlock the whole mechanism
+  exists to prevent.
+- **`y` blocks `x`**: `bd dep add <x> <y>` — always. The fix cannot be built
+  before its verification is planned.
+- **`R` depends on `x`**: `bd dep add <R> <x>` — existing reviewer behavior; an
+  epic-scoped finding blocks the review bead.
+
+When the foreman later dispatches `y` to the planner, the planner decides what
+verification `x` needs and wires one of:
+
+- **Case A — design-before-fix (red/green):** `z` blocks `x` —
+  `bd dep add <x> <z>`. The tester writes the *failing* test first; the builder
+  then makes it pass.
+- **Case B — run-after-fix:** `x` blocks `z` — `bd dep add <z> <x>` — **and**
+  `z` blocks `R` — `bd dep add <R> <z>`, so the review cannot close over an
+  unverified fix.
+- **No test needed:** no `z`; the planner records the reason.
+
+**Mandatory close — in every branch:** the planner closes `y` once the plan
+exists (`bd close <y> --reason "<plan or no-test reason>"`). `y` exists only to
+summon the planner; a `y` left open blocks `x` forever. This is stated
+explicitly because `y` is the first bead whose entire purpose is to be consumed —
+an agent must never have to *infer* that it should close `y`.
+
+Every edge above is a forward *blocks* edge (`y → x → R`; `z → x` Case A;
+`x → z → R` Case B), so no cycle is introduced; `bd dep add` runs cycle
+detection and `bd swarm validate <epic>` confirms acyclicity.
+
+### The canonical test-aware `R` body
+
+When the planner arms the loop, it rewrites `R`'s body to the **exact** block
+below — the same content every time, so re-running rewrites to the same body and
+never stacks a second copy. The `<!-- omg-test-aware -->` marker is the stable
+sentinel that lets the convergence survey cheaply recognize an already-armed
+`R`. Reproduce the load-bearing qualifiers **verbatim** — `y` is a **real** bead
+with **no `--ephemeral`**, and both `x` and `y` carry `discovered-from:<R>`;
+paraphrasing these away reintroduces the deadlock.
+
+```markdown
+<!-- omg-test-aware -->
+This epic is test-planned. When you file an **epic-scoped build finding**, in
+addition to the standard review filing steps, arm the planner before the fix is
+built:
+
+1. File the fix bead `x`: `agent=omg-builder`, `--parent <epic>`, **with
+   `discovered-from:<R>`** (`<R>` is this review bead's id).
+2. File the summons bead `y`, **a real bead — `--parent <epic>`, NO
+   `--ephemeral`** — `agent=omg-test-planner`, **with `discovered-from:<R>`**.
+3. Wire `y` blocks `x`: `bd dep add <x> <y>`.
+4. Wire `R` depends on `x`: `bd dep add <R> <x>`.
+5. Reopen `R`: `bd update <R> --status open`.
+
+(Out-of-scope findings are filed the standard way, with no `y` and no
+review-bead dependency.)
+```
+
+### Same-file `z` sequencing
+
+When the planner mints `z` beads, it inherits the decomposer's "wire
+file-sharing beads in sequence" rule (see **Dependencies are the concurrency
+guard**). A `z` and its own fix `x` are already serialized by Case A / Case B
+edges, but two *different* findings' beads that touch the same files must also be
+wired to block each other, so the planner never creates same-file `z` beads in a
+parallel ready wave under `multi_agents`.
+
 ## Validation Checklist
 
 After wiring dependencies, always:

@@ -12,6 +12,16 @@ procedure on top of it.
 
 ## Process
 
+The foreman hands you a **review bead id**, not the work to do. Your bead body
+is your work order, exactly as the builder's bead body is its work order
+(`omg-builder` steps 2–3: read the full description with `bd show <id>` and do
+what it says). So before the standard steps below, **fetch your review bead and
+execute the work order you find there**: `bd show <R>` (the review bead id the
+foreman passed), then carry out the standard review steps below **plus any
+additional filing steps the bead body names**. The standard procedure is the
+default work order; a bead body may carry extra filing steps on top of it, and
+you execute those the same way — no differently in kind from the standard steps.
+
 1. **Identify what changed.** Use `git diff` against the branch point, or
    `bd show <epic-id> --json` to understand the scope of the review.
 2. **Read every changed file in full.** Do not skim. A skimmed review misses the
