@@ -1,12 +1,40 @@
 # Agent Instructions
 
-This project has a slight meta or recursive side to it that all agents should
-be aware of. The development of this opencode plugin, represented in this code
-base, is being done with the aid of opencode. In this opencode environment,
-there are plugins installed via `.opencode/plugins/`. These have nothing to do
-with the plugin we are building. Do not confused development tools and plugins
-in the `.opencode` directory with the purpose of the plugin we are building in
-this repo. This plugin under development will be installed via npm pacakge.
+This repo is the **source of the OMG family of opencode instruments** — the
+agents, skills, and commands that make up the OMG workflow — together with the
+supporting beads and then-chaining plugins. Producing those instruments is the
+entire point of the repo. It is published as an npm package.
+
+## `opencode/` vs `.opencode/` — read this before touching either
+
+This repo has a meta/recursive character: it both **produces** opencode
+instruments and **dogfoods** them. Two directories look alike and are not. Do
+not confuse them.
+
+- **`opencode/` (no leading dot) is the PRODUCT.** It is the source of truth for
+  the OMG instruments this repo ships. When you edit an OMG agent, skill, or
+  command as a deliverable of this project, it lives here. **This is almost
+  always where your changes belong.**
+- **`.opencode/` (leading dot) is the DOGFOODING HARNESS** plus repo-local dev
+  tooling. opencode loads it to run *this* repo. It contains a working copy of
+  most OMG instruments (so we use the product on itself) **and** things that are
+  not part of OMG at all and must never be shipped from here — e.g. the
+  `oc-smith` agent (a repo-local authoring tool), and the dev plugins under
+  `.opencode/plugins/`.
+
+Two consequences worth internalizing:
+
+- **Some OMG instruments live ONLY in `opencode/`, never in `.opencode/`** —
+  deliberately. The `omg-test-planner`, for instance, plans verification over
+  built code; this repo is entirely markdown prose with no test framework to
+  plan against, so the planner has no operational role here and is not mirrored
+  into `.opencode/`. Its absence from `.opencode/` is correct, **not** a broken
+  path or a missing file.
+- **Before "fixing" anything in `.opencode/`, ask whether it is the harness or
+  the product.** A change to a dogfooded instrument that should ship belongs in
+  `opencode/` (and may then be mirrored into `.opencode/` for dogfooding). A
+  change to `oc-smith` or a dev plugin is harness-only and must not leak into
+  the product.
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
