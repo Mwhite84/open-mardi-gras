@@ -17,7 +17,14 @@ bd create "Title" -d "description" --type task --priority 2 --json
   holds the document's **stable `id`** (read from the document's frontmatter —
   per ADR-0001, identity is the document `id`, not the file path): the spec's
   `id` on the epic, the ADR's own `id` on an ADR bead.
-- Use `--parent <epic-id>` to create a child under an epic
+- Use `--parent <epic-id>` to create a child under an epic. **Always pair it with
+  `--no-inherit-labels`** — by default a child inherits the parent's labels, and an
+  epic carries `hindsight:pending` (it ships at close), so every child would
+  silently pick up `hindsight:pending` and pollute the ship queue
+  (`bd list --label hindsight:pending`) with work that is not a memory document.
+  A child's `hindsight` lifecycle is its own; do not let it inherit the epic's.
+  When a child genuinely needs labels, set them explicitly:
+  `--no-inherit-labels --labels <a,b>`.
 - 4 rich-text fields: description (`-d`), design (`--design`),
   acceptance criteria (`--acceptance`), notes (`--notes`)
 - Priority: 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog).
@@ -81,7 +88,9 @@ lives before you create it:
 
 - **Related to the epic** — it is in the epic's scope, or the epic cannot
   honestly ship without it:
-  1. Create it as a child of the epic with `--parent <epic-id>`.
+  1. Create it as a child of the epic with `--parent <epic-id> --no-inherit-labels`
+     (the flag keeps it off the epic's `hindsight:pending` — see **Creating
+     Issues** above).
   2. Add a dependency from the review bead to the new bead so the review
      cannot close until the new work is done:
      `bd dep add <review-bead-id> <new-bead-id>`

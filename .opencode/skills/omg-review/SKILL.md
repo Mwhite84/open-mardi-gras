@@ -35,7 +35,8 @@ you execute those the same way — no differently in kind from the standard step
    unlabeled finding cannot be routed. Decide where each finding lives:
    - **In the epic's scope** — a defect in the changed code, or something the
      epic cannot honestly ship without: create it as a child of the epic
-     (`--parent <epic-id>`) and make the review bead depend on it
+     (`--parent <epic-id> --no-inherit-labels`, so it does not inherit the epic's
+     `hindsight:pending`) and make the review bead depend on it
      (`bd dep add <review-bead-id> <finding-id>`), so the epic cannot close
      over an unfixed finding.
    - **Outside the epic's scope** — pre-existing tech debt or a bug in code the

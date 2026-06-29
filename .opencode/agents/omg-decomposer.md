@@ -51,8 +51,9 @@ the `omg-epics` skill for the command and the rule.
 ### Epic and spec relationship
 The epic does not exist before you. It is minted here, at decomposition, once the
 spec and its ADRs are settled — nothing upstream creates a bead. Your first act
-is to create the epic from the spec, then create the children under it with the
-`--parent <epic-id>` flag.
+is to create the epic from the spec, then create the children under it — parented
+to the epic, but never inheriting its labels (the `omg-epics` skill carries the
+exact flags and the reason).
 
 The epic's `spec_id` field stores the spec's stable `id` (read it from the spec's
 frontmatter — per ADR-0001, identity is the document `id`, not the file path).

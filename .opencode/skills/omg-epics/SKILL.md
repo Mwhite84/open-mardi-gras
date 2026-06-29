@@ -12,6 +12,18 @@ description: Epic decomposition, dependency wiring, and DAG validation for beads
   (e.g., schema before queries, types before implementations).
 - Do NOT over-constrain — unnecessary deps reduce parallelism.
 
+## Always create children with `--no-inherit-labels`
+
+Every `bd create … --parent <epic>` in this runbook must include
+`--no-inherit-labels`. By default a child inherits its parent's labels, and the
+epic carries `hindsight:pending` (it ships at close, see **Epic Lifecycle**), so an
+inheriting child silently picks up `hindsight:pending` and pollutes the ship queue
+(`bd list --label hindsight:pending`) with work that is not a memory document. A
+child's `hindsight` lifecycle is its own. When a child needs its own labels, set
+them explicitly alongside the flag: `--no-inherit-labels --labels <a,b>`. This
+applies to every child below — build beads, review beads, ADR-related beads, and
+the test-planning `x`/`y`/`z` beads alike.
+
 ## The `agent` label — who works each bead
 
 Every bead carries an `agent` **state label** naming the agent that works it. The
@@ -124,8 +136,8 @@ Names: **`R`** = the epic's review bead; **`x`** = a finding's fix bead
 When the reviewer files an epic-scoped build finding against a test-aware `R`, it
 files `x` **and** `y` and wires them:
 
-- **`y` is a real child bead** — `bd create … --parent <epic>`, **no
-  `--ephemeral`** — `agent=omg-test-planner`, `discovered-from:<R>`. It must be
+- **`y` is a real child bead** — `bd create … --parent <epic> --no-inherit-labels`,
+  **no `--ephemeral`** — `agent=omg-test-planner`, `discovered-from:<R>`. It must be
   real because `bd ready` hides ephemeral beads and the foreman dispatches only
   real beads off the ready queue; an ephemeral `y` would never be surfaced, and
   its fix `x` would block forever. This is the deadlock the whole mechanism
@@ -172,10 +184,10 @@ This epic is test-planned. When you file an **epic-scoped build finding**, in
 addition to the standard review filing steps, arm the planner before the fix is
 built:
 
-1. File the fix bead `x`: `agent=omg-builder`, `--parent <epic>`, **with
-   `discovered-from:<R>`** (`<R>` is this review bead's id).
-2. File the summons bead `y`, **a real bead — `--parent <epic>`, NO
-   `--ephemeral`** — `agent=omg-test-planner`, **with `discovered-from:<R>`**.
+1. File the fix bead `x`: `agent=omg-builder`, `--parent <epic> --no-inherit-labels`,
+   **with `discovered-from:<R>`** (`<R>` is this review bead's id).
+2. File the summons bead `y`, **a real bead — `--parent <epic> --no-inherit-labels`,
+   NO `--ephemeral`** — `agent=omg-test-planner`, **with `discovered-from:<R>`**.
 3. Wire `y` blocks `x`: `bd dep add <x> <y>`.
 4. Wire `R` depends on `x`: `bd dep add <R> <x>`.
 5. Reopen `R`: `bd update <R> --status open`.
