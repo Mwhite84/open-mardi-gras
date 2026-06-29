@@ -12,9 +12,11 @@ Use the `omg-onboard` skill end to end. Work in this order, and do not skip
 discovery:
 
 1. **Discover first.** Read any existing `.workflow.yaml`, `.beads/metadata.json`
-   and `config.yaml`, and `opencode.json`. Derive everything you can from what is
-   already there; if the on-disk `mode` contradicts `$1`, stop and reconcile with
-   me. Ask me only for the genuine gaps.
+   and `config.yaml`, and the project `opencode.json` — check **both** the
+   worktree-root `opencode.json` and `.opencode/opencode.json`, since opencode
+   merges both. Derive everything you can from what is already there; if the on-disk
+   `mode` contradicts `$1`, stop and reconcile with me. Ask me only for the genuine
+   gaps.
 2. **Load the reference for `$1`** and work it: write (or, if you cannot write a
    root file, emit with its destination path) the `.workflow.yaml`, set up beads if
    the mode needs it, and for a satellite the `opencode.json` references and
