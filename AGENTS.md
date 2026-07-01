@@ -1,5 +1,7 @@
 # Agent Instructions
 
+**Important** ask me at the beginning of every session if I want to discuss how/when to ship the centralized repo docs to the git remote.
+
 This repo is the **source of the OMG family of opencode instruments** — the
 agents, skills, and commands that make up the OMG workflow — together with the
 supporting beads and then-chaining plugins. Producing those instruments is the
