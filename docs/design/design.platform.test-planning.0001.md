@@ -3,10 +3,11 @@ schema_version: 1
 id: design.platform.test-planning.0001
 type: design
 title: "Test Planning as a First-Class, Owned Step in the OMG Delivery Workflow"
-status: draft
+status: superseded
 domain: platform
+superseded_by: design.platform.test-planning.0002
 created_at: 2026-06-26T04:17:07Z
-updated_at: 2026-06-26T13:12:18Z
+updated_at: 2026-07-01T01:43:40Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -22,9 +23,11 @@ hindsight:
 > proposed structure, the alternatives weighed, and the reasoning that connects
 > goals to design.
 >
-> **Status: draft.** This document captures a settled design conversation for
-> architectural review, against the approved PRD `prd.platform.test-planning.0001`.
-> It is **not yet approved for build.**
+> **Status: superseded** by `design.platform.test-planning.0002`. It is preserved
+> as the record of what was tried: the operator-invoked planner, the two-author
+> review bead, and the findings-loop mechanism whose termination proof `.0002`
+> re-homes and re-derives under the new plan-time-orchestrator topology. Read it
+> for history; build against `.0002`.
 
 > **Read first.** The planner-summons bead is a **real (non-ephemeral) bead**:
 > `bd ready` hides ephemeral beads and the foreman must not change, so a bead the

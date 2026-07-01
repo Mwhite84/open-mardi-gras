@@ -7,7 +7,7 @@ status: draft
 domain: platform
 supersedes: prd.platform.test-planning.0001
 created_at: 2026-06-29T03:24:30Z
-updated_at: 2026-07-01T01:32:07Z
+updated_at: 2026-07-01T04:15:12Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -176,12 +176,19 @@ serves the existing OMG operator who thinks in specs, epics, and beads.
    invariant — grab a ready bead, read its `agent` label, dispatch to that agent,
    hold no orchestration state, special-case no bead — must not change. The
    build-mode looping mechanics may be extended where independence requires it,
-   but routing stays label-only.
+   but routing stays label-only. Where the foreman changes, it should get *simpler*
+   — losing special-case state — not more clever.
 
 7. **A stuck test never becomes a silent hack.** When an implementer cannot pass a
    test — one planned for this epic, or a pre-existing test its change breaks — it
    has a recorded escalation path and never modifies the test, force-passes it, or
    closes the work silently.
+
+8. **Finishing the build never auto-commits durable memory.** Completing an epic
+   produces artifacts, but shipping decisions into Hindsight (canon) is a
+   deliberate, separately-invoked act — never an automatic side effect of the
+   queue draining. "The work is done" and "the memory is true" are different
+   claims; the workflow must not conflate them.
 
 ## Non-Goals
 
@@ -230,6 +237,15 @@ instruments — not a dashboard.
   filed, routed bead; none is resolved by an implementer altering a test or
   closing work silently. Cross-epic (Mode 2) resolutions appear in the build report
   and in Hindsight.
+- **The foreman has no closing ceremony.** *Signal:* the foreman skill carries no
+  inline "queue-empty → write report → ship" branch; the build report is a
+  dispatched bead, and shipping is not in the automated flow at all.
+- **Finishing a build ships nothing to memory.** *Signal:* completing an epic
+  writes the build report to the docs tree and stops; no Hindsight write occurs
+  without the separate sync command being invoked.
+- **A human gate pauses cleanly.** *Signal:* an epic with an open human gate does
+  not appear done and does not trigger any terminal work; it resumes when the gate
+  is resolved.
 - **The loop still terminates.** An epic with planned verification, findings, and
   re-planning drains to a clean close with no deadlock and no leaked beads.
 
@@ -273,11 +289,14 @@ or code.** Writing happens at build time, by the writing agents.
      owns the `test-writing` skill, and has the permissions to author test files.
    - The **implementation agent** writes only implementation, satisfies tests, and
      **never authors or alters a test**. It has no test-writing skill and mints no
-     test scope.
+     test scope. The implementation agent's **existing test-writing charter is
+     removed**: its persona today explicitly says it writes tests, and that
+     sentence must be deleted, not merely left unmentioned — otherwise the residual
+     authorship path this design closes stays open.
    The distinction is enforced where the harness enforces it: the two roles hold
-   different permissions in the test directory (see R6). Craft lives in the shared
-   skill; the *reason* these are separate agents is the permission boundary and the
-   authorship franchise, not who knows more.
+   different permissions in the test directory (see R6). Craft lives in the
+   test-writer's skill; the *reason* these are separate agents is the permission
+   boundary and the authorship franchise, not who knows more.
 
 6. **Independence is structural: separate dispatch, and an eventual read-boundary.**
    - Tests are authored in a dispatch separate from the one that writes the
@@ -293,54 +312,143 @@ or code.** Writing happens at build time, by the writing agents.
      (the test path varies by stack) and is configured at **onboarding**. Nothing
      in this design may assume the implementer can read tests.
 
-7. **The foreman's routing invariant is untouched; its looping mechanics may
+7. **The implementer knows its done-target through a two-hop metadata chain, never
+   by reading test source.** An implementation bead must be able to answer "which
+   focused test proves I am done?" without the implementer reading any test file
+   (so the answer survives the R6 read-deny). The reference is written in two hops,
+   each by the agent that authoritatively knows the value when it knows it:
+   - **At build-plan time**, the build-planner writes onto the implementation bead
+     the **bead id(s) of the test bead(s) it must satisfy** — a stable reference,
+     knowable because the test beads already exist (R2).
+   - **At test-write time**, the test-writer writes onto the *test* bead the
+     **concrete run-selector** for the test it just authored (file + test
+     name/filter) — the only agent that can, since it just wrote the test and knows
+     its real, valid identifier. (The build-planner cannot pre-commit this: the
+     test does not exist at plan time.)
+   - **At build time**, the implementer reads its own bead's test-bead reference,
+     queries those test beads' metadata for the run-selectors, and runs exactly
+     those. It resolves the chain through **bead metadata only** — never by reading
+     the test's source. The Case-A `test blocks implementation` edge (R2) guarantees
+     the test bead is written and closed before the implementer runs, so the
+     selector is present when needed.
+
+   These two writes are **skill-instructed, not enforced**, and that is acceptable
+   because R8 is their safety net: if either write is skipped or malformed, the
+   fast focused path degrades to "caught at review," never to "ships broken."
+
+8. **Per-bead done-check is focused; the review bead runs the full suite once.**
+   The implementer validates its own bead by running only its **focused** test
+   target (R7) and iterating to green — it does **not** run the whole suite, which
+   would cost full-suite time and tokens once per bead. The **full test suite runs
+   exactly once, at the review bead**, and is the systematic catch for two things:
+   any prior-epic test this epic broke (Mode 2, R11), and any hole left by a broken
+   R7 metadata chain (a planned test that never got wired to a focused run). When
+   the review-bead suite goes red, the reviewer files a bead in real time — a
+   Mode-2 finding to the PM, or a fix finding for a missed test — consistent with
+   its existing "file findings, don't fix" discipline. The run command itself is
+   **not** onboarding-configured: the agent infers the runner from the repo's
+   tooling (and may consult the web), so no brittle per-repo run-command config is
+   introduced. (Only the R6 read-deny needs onboarding, because a permission
+   boundary cannot be self-configured.)
+
+9. **The foreman's routing invariant is untouched; its looping mechanics may
    extend.** The foreman dispatches purely by `agent` label, holds no orchestration
    state, and special-cases no bead. This is sacred and unchanged. The build-mode
    looping mechanics (`one_agent`, `one_agent_fresh_contexts`, `multi_agents`) may
    be extended where independence requires a fresh test-writing context (R6). Any
    foreman change is confined to looping mechanics; routing is off-limits.
 
-8. **The review bead has exactly one author.** The decomposer creates and fully
-   authors the review bead — including the findings-loop instructions — **once,
-   after both planning passes**, from a static canonical block owned by the
-   `omg-epics` skill. No other agent rewrites it. The findings-loop instruction
-   content is static skill text the decomposer composes; no second author, no
-   sentinel, no convergence-detection.
+10. **The review bead has exactly one author.** The decomposer creates and fully
+    authors the review bead — including the findings-loop instructions — **once,
+    after both planning passes**, from a static canonical block owned by the
+    `omg-epics` skill. No other agent rewrites it. The findings-loop instruction
+    content is static skill text the decomposer composes; no second author, no
+    sentinel, no convergence-detection.
 
-9. **Findings-driven verification survives the re-homing.** When the reviewer
-   files an epic-scoped build finding, that fix's verification is still planned
-   before the fix is built, on the same footing as originally planned work, and
-   the loop still terminates with no deadlock. The mechanism may be re-homed to fit
-   single-author review beads and separate writing agents; the guarantee is
-   unchanged. The reviewer stays blind to test mode (it executes the review bead
-   as a work order).
+11. **Findings-driven verification survives the re-homing.** When the reviewer
+    files an epic-scoped build finding, that fix's verification is still planned
+    before the fix is built, on the same footing as originally planned work, and
+    the loop still terminates with no deadlock. The mechanism may be re-homed to fit
+    single-author review beads and separate writing agents; the guarantee is
+    unchanged. The reviewer stays blind to test mode (it executes the review bead
+    as a work order).
 
-10. **Verification planning is a standard plan-phase step.** Every decomposition
+12. **Verification planning is a standard plan-phase step.** Every decomposition
     runs test-planning then build-planning; no invocation flag, no config key, no
-    agent branching on whether testing is "on."
+    agent branching on whether testing is "on." The v1 operator-invoked
+    `/omg-test-plan` command is **retired**: a standing invocation surface is
+    exactly the optionality this removes, and keeping it would let an operator
+    re-import the opt-in model out of band.
 
-11. **A failing-test escape hatch, in two modes.** An implementation agent that
-    cannot pass a test never modifies it, never forces it green, and never closes
-    the work silently. It files a bead, and the blocked work waits on resolution:
+13. **A failing-test escape hatch, in two modes.** A focused test going red is the
+    **normal** build step, not an alarm: the implementer iterates red → green,
+    using the suite's failure output to judge progress. It escalates **only when
+    genuinely stuck** — when the failure output shows the test is wrong or
+    impossible to satisfy, not merely unmet. When it does escalate, it never
+    modifies the test, never forces it green, and never closes the work silently;
+    it files a bead and the blocked work waits on resolution:
     - **Mode 1 — a test planned for this epic is wrong or impossible to satisfy.**
       The bead is routed to the **test-planner** (the confidence authority), which
       upholds the test (kick back to the implementer with reasoning) or re-plans it
       (mint a corrected test bead for the test-writer). The implementer never edits
       the test.
     - **Mode 2 — a pre-existing test from a prior epic breaks** because this change
-      altered behavior it pinned. The bead is routed to the **PM agent**, which has
-      the product-intent authority and the full Hindsight memory of why prior
-      guarantees exist. The PM resolves it: the old behavior was intended (the
-      change is wrong — kick back), the change is intended (the old test is stale —
-      mint a test-update bead for the test-writer), or it is a genuine product
-      decision (escalate to a human via `bd human`). **The PM's Mode-2 decision is
-      recorded in the foreman's build report, ships to Hindsight, and surfaces to
-      the human** (who is informed, not gated). This gives cross-epic decisions a
-      durable trail in the same memory the PM consults for the next such collision.
+      altered behavior it pinned. Recognition keys on **test-run output and this
+      epic's test-bead metadata**, never on reading the test source (so it survives
+      the R6 read-deny): a failure outside this epic's planned test beads is a
+      Mode-2 signal. Systematically, Mode 2 is caught by the review-bead full-suite
+      run (R8); an implementer may also surface it opportunistically. The bead is
+      routed to the **PM agent**, which has the product-intent authority and the
+      full Hindsight memory of why prior guarantees exist. The PM resolves it: the
+      old behavior was intended (the change is wrong — kick back), the change is
+      intended (the old test is stale — mint a test-update bead for the
+      test-writer), or it is a genuine product decision (escalate to a human via
+      `bd human`). **The PM's Mode-2 decision is recorded in the foreman's build
+      report, ships to Hindsight, and surfaces to the human** (who is informed, not
+      gated). This gives cross-epic decisions a durable trail in the same memory the
+      PM consults for the next such collision.
 
-12. **Verification work is labeled and dispatchable like all other work.** Test
+14. **Verification work is labeled and dispatchable like all other work.** Test
     beads and test-update beads carry the appropriate `agent` label so the foreman
     routes them with no special-casing.
+
+15. **A red review-suite blocks the epic through the ordinary finding mechanism.**
+    When the review-bead full-suite run (R8) is red, the reviewer files a finding
+    bead that blocks the review bead — exactly the existing file-and-reopen
+    discipline. The reviewer's existing change-locality judgment sets only the
+    finding's **`agent` label**, not whether it blocks: a failure caused by this
+    epic reddening a **prior** guarantee is labeled for the **PM** (Mode 2); a
+    failure that should be fixed **in this epic** is labeled for the **builder**.
+    Either way the finding blocks the review bead, the foreman dispatches it by
+    label, and when the handler closes it the review re-fires (from a fresh
+    context). No new blocking machinery: it blocks like any finding; the label does
+    the routing. When the PM cannot decide, it does **not** close the bead — it
+    places a **human gate** on it (`bd gate create --type=human --blocks <id>`),
+    which hides the bead from `bd ready` until a human resolves the gate, so the
+    epic pauses cleanly instead of appearing done.
+
+16. **The epic's terminal work is beads on the graph; the foreman loses its
+    closing ceremony; shipping to memory leaves the automated flow entirely.**
+    - Today the foreman has a special terminal branch: when the ready queue drains,
+      it inline-writes the build report and ships to Hindsight. That branch is
+      **removed.** The epic's terminal work becomes **labeled beads** (minted at
+      plan time, blocked behind the review bead), dispatched by label like all
+      other work. With no inline "queue-empty → start shipping" leap, an empty queue
+      means one thing again — everything, including any terminal bead, is done — so
+      a human-gated pause (R15) can no longer be mistaken for completion. The
+      human-gate trap is removed structurally, not guarded against.
+    - **The automated terminal work stops at writing the build report.** A
+      report-writer bead writes the build report to the docs tree and stops. It
+      does **not** ship the report to Hindsight, and nothing in the automated flow
+      ships the epic to Hindsight.
+    - **Shipping to Hindsight (both the epic and the report) is rehomed to a
+      separate, deliberately-invoked command** (a docs→Hindsight sync), run when the
+      docs are actually canon. This is what makes the workflow safe under a future
+      PR/merge flow: durable memory enters only on a human's deliberate act, never
+      as a side effect of a build finishing on a branch that may never merge. Per
+      R8, ordering guarantees that were inline foreman rules (e.g. epic before
+      report) become dependency edges on the terminal beads / the sync command's
+      own logic.
 
 ## Scope
 
@@ -352,7 +460,15 @@ or code.** Writing happens at build time, by the writing agents.
 - Establishing the **test-writer** as the sole test-authoring agent, owner of the
   `test-writing` skill.
 - The **implementation agent** writing only code, authoring no tests, minting no
-  test scope, designed for an eventual test-dir read-deny.
+  test scope, designed for an eventual test-dir read-deny — including **removing
+  its existing test-writing charter** from its persona.
+- The two-hop **done-target metadata chain** (build-planner writes test-bead ids
+  onto the implementation bead; test-writer writes the run-selector onto the test
+  bead; implementer resolves it via metadata, never test source).
+- Focused per-bead done-checks plus a **single full-suite run at the review bead**
+  as the systematic catch for Mode 2 and for any broken metadata chain.
+- **Retiring the `/omg-test-plan` command** (the operator-invoked surface that
+  carried v1's optionality).
 - Sole authorship of the review bead by the decomposer, written once after both
   passes, from a static `omg-epics` canonical block.
 - Making verification planning a standard, non-optional plan-phase step.
@@ -361,60 +477,118 @@ or code.** Writing happens at build time, by the writing agents.
   untouched).
 - The failing-test escape hatch, Modes 1 and 2, including the Mode-2 → PM →
   build-report → Hindsight loop.
+- A red review-suite blocking the epic via the ordinary finding-and-reopen
+  mechanism (change-locality sets the label; human gate for undecided PM cases).
 - Re-homing the findings mechanism to fit single-author review beads and separate
   writing agents, preserving termination.
+- **Dismantling the foreman's terminal branch**: the build report and any closing
+  work become labeled beads on the graph, blocked behind the review bead; the
+  automated flow stops at writing the build report.
+- **Removing shipping-to-Hindsight from the automated flow** and defining its new
+  home as a separate, deliberately-invoked docs→Hindsight sync command (this PRD
+  defines the boundary and the removal; the command's full behavior is its own
+  effort — see Deferred).
 
 ### Out
 
-- Optionality / opt-in invocation of verification planning.
+- Optionality / opt-in invocation of verification planning (and the standalone
+  `/omg-test-plan` command that embodied it).
 - Any change to the foreman's routing logic.
 - A second build-time orchestrator.
 - Sharing the `test-writing` skill with the implementer.
+- A per-repo onboarding-configured "test run command" — the agent infers the
+  runner from tooling; only the read-deny needs onboarding.
+- Per-bead full-suite runs — the implementer runs only its focused target; the
+  full suite runs once, at the review bead.
 - Test taxonomy, scoring rubrics, coverage thresholds, CI/merge gating.
 - Re-deriving the termination proof in this PRD.
 
 ### Deferred (named, not built)
 
+- **The docs→Hindsight sync command's full behavior** — this PRD removes shipping
+  from the automated flow and names the command as its new home, but the command's
+  own design (including whether it **deletes superseded docs** from Hindsight, to
+  be reconciled against `adr.platform.memory-lifecycle.0001`) is a separate effort.
+- **A `ship_at: close | merge` workflow mode** — automating the sync trigger for
+  PR/merge-based flows so memory enters canon at merge, not at build. The "stop at
+  the build report + deliberate sync command" boundary in R16 is what makes this a
+  future *addition* rather than a *rework*. Most operators are expected to want
+  ship-at-merge.
 - **The implementation agent's test-directory read-deny** — the permission rule
   and its onboarding configuration (framework-specific). Designed-for now (R6),
   built later.
 - **Systematic cross-epic verification confidence** — proactively re-checking
-  shipped epics' tests under later change. R11 Mode 2 handles the reactive case and
-  seeds the memory trail; the systematic version is likely its own future PRD.
+  shipped epics' tests under later change. R13 Mode 2 (and the review-bead
+  full-suite run) handles the reactive case and seeds the memory trail; the
+  systematic version is likely its own future PRD.
 - **A deliberate "skip verification" opt-out mode** for throwaway/spike work.
 - **Formula/molecule extraction** of the recurring plan-phase wiring, once proven.
 - **Richer re-planning depth** (cascading re-plans across large subgraphs).
 
 ## Open Questions
 
-These carry into the architect's design pass and the spec.
+The architect's first design pass (`design.platform.test-planning.0002`) resolved
+the original four questions below — the resolutions are recorded there. They are
+kept here, marked resolved, for the audit trail, plus the residual build-time
+details the design left open.
 
-1. **Plan-phase sequencing mechanism.** The decomposer drives test-planning then
-   build-planning at plan time, where no foreman exists. Whether it invokes each
-   planner as a subagent dispatch, mints plan-time beads with dependencies, or
-   another shape, is an architecture decision — with the correctness constraint that
-   build-planning must run after the test beads exist, and both after the epic is
-   minted. (Direction: skill-based orchestration instruction, per R1.)
+1. **Plan-phase sequencing mechanism.** *Resolved:* the decomposer dispatches the
+   two planners as subagents via the Task tool in fixed order (test-planner, then
+   build-planner), each dispatch returning before the next — so ordering is
+   guaranteed with no plan-time queue and no second orchestrator. This is why the
+   v1 command-chaining blocker dissolves: dispatching a subagent is a primary
+   agent's native capability.
 
 2. **How the test-planner's intent reaches the wiring without a second review-bead
-   author.** The build-planner completes the implementation-satisfies-test
-   dependency edges (it runs second and sees the test beads). The design must
-   confirm this fully expresses the Case-A "test blocks implementation" shape as
-   the default, and that the review bead's findings-loop content remains static
-   skill text the decomposer writes — with no planner reaching into the review bead.
+   author.** *Resolved:* two disjoint channels — the build-planner reads the test
+   beads and wires the satisfies-test edges (original graph), and the static
+   review-bead block summons the planner (findings). Because verification is always
+   planned, the block is always present, so nothing conditionally installs it and
+   the second author disappears.
 
-3. **Baseline vs. independent, under a single test-writer.** With all tests written
-   by the test-writer from test-planner beads, the old "builder writes baseline,
-   planner reserves independent" distinction dissolves. The design should confirm
-   there is one authorship path (test-writer, from planned beads) and that the
-   implementer's only relationship to tests is *satisfying* them — so there is no
-   residual place the implementer is expected to produce a test.
+3. **Baseline vs. independent, under a single test-writer.** *Resolved:* one
+   authorship path (test-writer, from planned beads); confirmed no residual place
+   the implementer produces a test — which is why R5 requires removing the builder's
+   existing test-writing charter outright.
 
-4. **Mode 2 routing detail.** R11 routes prior-epic test breaks to the PM agent.
-   The design should specify how the implementer recognizes a Mode-2 failure
-   (a failing test outside this epic's planned test beads), how the PM's decision
-   re-enters the graph (kick-back vs. test-update bead vs. `bd human`), and exactly
-   how it lands in the build report en route to Hindsight.
+4. **Mode 2 recognition and re-entry.** *Resolved in principle* (see R7/R8/R13): the
+   implementer classifies by this epic's test-bead metadata and run output, never by
+   reading test source; the PM's decision re-enters as a kick-back, a test-update
+   bead, or `bd human`, and lands in the build report via bead comments the foreman
+   folds in. The exact matching mechanics (run-output → test-bead selector) and the
+   build-planner's requirement-to-implementation-bead mapping remain **build-time
+   details for the spec**, not design gaps.
+
+5. **Does a red prior-epic test block the epic? (was OQ-E)** *Resolved:* yes — it
+   blocks via the ordinary finding-and-reopen mechanism (R15), because the breakage
+   is *caused by this epic* and must not ship before the PM adjudicates. It is not a
+   departure from the reviewer's disposition after all: the reviewer files a
+   blocking finding as it does today, and change-locality sets only the `agent`
+   label (PM vs. builder). Undecided PM cases pause the epic with a human gate.
+
+6. **Terminal-work bead shape.** *Resolved by the design pass:* the build-report
+   bead is labeled `agent=omg-reviewer` (the review agent is already the build-record
+   synthesizer per `adr.platform.memory-lifecycle.0001` §5, so this adds no new
+   agent), minted by the decomposer at plan time from a static `omg-epics` block,
+   and blocks the review bead (`report blocks R`) so epic-before-report ordering
+   becomes a dependency edge. The foreman's "Closing / build report / Shipping"
+   sections are removed; it dispatches the terminal bead like any other. The
+   "shipping is a deliberate act, not an automated phase" principle became its own
+   ADR (`adr.platform.memory-shipping-boundary.0001`), and the foreman's loss of
+   terminal state was folded into `adr.platform.plan-time-orchestration.0001`.
+
+7. **Report-writer write grant (OQ-F, for the spec).** The report-writer bead needs
+   a narrow `**/*.md` write grant, but the reviewer agent is `edit: deny` today. The
+   spec must specify this grant and confirm it does not weaken the reviewer's stance
+   elsewhere — and reconcile whether memory-lifecycle §5's "review agent synthesizes
+   the record" is faithfully met by a terminal bead the review agent handles *after*
+   the review bead closes (vs. synthesis inside the review bead).
+
+8. **Sync-command boundary (OQ-G, deferred).** This PRD defines only the boundary
+   (shipping leaves the automated flow; the report is written but not shipped). The
+   docs→Hindsight sync command's own behavior — ship ordering, superseded-doc
+   deletion, ergonomics — is a separate deferred effort against
+   `adr.platform.memory-lifecycle.0001`.
 
 ## Related Documents
 
@@ -432,6 +606,11 @@ These carry into the architect's design pass and the spec.
 - `omg-reviewer` agent + `omg-review` skill — drives the findings loop; stays blind
   to test mode; executes the single-author review bead as a work order.
 - `omg-foreman` agent + skill — routing invariant untouched; looping mechanics may
-  extend for fresh-context test-writing.
+  extend for fresh-context test-writing; its inline terminal branch (closing / build
+  report / shipping) is dismantled into dispatched beads, and shipping leaves the
+  automated flow (R16).
+- The docs→Hindsight **sync command** (new home for shipping; its full behavior,
+  including superseded-doc handling, is deferred) — reconcile against
+  `adr.platform.memory-lifecycle.0001`.
 - `omg-product-manager` agent — Mode-2 adjudicator, using Hindsight memory; its
   decision is recorded via the foreman's build report.
