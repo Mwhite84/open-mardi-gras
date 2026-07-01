@@ -1,0 +1,437 @@
+---
+schema_version: 1
+id: prd.platform.test-planning.0002
+type: prd
+title: "Verification Ownership Across the OMG Plan/Build Phases"
+status: draft
+domain: platform
+supersedes: prd.platform.test-planning.0001
+created_at: 2026-06-29T03:24:30Z
+updated_at: 2026-07-01T01:32:07Z
+hindsight:
+  strategy: spec-or-adr
+  tags:
+    - source:authored
+    - domain:platform
+    - discipline:product
+    - memory_type:prd
+---
+
+# Verification Ownership Across the OMG Plan/Build Phases — PRD
+
+> Product Requirements Document. Defines the problem, who it is for, and what
+> success looks like — not how it is built.
+>
+> **Status: draft.** Supersedes `prd.platform.test-planning.0001`. It is not yet
+> approved for build; it awaits the architect's buildability pass and the
+> superseding design doc.
+
+## Why this supersedes `prd.platform.test-planning.0001`
+
+The v1 test-planning feature shipped and was dogfed. It works — the
+findings-driven loop terminates, the planner plans real verification — but
+running it against real epics surfaced facts the v1 problem framing did not
+account for. This PRD re-frames the problem around those facts and reverses
+several v1 decisions. The v1 documents are preserved as the record of what was
+tried; this document records what we learned and what changes.
+
+What the dogfooding taught us:
+
+1. **The builder already writes tests, unprompted, from the spec.** v1 called
+   builder-authored tests an "unreliable side effect" to be replaced. In practice
+   the builder writes tests because the spec's acceptance criteria are
+   verification statements and the builder is told to satisfy them. This happens
+   whether or not anyone plans. The problem was never that it happens — it is that
+   it happens in the *wrong place*, by an agent that both writes the test and
+   writes the code it checks.
+
+2. **Independence comes from context isolation and ordering, not from agent
+   identity.** In this harness an "agent" is a persona layered onto whatever
+   context is running; two agents in one context share everything. What makes a
+   test independent of the implementation is that it was authored in a **separate
+   dispatch**, **before** the implementation existed. Agent identity does not
+   provide that; ordering and isolation do.
+
+3. **The review bead had two authors, and that split spawned v1's most intricate
+   machinery** — a sentinel, a "rewrite to the same content, don't stack a copy"
+   convergence rule, and a survey step whose whole job was to detect the other
+   author's work. All of it exists only because one bead had two authors.
+
+4. **The decisive constraint we missed: permissions are per-agent in opencode.**
+   The property that would *complete* verification independence — denying the
+   implementer read access to the tests so it cannot game them — is an
+   agent-level permission. One agent cannot both write tests (needs test-dir
+   access) and implement code blind to them (needs test-dir access denied). That
+   single fact means test-writing and implementation **must** be different agents,
+   independent of any argument about craft.
+
+Together these reframe the problem from v1's *"test planning has no owner"* to:
+**verification authorship and judgment are assigned to the wrong agents and the
+wrong phases, and the boundaries that would make verification trustworthy are not
+enforced where the harness can enforce them.**
+
+The correction that resolves it: split the **planning** layer correctly (a
+test-planner and a build-planner under a neutral plan-time orchestrator) and
+**invert** it (plan tests first, then the build to satisfy them). Once the
+planning split and ordering are right, the writing roles fall out cleanly — a
+test-writer writes tests, an implementer writes code blind to them — with no
+overlap and no agent holding two contradictory jobs.
+
+## Problem
+
+The OMG workflow turns a spec into an epic and builds it. Verification — deciding
+what confidence the work needs, and writing the tests that establish it — is
+assigned across agents and phases in ways that do not match the distinct kinds of
+work involved, producing four concrete harms:
+
+- **One agent both writes a test and writes the code it checks.** The builder
+  authors tests as a side effect of implementation. A test written by the same
+  agent, in the same context, as the code it verifies cannot independently
+  challenge that code — it confirms the author did what the author intended. This
+  is the "grading your own work" failure, and it is the default today.
+
+- **Verification-shaped acceptance criteria leak into implementation work.** The
+  architect deliberately writes acceptance criteria as verification statements.
+  The decomposer folds them into build beads, and the builder reads them as test
+  orders. So test scope is decided implicitly, by whoever happens to build,
+  scattered across implementation beads, with no single owner and no way to record
+  a deliberate "no test needed here."
+
+- **Independence has no structural guarantee.** The value a test-planning step is
+  meant to add — a test authored before and apart from the implementation, that
+  the implementer must satisfy and cannot weaken — depends on ordering and
+  permission boundaries that the workflow does not currently establish.
+
+- **Verification is nominally optional but not actually optional.** Making
+  planning an operator-invoked step means an epic the operator forgets to plan
+  still ships with the builder's ad-hoc tests. The "off" state is not "no
+  verification"; it is "undisciplined, unrecorded verification." The optionality
+  protects a control group that does not exist.
+
+Underneath all four is a single missing distinction. **Four different kinds of
+work turn a spec into verified build work, and they are different in kind:**
+planning the *confidence* (what verification the work needs), planning the
+*build* (what implementation satisfies the spec), *writing tests* (the craft of a
+good test for this stack), and *writing the implementation*. The workflow
+collapsed the two planning judgments into one test-blind decomposer, and let one
+agent do both kinds of writing. The phases and the agents do not line up with the
+judgments.
+
+### Why now
+
+- The findings-driven mechanism from v1 already works in dogfooding; we are
+  re-homing ownership, not inventing the loop.
+- The `test-writing` skill already exists and carries ecosystem-specific craft;
+  giving it a single clear owner is a wiring change, not new authorship.
+- v1 deferred making testing non-optional because of a harness limit (an agent
+  cannot invoke a slash command, so the decomposer could not call
+  `/omg-test-plan`). This design removes that blocker: verification planning
+  becomes a plan-time step the plan-time orchestrator drives directly as ordinary
+  work — not a slash command an agent must somehow call. What v1 could only defer
+  is now buildable.
+
+## Target Users
+
+The direct users are the **maintainers running the OMG delivery workflow** on
+their own repos — the people who decompose specs into epics and build them, and
+who want the work that ships to be verifiably correct, with every test traceable
+to a deliberate decision. Same audience as v1 and the existing OMG commands.
+
+The indirect beneficiaries are **the humans and future agents who must trust
+generated code** — they inherit an epic whose tests were authored independently
+of the code they verify, whose verification scope was a deliberate recorded
+decision, and whose review bead has a single clear author.
+
+This PRD does **not** target teams wanting a turnkey CI/coverage product. It
+serves the existing OMG operator who thinks in specs, epics, and beads.
+
+## Goals
+
+1. **Tests are authored independently of the code they verify.** The agent that
+   writes a test is never the agent that writes the implementation it checks, and
+   the test is authored before the implementation exists. Independence is
+   structural — from ordering and from agent-level permission boundaries — not an
+   implied property of a label.
+
+2. **Verification scope has exactly one owner.** Deciding what to verify (and what
+   deliberately not to) is one agent's franchise. No other agent adds, removes, or
+   implies test scope. In particular, the implementation agent mints no test scope
+   and never authors or alters a test.
+
+3. **Verification is a standard phase, not an option.** Every epic gets its
+   verification planned as a normal part of the plan phase. No invocation flag, no
+   config key; the question "are we testing this epic?" stops being askable.
+
+4. **The four kinds of work have four clear owners.** Planning confidence,
+   planning the build, writing tests, and writing implementation are distinct, each
+   owned by exactly one role, so no agent does a judgment or a craft in passing
+   that degrades it.
+
+5. **Verification stays economical.** The point is *justified confidence per
+   test*, never count or coverage. The confidence owner is as willing to record
+   "no test needed here, because…" as to plan a test — and that decision is
+   recorded, not silent.
+
+6. **The build-time dispatcher keeps its elegance.** The foreman's routing
+   invariant — grab a ready bead, read its `agent` label, dispatch to that agent,
+   hold no orchestration state, special-case no bead — must not change. The
+   build-mode looping mechanics may be extended where independence requires it,
+   but routing stays label-only.
+
+7. **A stuck test never becomes a silent hack.** When an implementer cannot pass a
+   test — one planned for this epic, or a pre-existing test its change breaks — it
+   has a recorded escalation path and never modifies the test, force-passes it, or
+   closes the work silently.
+
+## Non-Goals
+
+- **Not keeping testing optional.** v1's opt-in-by-invocation model is removed. A
+  deliberate "skip verification" mode for throwaway work would be an explicit
+  opt-*out*, a separate future decision, not this PRD's.
+- **Not changing the foreman's routing.** Routing stays label-only and stateless;
+  the foreman special-cases no bead. (Build-mode looping mechanics are touchable —
+  see Requirements — but routing is sacred.)
+- **Not introducing a second build-time orchestrator.** The plan-time orchestrator
+  operates in the plan phase only and hands a validated graph to the build phase.
+- **Not sharing the `test-writing` skill with the implementer.** The implementer
+  writes no tests and has no use for a test-writing skill; the skill has one owner.
+- **Not building a test taxonomy, type enum, or risk/cost scoring rubric.**
+  Inherited from v1 and still rejected; the confidence judgment reasons in prose.
+- **Not a coverage or CI-integration feature.** No thresholds, no CI wiring, no
+  merge gating.
+- **Not building reusable formulas/molecules yet.**
+- **Not re-deriving the findings-loop termination proof here.** That is the
+  superseding design doc's job.
+- **Not solving systematic cross-epic verification.** Reactively handling a
+  broken prior-epic test is in scope (R11); proactively maintaining confidence in
+  shipped epics under later change is named-deferred.
+
+## Success Metrics
+
+Signals observable in the beads graph, the build report, and the built
+instruments — not a dashboard.
+
+- **No self-graded tests.** Every test in a shipped epic was authored by an agent
+  other than the one that wrote the code it verifies, in a separate dispatch.
+  *Signal:* test authorship and implementation authorship are distinct beads,
+  dispatched separately; no implementer bead produced a test.
+- **Test scope traces to one owner.** For every verified behavior, the decision to
+  test it (or not) was the confidence owner's. *Signal:* no implementation bead
+  carries test scope; every test bead and every "no test needed" decision traces
+  to the confidence owner.
+- **No epic ships unplanned.** *Signal:* no path produces a build-ready epic
+  without the verification-planning step having run.
+- **The review bead has one author.** *Signal:* exactly one agent creates and
+  writes the review bead; the v1 sentinel / "don't stack a copy" machinery is gone.
+- **The foreman's routing is unchanged.** *Signal:* the shipped change alters no
+  foreman routing logic; any foreman change is confined to build-mode looping
+  mechanics.
+- **Stuck tests surface, never hide.** *Signal:* every un-passable test produces a
+  filed, routed bead; none is resolved by an implementer altering a test or
+  closing work silently. Cross-epic (Mode 2) resolutions appear in the build report
+  and in Hindsight.
+- **The loop still terminates.** An epic with planned verification, findings, and
+  re-planning drains to a clean close with no deadlock and no leaked beads.
+
+## Requirements
+
+At the level of capability; the mechanism is the design doc's territory.
+Throughout, **"plan" and "mint" mean creating beads; neither planner writes tests
+or code.** Writing happens at build time, by the writing agents.
+
+1. **Split the decomposer into three plan-time roles.** Today's decomposer becomes:
+   a **decomposer** (plan-time orchestrator), a **test-planner** (confidence
+   judgment), and a **build-planner** (build judgment). The orchestrator absorbs
+   none of the planning judgment; it sequences the passes, authors the review bead,
+   and validates the graph. The plan-phase sequence is skill-based instruction, not
+   logic baked into any agent persona.
+
+2. **Invert the planning order: test-planning first, then build-planning.** The
+   test-planner runs first and mints the test beads for the behaviors it judges
+   warrant verification (recording "no test needed, because…" for the rest). The
+   build-planner runs second, sees those test beads, and mints the implementation
+   beads. Test-first is what makes independence structural: the tests are planned
+   before any implementation exists.
+
+3. **Verification scope is the test-planner's exclusive franchise.** The
+   test-planner is the only role that decides what is tested. Its vocabulary stays
+   minimal: a test bead (for a behavior that warrants independent verification) or
+   a recorded no-test decision. No taxonomy, no scoring.
+
+4. **The build-planner mints no test scope, and derives completeness from the
+   spec.** Every requirement and acceptance criterion in the spec must be spoken
+   for by an implementation bead — whether or not the test-planner planned a test
+   for it. The build-planner reads acceptance criteria as *what behavior must
+   exist*, never as *what test to write*. It **reads the test beads** (to wire the
+   implementation-satisfies-test dependencies) but does **not** derive its
+   completeness from them: a behavior the test-planner declined to test still needs
+   its implementation bead. Test scope is never filled in by the build-planner on
+   its own initiative.
+
+5. **Two writing agents, split by permission and franchise, not by craft.**
+   - A **test-writer** agent writes all tests (from beads the test-planner minted),
+     owns the `test-writing` skill, and has the permissions to author test files.
+   - The **implementation agent** writes only implementation, satisfies tests, and
+     **never authors or alters a test**. It has no test-writing skill and mints no
+     test scope.
+   The distinction is enforced where the harness enforces it: the two roles hold
+   different permissions in the test directory (see R6). Craft lives in the shared
+   skill; the *reason* these are separate agents is the permission boundary and the
+   authorship franchise, not who knows more.
+
+6. **Independence is structural: separate dispatch, and an eventual read-boundary.**
+   - Tests are authored in a dispatch separate from the one that writes the
+     implementation, and (by R2) before it. This holds in **all** build-mode
+     looping models: where a mode would otherwise reuse one context, the test-
+     writing dispatch gets a fresh context. This may extend the build-mode looping
+     mechanics but must not touch the foreman's routing invariant (R7).
+   - **Named-deferred, but designed-for:** the implementation agent should
+     eventually be **denied read access to the test directory**, so it satisfies
+     tests it cannot see or game. Because opencode permissions are per-agent, this
+     is only possible with the implementation and test-writing roles as separate
+     agents (R5) — which this PRD establishes. The deny rule is framework-specific
+     (the test path varies by stack) and is configured at **onboarding**. Nothing
+     in this design may assume the implementer can read tests.
+
+7. **The foreman's routing invariant is untouched; its looping mechanics may
+   extend.** The foreman dispatches purely by `agent` label, holds no orchestration
+   state, and special-cases no bead. This is sacred and unchanged. The build-mode
+   looping mechanics (`one_agent`, `one_agent_fresh_contexts`, `multi_agents`) may
+   be extended where independence requires a fresh test-writing context (R6). Any
+   foreman change is confined to looping mechanics; routing is off-limits.
+
+8. **The review bead has exactly one author.** The decomposer creates and fully
+   authors the review bead — including the findings-loop instructions — **once,
+   after both planning passes**, from a static canonical block owned by the
+   `omg-epics` skill. No other agent rewrites it. The findings-loop instruction
+   content is static skill text the decomposer composes; no second author, no
+   sentinel, no convergence-detection.
+
+9. **Findings-driven verification survives the re-homing.** When the reviewer
+   files an epic-scoped build finding, that fix's verification is still planned
+   before the fix is built, on the same footing as originally planned work, and
+   the loop still terminates with no deadlock. The mechanism may be re-homed to fit
+   single-author review beads and separate writing agents; the guarantee is
+   unchanged. The reviewer stays blind to test mode (it executes the review bead
+   as a work order).
+
+10. **Verification planning is a standard plan-phase step.** Every decomposition
+    runs test-planning then build-planning; no invocation flag, no config key, no
+    agent branching on whether testing is "on."
+
+11. **A failing-test escape hatch, in two modes.** An implementation agent that
+    cannot pass a test never modifies it, never forces it green, and never closes
+    the work silently. It files a bead, and the blocked work waits on resolution:
+    - **Mode 1 — a test planned for this epic is wrong or impossible to satisfy.**
+      The bead is routed to the **test-planner** (the confidence authority), which
+      upholds the test (kick back to the implementer with reasoning) or re-plans it
+      (mint a corrected test bead for the test-writer). The implementer never edits
+      the test.
+    - **Mode 2 — a pre-existing test from a prior epic breaks** because this change
+      altered behavior it pinned. The bead is routed to the **PM agent**, which has
+      the product-intent authority and the full Hindsight memory of why prior
+      guarantees exist. The PM resolves it: the old behavior was intended (the
+      change is wrong — kick back), the change is intended (the old test is stale —
+      mint a test-update bead for the test-writer), or it is a genuine product
+      decision (escalate to a human via `bd human`). **The PM's Mode-2 decision is
+      recorded in the foreman's build report, ships to Hindsight, and surfaces to
+      the human** (who is informed, not gated). This gives cross-epic decisions a
+      durable trail in the same memory the PM consults for the next such collision.
+
+12. **Verification work is labeled and dispatchable like all other work.** Test
+    beads and test-update beads carry the appropriate `agent` label so the foreman
+    routes them with no special-casing.
+
+## Scope
+
+### In
+
+- Splitting today's decomposer into **decomposer (plan-time orchestrator)**,
+  **test-planner**, and **build-planner**, sequenced by skill-based instruction.
+- Inverting the plan order to test-planning → build-planning.
+- Establishing the **test-writer** as the sole test-authoring agent, owner of the
+  `test-writing` skill.
+- The **implementation agent** writing only code, authoring no tests, minting no
+  test scope, designed for an eventual test-dir read-deny.
+- Sole authorship of the review bead by the decomposer, written once after both
+  passes, from a static `omg-epics` canonical block.
+- Making verification planning a standard, non-optional plan-phase step.
+- Structural independence via test-first ordering plus fresh-context test-writing
+  dispatch in all build modes (extending looping mechanics only; routing invariant
+  untouched).
+- The failing-test escape hatch, Modes 1 and 2, including the Mode-2 → PM →
+  build-report → Hindsight loop.
+- Re-homing the findings mechanism to fit single-author review beads and separate
+  writing agents, preserving termination.
+
+### Out
+
+- Optionality / opt-in invocation of verification planning.
+- Any change to the foreman's routing logic.
+- A second build-time orchestrator.
+- Sharing the `test-writing` skill with the implementer.
+- Test taxonomy, scoring rubrics, coverage thresholds, CI/merge gating.
+- Re-deriving the termination proof in this PRD.
+
+### Deferred (named, not built)
+
+- **The implementation agent's test-directory read-deny** — the permission rule
+  and its onboarding configuration (framework-specific). Designed-for now (R6),
+  built later.
+- **Systematic cross-epic verification confidence** — proactively re-checking
+  shipped epics' tests under later change. R11 Mode 2 handles the reactive case and
+  seeds the memory trail; the systematic version is likely its own future PRD.
+- **A deliberate "skip verification" opt-out mode** for throwaway/spike work.
+- **Formula/molecule extraction** of the recurring plan-phase wiring, once proven.
+- **Richer re-planning depth** (cascading re-plans across large subgraphs).
+
+## Open Questions
+
+These carry into the architect's design pass and the spec.
+
+1. **Plan-phase sequencing mechanism.** The decomposer drives test-planning then
+   build-planning at plan time, where no foreman exists. Whether it invokes each
+   planner as a subagent dispatch, mints plan-time beads with dependencies, or
+   another shape, is an architecture decision — with the correctness constraint that
+   build-planning must run after the test beads exist, and both after the epic is
+   minted. (Direction: skill-based orchestration instruction, per R1.)
+
+2. **How the test-planner's intent reaches the wiring without a second review-bead
+   author.** The build-planner completes the implementation-satisfies-test
+   dependency edges (it runs second and sees the test beads). The design must
+   confirm this fully expresses the Case-A "test blocks implementation" shape as
+   the default, and that the review bead's findings-loop content remains static
+   skill text the decomposer writes — with no planner reaching into the review bead.
+
+3. **Baseline vs. independent, under a single test-writer.** With all tests written
+   by the test-writer from test-planner beads, the old "builder writes baseline,
+   planner reserves independent" distinction dissolves. The design should confirm
+   there is one authorship path (test-writer, from planned beads) and that the
+   implementer's only relationship to tests is *satisfying* them — so there is no
+   residual place the implementer is expected to produce a test.
+
+4. **Mode 2 routing detail.** R11 routes prior-epic test breaks to the PM agent.
+   The design should specify how the implementer recognizes a Mode-2 failure
+   (a failing test outside this epic's planned test beads), how the PM's decision
+   re-enters the graph (kick-back vs. test-update bead vs. `bd human`), and exactly
+   how it lands in the build report en route to Hindsight.
+
+## Related Documents
+
+- `prd.platform.test-planning.0001` — **superseded by this PRD.** The v1 problem
+  framing and decisions; preserved as the record of what was tried and dogfed.
+- `design.platform.test-planning.0001` / `spec.platform.test-planning.0001` — the
+  v1 design and build contract; to be superseded by `.0002` counterparts.
+- `omg-decomposer` agent + `omg-epics` skill — the decomposer split into
+  orchestrator + build-planner; `omg-epics` gains the plan-phase sequence and the
+  static review-bead canonical block.
+- `omg-tester` agent + `test-writing` skill — the test-writer, sole owner of the
+  `test-writing` skill and sole test author.
+- `omg-builder` agent + skill — the implementation agent: writes only code,
+  authors no tests, designed for an eventual test-dir read-deny.
+- `omg-reviewer` agent + `omg-review` skill — drives the findings loop; stays blind
+  to test mode; executes the single-author review bead as a work order.
+- `omg-foreman` agent + skill — routing invariant untouched; looping mechanics may
+  extend for fresh-context test-writing.
+- `omg-product-manager` agent — Mode-2 adjudicator, using Hindsight memory; its
+  decision is recorded via the foreman's build report.

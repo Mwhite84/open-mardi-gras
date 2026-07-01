@@ -3,10 +3,11 @@ schema_version: 1
 id: prd.platform.test-planning.0001
 type: prd
 title: "Test Planning as First-Class Work in the OMG Delivery Workflow"
-status: draft
+status: superseded
 domain: platform
+superseded_by: prd.platform.test-planning.0002
 created_at: 2026-06-25T04:30:57Z
-updated_at: 2026-06-26T13:18:42Z
+updated_at: 2026-06-29T03:24:30Z
 hindsight:
   strategy: spec-or-adr
   tags:
