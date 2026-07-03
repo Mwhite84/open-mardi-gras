@@ -100,6 +100,45 @@ set before the problem is understood is a guess.
 8. **Capture it in the right artifact**, using the template for its form and this
    skill's reference for what each section should hold.
 
+9. **Self-review before handoff.** Run the pass below on your own draft before
+   you call it done.
+
+## Self-review before handoff
+
+Turn the review lens on your *own* document before you hand it off. This is not
+Review mode — that judges someone else's doc — and it does not replace peer
+review; it is the author's own gate, run in **Define** (before handoff) and
+after every **Refine** edit. It matters most for **long-lived, multi-round
+documents**: over many rounds a draft drifts into contradictions the author is
+too close to see and a fresh reader catches at once. A clean self-pass is what
+keeps that drift from leaking to your reviewer.
+
+Read the whole document back and check, in order:
+
+1. **Reconcile the document against itself.** This is the highest-value check.
+   When a decision changed something, search the *entire* document for every
+   place the old concept, claim, or term still appears — earlier requirements,
+   success metrics, resolved open questions, related-docs lines, glosses — and
+   update all of them to match. A document that asserts and forbids the same
+   thing is a defect, and a late change is the usual cause.
+
+2. **Resolve every internal reference.** After any renumbering or insertion,
+   confirm each internal pointer — requirement numbers ("per R8", "in scope
+   (R11)"), section names, document ids — still resolves to the target you
+   meant. Renumbering silently strands the pointers that were correct before.
+
+3. **Respect the document's own charter.** If the document declares that
+   mechanism belongs elsewhere (e.g. "the mechanism is the design doc's
+   territory"), hold your own draft to it: state capabilities and outcomes, and
+   do not smuggle in the mechanism — a literal command, a flag, a concrete
+   procedure — that you deferred. Apply to yourself the implementation-creep
+   smell you would flag in someone else's doc.
+
+4. **Read it as a hostile literal reader.** Take every claim at its exact words
+   and try to disprove it. Check quantifiers ("exactly once" when it can recur)
+   and directional or relational statements (X blocks Y vs. Y blocks X) say what
+   you actually mean. A claim a precise reader can falsify is a defect.
+
 ## Review mode
 
 Evaluate an existing document. Do **not** edit in this mode.
@@ -122,7 +161,9 @@ straight to editing only when the user's request is itself unambiguously "refine
 or "rewrite" — then state the findings briefly and proceed.
 
 When you edit, keep changes scoped to what was agreed. Do not smuggle in
-unrelated rewrites.
+unrelated rewrites. After editing, run the **Self-review before handoff** pass —
+a refine is exactly the moment a change upstream contradicts prose elsewhere or
+strands an internal reference.
 
 ## Generic criteria
 
@@ -154,3 +195,6 @@ Every product document, regardless of type, is judged on:
 - **Blurring severity.** A blocking flaw buried among nitpicks reads as a nitpick.
   Keep the tiers separate and ordered.
 - **Scope creep on refine.** Change what was agreed and nothing more.
+- **Handing off an unreviewed draft.** Skipping the self-review pass and trusting
+  a peer to catch what you were too close to see. The self-pass is your gate;
+  run it first.
