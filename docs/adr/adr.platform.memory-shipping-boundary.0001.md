@@ -5,9 +5,9 @@ type: adr
 title: "Shipping to Durable Memory Is a Deliberate Act, Not an Automated Phase of the Build"
 status: accepted
 domain: platform
-produced_for: prd.platform.test-planning.0002
+produced_for: spec.platform.test-planning.0002
 created_at: 2026-07-01T04:25:58Z
-updated_at: 2026-07-01T04:25:58Z
+updated_at: 2026-07-03T00:39:17Z
 hindsight:
   strategy: spec-or-adr
   tags:

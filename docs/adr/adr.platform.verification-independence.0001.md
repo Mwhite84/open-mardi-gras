@@ -5,9 +5,9 @@ type: adr
 title: "Verification Independence Comes from Ordering and Context Isolation Enforced by Per-Agent Permission, Not from Agent Identity"
 status: accepted
 domain: platform
-produced_for: prd.platform.test-planning.0002
+produced_for: spec.platform.test-planning.0002
 created_at: 2026-07-01T01:43:40Z
-updated_at: 2026-07-01T01:43:40Z
+updated_at: 2026-07-03T05:10:00Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -68,7 +68,7 @@ Draw the writing boundary so that a **test-writer** owns test authorship (and th
 
 **Verification independence is a structural property — from test-first ordering and context isolation, made enforceable by per-agent permission — not a property of agent identity. Agent boundaries are drawn by judgment-stance and permission enforcement so that independence can be enforced where the harness enforces it.** Concretely:
 
-1. **Two writing agents, split by permission and franchise, not by craft.** A **test-writer** authors all tests, owns the `test-writing` skill, and holds the permission to write test files. An **implementation agent** writes only code, authors or alters no test, mints no test scope, and does not hold the `test-writing` skill. The craft of a good test lives in the shared skill; the *reason* these are two agents is the permission boundary and the authorship franchise.
+1. **Two writing agents, split by permission and franchise, not by craft.** A **test-writer** authors all tests, owns the `test-writing` skill, and is the role that carries the capability to write test files. An **implementation agent** writes only code, authors or alters no test, mints no test scope, and does not load the `test-writing` skill. The craft of a good test lives in the shared skill; the *reason* these are two agents is the permission boundary and the authorship franchise — a boundary the harness enforces **by per-agent `permission` frontmatter, which is designed-for here but whose exact grant matrix is named-deferred, not specified in the first cut.** The split ships now (separate agents, distinct franchises, delivered by instruction); the *permission enforcement* that will make it airtight arrives with the deferred permissions effort. Until then the boundary holds by role and instruction, the same trust-the-runbook posture the rest of this workflow uses.
 
 2. **Independence is structural, not nominal.** It is guaranteed by two things together: **ordering** — tests are planned and authored before the implementation exists — and **context isolation** — test-writing is dispatched in a context separate from (and, by ordering, prior to) the one that writes the code. Agent identity alone is explicitly *not* the guarantee, because an agent is a persona on a context and two agents in one context share state.
 
@@ -91,14 +91,14 @@ This decision **records the independence principle and the boundary rationale.**
 
 ### Costs, risks, and new constraints accepted
 
-- **Two writing agents and a fresh-context dispatch.** Splitting writing adds an agent and requires that every build-loop mode dispatch test-writing in a fresh context (so a mode that would otherwise reuse one context does not fuse test and code authorship). This touches build-mode *looping mechanics* — permitted — but must not touch the foreman's routing invariant (`adr.platform.plan-time-orchestration.0001`, PRD R6/R7). The design doc owns that mechanic.
+- **Two writing agents and a fresh-context dispatch.** Splitting writing adds an agent and requires that every build-loop mode dispatch test-writing in a fresh context (so a mode that would otherwise reuse one context does not fuse test and code authorship). This touches build-mode *looping mechanics* — permitted — but must not touch the foreman's routing invariant (`adr.platform.plan-time-orchestration.0001`, PRD R9). The design doc owns that mechanic.
 - **The read-deny is deferred and framework-specific.** The completing property (implementer blind to the test directory) is not in the first cut; it is configured at onboarding per stack. Until it lands, independence rests on ordering and isolation alone — strong, but not yet the full guarantee. The design must never *assume* the implementer can read tests, so that enabling the deny later breaks nothing.
 - **The implementer cannot fix a test it cannot pass — by design.** With the implementer barred from authoring or altering tests (and eventually from reading them), a stuck test needs an escalation path rather than a local edit. This is a deliberate constraint that makes the escape-hatch mechanism (routed to the confidence planner or the PM) load-bearing rather than optional; the design doc owns it.
 - **Independence between two agents still depends on the harness honoring per-agent context and permission.** If a future harness change let two agents truly share a live context with shared permissions, the isolation guarantee would weaken. The dependency on opencode's per-agent permission and dispatch model is real and named here.
 
 ## Related Documents
 
-- `prd.platform.test-planning.0002` — the PRD this ADR was produced for; its R4 (two writing agents split by permission + franchise), R5/R6 (structural independence: ordering, fresh-context dispatch, eventual read-deny), R2/R3 (test scope is the confidence planner's exclusive franchise), and R8 (single-author review bead) are the requirements this decision realizes.
+- `prd.platform.test-planning.0002` — the PRD this ADR was produced for; its R5 (two writing agents split by permission + franchise), R6 (structural independence: ordering, fresh-context dispatch, eventual read-deny), R3 (test scope is the confidence planner's exclusive franchise), and R10 (single-author review bead) are the requirements this decision realizes.
 - `adr.platform.plan-time-orchestration.0001` — the companion decision on the *phase model* (plan-time orchestration distinct from build-time dispatch; verification as a standard phase). This ADR governs the boundary/independence axis; that one governs the phase/orchestration axis. Produced together for the same PRD; relate-to, not supersede.
 - `adr.platform.beads-sync-ownership.0001` — the worker/orchestration layer split this ADR's agents obey; every agent here carries task semantics only and is mode-agnostic for sync. Unchanged.
 - `design.platform.test-planning.0002` — owns how ordering, isolation, and the fresh-context dispatch are wired, the escape-hatch mechanism the read-boundary makes load-bearing, and the re-derived termination proof.

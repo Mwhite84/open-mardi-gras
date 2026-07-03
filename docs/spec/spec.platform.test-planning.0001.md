@@ -3,10 +3,11 @@ schema_version: 1
 id: spec.platform.test-planning.0001
 type: spec
 title: "Test Planning Instruments for the OMG Delivery Workflow"
-status: draft
+status: superseded
+superseded_by: spec.platform.test-planning.0002
 domain: platform
 created_at: 2026-06-27T21:36:52Z
-updated_at: 2026-06-28T00:14:42Z
+updated_at: 2026-07-03T00:47:52Z
 hindsight:
   strategy: spec-or-adr
   tags:

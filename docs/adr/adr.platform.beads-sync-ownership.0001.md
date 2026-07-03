@@ -5,9 +5,9 @@ type: adr
 title: "Beads Sync Discipline Is Owned by the BeadsPlugin, Not by Agent or Skill Instructions"
 status: accepted
 domain: platform
-produced_for: spec.platform.test-planning.0001
+produced_for: spec.platform.test-planning.0002
 created_at: 2026-06-28T00:06:29Z
-updated_at: 2026-06-28T01:34:19Z
+updated_at: 2026-07-03T00:44:47Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -122,9 +122,13 @@ agent to run a command that errors in the deployment it is running in) and
 instruments each re-deriving and re-branching on the mode). Scale, cost, and
 performance are secondary.
 
-This ADR was produced for `spec.platform.test-planning.0001`, whose
-`omg-test-planner` instrument is the first instrument written after this
-decision and the first to follow it from birth.
+This decision was **occasioned** by `spec.platform.test-planning.0001`, whose
+`omg-test-planner` instrument was the first instrument written after this
+decision and the first to follow it from birth. That spec was the birth
+occasion, not the scope: the decision is workflow-wide and standing. It is now
+produced for the successor spec `spec.platform.test-planning.0002` (which
+supersedes v1), whose new instruments must likewise be born mode-agnostic under
+it — so the decomposition of v2 discovers this ADR.
 
 ## Options Considered
 
@@ -316,10 +320,16 @@ migration work executes.
 
 ## Related Documents
 
-- `spec.platform.test-planning.0001` — the spec this ADR was produced for; its
-  `omg-test-planner` is the first instrument born under this decision, and its
-  R1.7 / server-mode Precondition are the defects this decision lets the PM
-  correct.
+- `spec.platform.test-planning.0002` — the spec this ADR is produced for. This
+  decision governs the v2 spec no less than the v1 spec it superseded: v2's
+  Preconditions invoke this ADR directly ("Sync discipline is plugin-owned … no
+  instrument built here reads or branches on the dolt mode for sync"), and v2
+  creates several new instruments that must be born mode-agnostic under it.
+- `spec.platform.test-planning.0001` (superseded by v2) — the spec that
+  **occasioned** this decision. Its `omg-test-planner` was the first instrument
+  written after this decision and the first to follow it from birth, and its
+  R1.7 / server-mode Precondition were the defects this decision let the PM
+  correct. This is the birth-record context, unchanged by the supersession.
 - `src/plugins/beads.ts` — the `BeadsPlugin` this ADR names as the owner of sync
   discipline. Its implementation is its own concern and may change without
   revisiting this decision.

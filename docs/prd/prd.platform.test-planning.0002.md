@@ -7,7 +7,7 @@ status: draft
 domain: platform
 supersedes: prd.platform.test-planning.0001
 created_at: 2026-06-29T03:24:30Z
-updated_at: 2026-07-01T04:15:12Z
+updated_at: 2026-07-03T04:38:43Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -190,6 +190,13 @@ serves the existing OMG operator who thinks in specs, epics, and beads.
    queue draining. "The work is done" and "the memory is true" are different
    claims; the workflow must not conflate them.
 
+9. **A dispatched bead never strands the epic, and a crash is recoverable.** Every
+   dispatch ends with the bead in a state the foreman can act on, and an epic that
+   was interrupted mid-build (a crashed or killed worker) can be resumed by
+   re-running the same command — with a human involved only when automatic recovery
+   has demonstrably failed. No worker can silently wedge the epic by leaving a bead
+   in limbo.
+
 ## Non-Goals
 
 - **Not keeping testing optional.** v1's opt-in-by-invocation model is removed. A
@@ -210,7 +217,7 @@ serves the existing OMG operator who thinks in specs, epics, and beads.
 - **Not re-deriving the findings-loop termination proof here.** That is the
   superseding design doc's job.
 - **Not solving systematic cross-epic verification.** Reactively handling a
-  broken prior-epic test is in scope (R11); proactively maintaining confidence in
+  broken prior-epic test is in scope (R13); proactively maintaining confidence in
   shipped epics under later change is named-deferred.
 
 ## Success Metrics
@@ -235,8 +242,9 @@ instruments — not a dashboard.
   mechanics.
 - **Stuck tests surface, never hide.** *Signal:* every un-passable test produces a
   filed, routed bead; none is resolved by an implementer altering a test or
-  closing work silently. Cross-epic (Mode 2) resolutions appear in the build report
-  and in Hindsight.
+  closing work silently. A cross-epic (Mode 2) resolution is recorded in the build
+  report the report-writer bead authors, and reaches Hindsight only when the
+  deliberate docs→Hindsight sync command is later invoked — never automatically.
 - **The foreman has no closing ceremony.** *Signal:* the foreman skill carries no
   inline "queue-empty → write report → ship" branch; the build report is a
   dispatched bead, and shipping is not in the automated flow at all.
@@ -246,8 +254,15 @@ instruments — not a dashboard.
 - **A human gate pauses cleanly.** *Signal:* an epic with an open human gate does
   not appear done and does not trigger any terminal work; it resumes when the gate
   is resolved.
-- **The loop still terminates.** An epic with planned verification, findings, and
-  re-planning drains to a clean close with no deadlock and no leaked beads.
+- **No dispatch strands the epic.** *Signal:* every foreman-dispatched worker
+  returns its bead closed or reopened-and-blocked; no bead is left `in_progress`
+  after a dispatch returns.
+- **A crashed epic resumes on re-run.** *Signal:* re-running `/omg-build` on an epic
+  with an orphaned `in_progress` bead reclaims and completes it; recovery is bounded
+  (one automatic retry, then a human gate) — it never re-dispatches indefinitely.
+- **The loop still terminates.** An epic with planned verification, findings,
+  re-planning, and crash-recovery drains to a clean close with no deadlock, no leaked
+  beads, and no unbounded retry.
 
 ## Requirements
 
@@ -293,10 +308,13 @@ or code.** Writing happens at build time, by the writing agents.
      removed**: its persona today explicitly says it writes tests, and that
      sentence must be deleted, not merely left unmentioned — otherwise the residual
      authorship path this design closes stays open.
-   The distinction is enforced where the harness enforces it: the two roles hold
-   different permissions in the test directory (see R6). Craft lives in the
-   test-writer's skill; the *reason* these are separate agents is the permission
-   boundary and the authorship franchise, not who knows more.
+   The distinction is **designed to be enforced** where the harness enforces it —
+   the two roles are meant to hold different permissions in the test directory —
+   but that permission enforcement is **named-deferred** (see R6; the per-agent
+   `permission` grant matrix is a separate effort, so the split ships enforced by
+   *instruction and separate-agent structure* now and by permissions later). Craft
+   lives in the test-writer's skill; the *reason* these are separate agents is the
+   permission boundary and the authorship franchise, not who knows more.
 
 6. **Independence is structural: separate dispatch, and an eventual read-boundary.**
    - Tests are authored in a dispatch separate from the one that writes the
@@ -328,24 +346,26 @@ or code.** Writing happens at build time, by the writing agents.
    - **At build time**, the implementer reads its own bead's test-bead reference,
      queries those test beads' metadata for the run-selectors, and runs exactly
      those. It resolves the chain through **bead metadata only** — never by reading
-     the test's source. The Case-A `test blocks implementation` edge (R2) guarantees
-     the test bead is written and closed before the implementer runs, so the
-     selector is present when needed.
+     the test's source. The default test-blocks-implementation edge the build-planner
+     wires (R2 — the test bead blocks the implementation bead) guarantees the test
+     bead is written and closed before the implementer runs, so the selector is
+     present when needed.
 
    These two writes are **skill-instructed, not enforced**, and that is acceptable
    because R8 is their safety net: if either write is skipped or malformed, the
    fast focused path degrades to "caught at review," never to "ships broken."
 
-8. **Per-bead done-check is focused; the review bead runs the full suite once.**
-   The implementer validates its own bead by running only its **focused** test
-   target (R7) and iterating to green — it does **not** run the whole suite, which
-   would cost full-suite time and tokens once per bead. The **full test suite runs
-   exactly once, at the review bead**, and is the systematic catch for two things:
-   any prior-epic test this epic broke (Mode 2, R11), and any hole left by a broken
-   R7 metadata chain (a planned test that never got wired to a focused run). When
-   the review-bead suite goes red, the reviewer files a bead in real time — a
-   Mode-2 finding to the PM, or a fix finding for a missed test — consistent with
-   its existing "file findings, don't fix" discipline. The run command itself is
+8. **Per-bead done-check is focused; the full suite runs at the review bead, never
+   per-bead.** The implementer validates its own bead by running only its
+   **focused** test target (R7) and iterating to green — it does **not** run the
+   whole suite, which would cost full-suite time and tokens once per bead. The
+   **full test suite runs at the review bead** (each time the review fires, per
+   R15 — the point is that it runs *there*, not per implementation bead), and is the
+   systematic catch for two things: any prior-epic test this epic broke (Mode 2,
+   R13), and any hole left by a broken R7 metadata chain (a planned test that never
+   got wired to a focused run). When the review-bead suite goes red, the reviewer
+   files a bead in real time — a Mode-2 finding to the PM, or a fix finding for a
+   missed test — consistent with its existing "file findings, don't fix" discipline. The run command itself is
    **not** onboarding-configured: the agent infers the runner from the repo's
    tooling (and may consult the web), so no brittle per-repo run-command config is
    introduced. (Only the R6 read-deny needs onboarding, because a permission
@@ -402,11 +422,13 @@ or code.** Writing happens at build time, by the writing agents.
       full Hindsight memory of why prior guarantees exist. The PM resolves it: the
       old behavior was intended (the change is wrong — kick back), the change is
       intended (the old test is stale — mint a test-update bead for the
-      test-writer), or it is a genuine product decision (escalate to a human via
-      `bd human`). **The PM's Mode-2 decision is recorded in the foreman's build
-      report, ships to Hindsight, and surfaces to the human** (who is informed, not
-      gated). This gives cross-epic decisions a durable trail in the same memory the
-      PM consults for the next such collision.
+      test-writer), or it is a genuine product decision (pause for a human — see
+      R15). **The PM's Mode-2 decision is captured as bead comments that the
+      report-writer bead (R16) folds into the build report, and surfaces to the
+      human** (who is informed, not gated). It enters Hindsight only when the
+      deliberate docs→Hindsight sync command is later invoked (Goal 8, R16) — never
+      as an automatic side effect. Once shipped, this gives cross-epic decisions a
+      durable trail in the same memory the PM consults for the next such collision.
 
 14. **Verification work is labeled and dispatchable like all other work.** Test
     beads and test-update beads carry the appropriate `agent` label so the foreman
@@ -414,18 +436,30 @@ or code.** Writing happens at build time, by the writing agents.
 
 15. **A red review-suite blocks the epic through the ordinary finding mechanism.**
     When the review-bead full-suite run (R8) is red, the reviewer files a finding
-    bead that blocks the review bead — exactly the existing file-and-reopen
-    discipline. The reviewer's existing change-locality judgment sets only the
-    finding's **`agent` label**, not whether it blocks: a failure caused by this
-    epic reddening a **prior** guarantee is labeled for the **PM** (Mode 2); a
-    failure that should be fixed **in this epic** is labeled for the **builder**.
-    Either way the finding blocks the review bead, the foreman dispatches it by
-    label, and when the handler closes it the review re-fires (from a fresh
-    context). No new blocking machinery: it blocks like any finding; the label does
-    the routing. When the PM cannot decide, it does **not** close the bead — it
-    places a **human gate** on it (`bd gate create --type=human --blocks <id>`),
-    which hides the bead from `bd ready` until a human resolves the gate, so the
-    epic pauses cleanly instead of appearing done.
+    bead that blocks the review bead — the existing file-and-reopen discipline —
+    and its change-locality judgment sets the finding's **`agent` label**: a failure
+    that should be fixed **in this epic** is labeled for the **builder**; a failure
+    caused by this epic reddening a **prior** guarantee is labeled for the **PM**
+    (Mode 2). Either way the finding blocks the review bead and the foreman
+    dispatches it by label; when it closes, the review re-fires from a fresh context.
+    **The label does more than route — it selects the resolution wiring, which
+    differs by handler** (the two are not interchangeable):
+    - A **builder-bound** finding follows the standard fix path, including the R13
+      guarantee that its fix's verification is planned before the fix is built.
+    - A **PM-bound** (Mode 2) finding is adjudicated by the PM (R13 Mode 2). Its
+      resolutions have their own wiring, distinct from the builder path — a
+      kick-back that mints a fix bead, a test-update, or a human pause — because the
+      review-time finding blocks the review bead with **no open implementation bead
+      to attach to** (the epic's work has all closed). **A fix the PM mints is still
+      a fix: its verification is planned before it is built, on the same footing as
+      any other fix (R13 Mode 1 / R11)** — a PM-minted fix must not be the one path
+      that escapes verification planning, since findings-driven work escaping
+      verification is the exact gap this whole effort closes.
+    When the PM cannot decide, it does **not** close the finding — it places a
+    **human gate** on it: a gate that hides the bead from the ready queue until a
+    human resolves it, so the epic pauses cleanly instead of appearing done. (The
+    gate mechanism, and the exact resolution wiring for each handler, are the design
+    doc's to specify.)
 
 16. **The epic's terminal work is beads on the graph; the foreman loses its
     closing ceremony; shipping to memory leaves the automated flow entirely.**
@@ -445,10 +479,67 @@ or code.** Writing happens at build time, by the writing agents.
       separate, deliberately-invoked command** (a docs→Hindsight sync), run when the
       docs are actually canon. This is what makes the workflow safe under a future
       PR/merge flow: durable memory enters only on a human's deliberate act, never
-      as a side effect of a build finishing on a branch that may never merge. Per
-      R8, ordering guarantees that were inline foreman rules (e.g. epic before
-      report) become dependency edges on the terminal beads / the sync command's
-      own logic.
+      as a side effect of a build finishing on a branch that may never merge.
+      Ordering guarantees that were inline foreman rules become explicit: the
+      report-after-work order is a dependency edge on the terminal beads (the report
+      bead is blocked behind the review bead), and the epic-before-report *ship*
+      order moves to the sync command's own logic.
+
+17. **The dispatch lifecycle contract (foreman-dispatched build-phase workers).**
+    Every agent the foreman dispatches to work a bead must, before returning control,
+    leave that bead in exactly one of two states: **closed** (the work succeeded), or
+    **reopened *and* blocked by a new bead** (it could not finish, and the new bead —
+    labeled for whoever can resolve the blocker — carries what must happen first). It
+    must **never** return with the bead left `in_progress`, and **never** reopen a
+    bead without a blocking bead (a reopened-but-unblocked bead re-dispatches to the
+    same agent that just failed, in a loop). A dispatch is a single turn, not a
+    back-and-forth with the foreman. This contract is what lets the foreman stay
+    stateless — it can route purely by label and trust the bead state — so a
+    violation is a defect, not a style issue. **Scope:** this governs foreman-
+    dispatched build-phase workers that *operate on their own bead* (builder,
+    test-writer, reviewer, PM adjudicator). It does **not** apply to the plan-time
+    planners **in their plan-time pass** (build-planner, test-planner), which *mint*
+    beads rather than claim and close one. (Note the test-planner is only exempt in
+    that plan-time pass: when it later works a foreman-dispatched summons bead at
+    build time — e.g. a Mode-1 `w₁` — it *is* a build-phase worker on its own bead
+    and the contract applies, which is exactly its mandatory-close discipline.)
+
+18. **A partially-built epic is recoverable by re-running the same command; a human
+    is involved only after automatic recovery fails.** A worker can be interrupted
+    mid-bead (crash, kill, power loss), leaving its bead claimed and `in_progress`.
+    Because `bd ready` excludes `in_progress` beads, such a bead is invisible to the
+    queue and would silently wedge the epic. Recovery has **two detection points
+    feeding one recovery path:**
+    - **Run-start orphan scan.** On a fresh `/omg-build`, before dispatching
+      anything, the foreman scans for `in_progress` children. Since it has dispatched
+      nothing yet this run, any it finds are **orphaned by definition** (leftovers
+      from a prior interrupted run) — no run-state tracking needed.
+    - **Drain-time stranded-bead check.** If the queue drains and the epic is not
+      close-eligible, an `in_progress` child remains that this run's foreman *did*
+      dispatch —
+      i.e. a worker returned in violation of R17. It is treated as stranded, through
+      the same recovery path (not silently reclaimed as "orphaned," and not a halt).
+    - **The one recovery path (both points):** the foreman **comments the reclamation
+      on the bead** (an audit trail, and a signal to the replacement) and
+      re-dispatches it to a **fresh** agent by its label, instructing that agent to:
+      **(1)** check whether the work is already complete — the prior agent may have
+      finished but died before closing — and if so, close the bead; **(2)** otherwise
+      pick up the partial work and continue to a clean terminal state (R17); **(3)**
+      if it still cannot reach a clean terminal state, fail cleanly. **Bounded
+      escalation:** exactly **one** automatic second chance. If the fresh agent also
+      fails to reach a clean terminal state, the foreman **human-gates** the bead —
+      it does not re-dispatch again. This bounds recovery (no infinite retry) and
+      reserves the human for the genuinely-stuck case. The retry count is **carried on
+      the bead** (via the reclamation record), not held by the foreman, so the bound
+      requires no per-run foreman state — preserving the statelessness R17 rests on.
+      (Where exactly the count lives on the bead is a build-time detail for the design
+      and spec.)
+    - **Accepted residual risk (named, not solved):** re-dispatch relies on the
+      replacement agent rediscovering the prior agent's partial work. The reclamation
+      comment mitigates this (it tells the replacement to look), and the risk requires
+      *chained* failure (the prior agent left partial work *and* the replacement fails
+      to notice). It remains possible but low-risk, and is now auditable via the
+      comment. It is stated as a known cost, not claimed away.
 
 ## Scope
 
@@ -484,6 +575,13 @@ or code.** Writing happens at build time, by the writing agents.
 - **Dismantling the foreman's terminal branch**: the build report and any closing
   work become labeled beads on the graph, blocked behind the review bead; the
   automated flow stops at writing the build report.
+- **The dispatch lifecycle contract** for foreman-dispatched build-phase workers
+  (return closed, or reopened-and-blocked; never `in_progress`, never
+  open-unblocked).
+- **Crash/interruption recovery**: run-start orphan scan + drain-time stranded-bead
+  check, one recovery path (comment → re-dispatch fresh with verify-done-then-continue
+  → one bounded retry → human-gate). This adds recovery logic to the foreman's
+  looping mechanics; it does not touch the label-only routing invariant.
 - **Removing shipping-to-Hindsight from the automated flow** and defining its new
   home as a separate, deliberately-invoked docs→Hindsight sync command (this PRD
   defines the boundary and the removal; the command's full behavior is its own
@@ -514,6 +612,13 @@ or code.** Writing happens at build time, by the writing agents.
   the build report + deliberate sync command" boundary in R16 is what makes this a
   future *addition* rather than a *rework*. Most operators are expected to want
   ship-at-merge.
+- **Precise orphan detection via a session-id claimant** — if a dispatched subagent
+  can read a stable session id and use it as the bead's claimant, the foreman could
+  distinguish "orphaned by a dead session" from "live in a running session" at any
+  moment, enabling *mid-run* recovery (not just fresh-run). Deferred pending
+  verification that the harness exposes a usable, stable session id to the subagent;
+  R18's run-boundary detection is sufficient for the fresh-run recovery in scope and
+  requires no such harness assumption.
 - **The implementation agent's test-directory read-deny** — the permission rule
   and its onboarding configuration (framework-specific). Designed-for now (R6),
   built later.
@@ -554,8 +659,9 @@ details the design left open.
 4. **Mode 2 recognition and re-entry.** *Resolved in principle* (see R7/R8/R13): the
    implementer classifies by this epic's test-bead metadata and run output, never by
    reading test source; the PM's decision re-enters as a kick-back, a test-update
-   bead, or `bd human`, and lands in the build report via bead comments the foreman
-   folds in. The exact matching mechanics (run-output → test-bead selector) and the
+   bead, or a human pause (R15), and is captured as bead comments the report-writer
+   bead folds into the build report (reaching Hindsight only via the later sync
+   command). The exact matching mechanics (run-output → test-bead selector) and the
    build-planner's requirement-to-implementation-bead mapping remain **build-time
    details for the spec**, not design gaps.
 
@@ -570,18 +676,24 @@ details the design left open.
    bead is labeled `agent=omg-reviewer` (the review agent is already the build-record
    synthesizer per `adr.platform.memory-lifecycle.0001` §5, so this adds no new
    agent), minted by the decomposer at plan time from a static `omg-epics` block,
-   and blocks the review bead (`report blocks R`) so epic-before-report ordering
-   becomes a dependency edge. The foreman's "Closing / build report / Shipping"
+   and is **blocked behind** the review bead (the report bead depends on `R`, so it
+   comes ready only after `R` is green and all findings have drained) — making the
+   work-before-report ordering a dependency edge. The foreman's "Closing / build
+   report / Shipping"
    sections are removed; it dispatches the terminal bead like any other. The
    "shipping is a deliberate act, not an automated phase" principle became its own
    ADR (`adr.platform.memory-shipping-boundary.0001`), and the foreman's loss of
    terminal state was folded into `adr.platform.plan-time-orchestration.0001`.
 
-7. **Report-writer write grant (OQ-F, for the spec).** The report-writer bead needs
-   a narrow `**/*.md` write grant, but the reviewer agent is `edit: deny` today. The
-   spec must specify this grant and confirm it does not weaken the reviewer's stance
-   elsewhere — and reconcile whether memory-lifecycle §5's "review agent synthesizes
-   the record" is faithfully met by a terminal bead the review agent handles *after*
+7. **Report-writer write grant (OQ-F).** The report-writer bead needs the reviewer
+   to be able to write into the docs tree, but the reviewer agent is `edit: deny`
+   today. **The grant's *scoping* is deferred with the rest of the `permission`
+   frontmatter matrix** (see the Non-Goal in the spec): this build grants a working
+   write capability, and tightening it to the docs tree (a scoped frontmatter glob,
+   a satellite `external_directory` reach, or both) is part of the separate
+   permissions effort. What remains a live design point is unchanged by the
+   deferral: reconcile whether memory-lifecycle §5's "review agent synthesizes the
+   record" is faithfully met by a terminal bead the review agent handles *after*
    the review bead closes (vs. synthesis inside the review bead).
 
 8. **Sync-command boundary (OQ-G, deferred).** This PRD defines only the boundary
@@ -606,11 +718,16 @@ details the design left open.
 - `omg-reviewer` agent + `omg-review` skill — drives the findings loop; stays blind
   to test mode; executes the single-author review bead as a work order.
 - `omg-foreman` agent + skill — routing invariant untouched; looping mechanics may
-  extend for fresh-context test-writing; its inline terminal branch (closing / build
-  report / shipping) is dismantled into dispatched beads, and shipping leaves the
-  automated flow (R16).
+  extend for fresh-context test-writing (R6), crash/interruption recovery (R18), and
+  the dispatch lifecycle contract it relies on (R17); its inline terminal branch
+  (closing / build report / shipping) is dismantled into dispatched beads, and
+  shipping leaves the automated flow (R16).
+- `omg-builder` / `omg-tester` / `omg-reviewer` (and the PM as adjudicator) — the
+  foreman-dispatched build-phase workers bound by the dispatch lifecycle contract
+  (R17): return closed, or reopened-and-blocked; never `in_progress`.
 - The docs→Hindsight **sync command** (new home for shipping; its full behavior,
   including superseded-doc handling, is deferred) — reconcile against
   `adr.platform.memory-lifecycle.0001`.
 - `omg-product-manager` agent — Mode-2 adjudicator, using Hindsight memory; its
-  decision is recorded via the foreman's build report.
+  decision is captured as bead comments the report-writer bead folds into the build
+  report (and reaches Hindsight only via the deliberate sync command).
