@@ -6,8 +6,9 @@ description: >
   conventions, preferred test libraries, mocking strategies, and opinionated
   patterns. Use this skill whenever writing, reviewing, or planning tests.
   Trigger on: writing new tests, reviewing test quality, improving coverage,
-  debugging flaky tests, setting up test infrastructure, or evaluating test
-  suite confidence.
+  debugging flaky tests, setting up test infrastructure, evaluating test
+  suite confidence, or, in the OMG workflow, working a dispatched test bead
+  (stamping a run-selector, leaving a bead terminal).
 version: 0.1.0
 ---
 # Testing Skill
@@ -61,6 +62,71 @@ A Phoenix app with a TypeScript frontend:
 - Working on Elixir context modules: read `guides/elixir.md`
 - Working on LiveView or controllers: read `guides/elixir.md` + `guides/phoenix.md`
 - Working on the JS frontend: read `guides/typescript.md` + `guides/frontend.md`
+
+## The run-selector for a test you authored
+
+In the OMG workflow you stamp a **run-selector** onto each test bead after writing
+its test — the concrete, runnable identifier that runs *exactly* that test and
+nothing else. Its form is ecosystem-specific, and the guide for your stack is where
+to confirm it: it is the file path plus whatever name/filter the runner accepts to
+target a single test (for example, an ExUnit `path:line`, a pytest
+`path::Class::test_name` node id, a Vitest/Jest `-t "<name>"` filter, a `cargo test
+<module>::<name>` path). Prefer the tightest selector the runner supports, so the
+implementer's focused done-check runs only this test. When a guide names the
+idiomatic single-test invocation for its stack, use that form for the selector.
+
+## Working a dispatched test bead (OMG workflow)
+
+When the foreman dispatches you onto a test bead — a planned `z`, a Mode-1 re-plan
+`z′`, or a stale prior-epic test-update `u` — follow this procedure. It applies to
+`z`, `z′`, and `u` **alike**.
+
+### 1. Write the test the bead's wiring intends
+
+Honor the bead's Case, do not re-decide scope:
+
+- **Case-A bead** (the code does not exist yet; the test bead blocks the
+  implementation bead): write the **failing** test. It must fail red until the
+  implementer's code makes it pass — that red is the point of ordering the test
+  first.
+- **Case-B bead** (the code already exists; the test is ordered after it): author
+  and run the **post-fix** test, confirming it passes against the existing code.
+
+### 2. Stamp the run-selector onto the bead (the second metadata hop)
+
+Once the test exists, write its concrete run-selector (the form above) onto the
+test bead. You are the only agent that can: the build planner could not pre-commit
+it at plan time because the test did not exist yet. The selector is the target the
+implementer later runs to prove its code is done, resolved through bead metadata
+without ever reading your test's source (so it survives an eventual read-deny on
+the test directory).
+
+The `bd` write itself lives in `omg-commands` §"Bead metadata" — reach for it for
+the authoritative form (`bd update <bead> --set-metadata
+"run_selector=<file>:<name-or-filter>"`). Stamp it for `z`, `z′`, and `u` alike; a
+bead closed without its `run_selector` costs the implementer its focused fast path.
+
+### 3. Leave the bead terminal (the dispatch-lifecycle contract, R17)
+
+The foreman holds no state, so before you return control you leave your `z`/`z′`/`u`
+bead in **exactly one** of two states, never `in_progress` and never
+reopened-unblocked:
+
+- **Closed** — you authored the test and stamped its selector. Success.
+- **Reopened and blocked** — you could not finish. File a bead naming the blocker,
+  wire it to **block** yours (`bd dep add <your-bead> <blocker-bead>`), reset yours
+  to the queue (`bd update <your-bead> --status open --assignee ""`), and stop. A
+  dispatch is a single turn; you finish or you file-and-block — you never hand a
+  half-written bead back expecting a nudge.
+
+### 4. Recovery: a bead carrying a reclamation comment (R18)
+
+If you are dispatched onto a bead carrying a **reclamation comment** (a prior worker
+was interrupted mid-write and the foreman handed you the bead fresh), first check
+whether the test was **already authored** — the prior worker may have finished the
+work but died before closing. If it was, close the bead (stamping the selector per
+step 2 if it is missing). Otherwise pick up the partial work and carry it to a clean
+terminal state per steps 1–3.
 
 ## When No Guide Exists
 

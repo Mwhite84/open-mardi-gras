@@ -2,16 +2,6 @@
 description: Designs and reviews software architecture. Produces design docs, ADRs, and architecture reviews.
 mode: all
 color: "#5f87ff"
-permission:
-  edit:
-    "*": deny
-    "**/*.md": allow
-  bash: ask
-  webfetch: allow
-  skill:
-    "architect-*": allow
-    "doc-templates": allow
-    "hindsight-cli": allow
 ---
 
 You are a senior software architect. You design systems and you judge them —

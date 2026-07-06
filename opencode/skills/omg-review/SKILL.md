@@ -12,37 +12,55 @@ procedure on top of it.
 
 ## Process
 
-The foreman hands you a **review bead id**, not the work to do. Your bead body
-is your work order, exactly as the builder's bead body is its work order
-(`omg-builder` steps 2–3: read the full description with `bd show <id>` and do
-what it says). So before the standard steps below, **fetch your review bead and
-execute the work order you find there**: `bd show <R>` (the review bead id the
-foreman passed), then carry out the standard review steps below **plus any
-additional filing steps the bead body names**. The standard procedure is the
-default work order; a bead body may carry extra filing steps on top of it, and
-you execute those the same way — no differently in kind from the standard steps.
+The foreman hands you a **bead id**, not the work to do. Your bead body is your
+work order, exactly as the builder's bead body is its work order (`omg-builder`
+steps 2–3: read the full description with `bd show <id>` and do what it says). So
+before the standard steps below, **fetch your bead and execute the work order you
+find there**: `bd show <id>`, then carry out the work order. Two different beads
+come to you by the same `agent=omg-reviewer` label — recognize which you are on:
+
+- The **review bead `R`** — you review the changes and run the findings loop
+  (below). Its static body carries the full-suite run and the finding-filing steps
+  on top of the standard review procedure; you execute those the same way, no
+  differently in kind.
+- The **terminal report-writer bead `P`** — a *different* bead, blocked behind `R`.
+  You write the build report and stop (see "The report-writer bead `P`").
 
 1. **Identify what changed.** Use `git diff` against the branch point, or
    `bd show <epic-id> --json` to understand the scope of the review.
 2. **Read every changed file in full.** Do not skim. A skimmed review misses the
    findings that matter.
-3. **File a bead for every finding.** As you find each issue, create a bead of
-   type `bug` or `chore`, with a priority from the scale below, a description
-   that names the file paths and line numbers, and a `discovered-from` link back
-   to the review bead. See `omg-commands` for the exact `bd create` flags.
-   **Stamp each finding with an `agent` label** (`bd set-state <finding-id>
-   agent=omg-builder`) so the foreman can dispatch it when it comes ready — an
-   unlabeled finding cannot be routed. Decide where each finding lives:
-   - **In the epic's scope** — a defect in the changed code, or something the
-     epic cannot honestly ship without: create it as a child of the epic
-     (`--parent <epic-id>`) and make the review bead depend on it
-     (`bd dep add <review-bead-id> <finding-id>`), so the epic cannot close
-     over an unfixed finding.
-   - **Outside the epic's scope** — pre-existing tech debt or a bug in code the
-     epic does not touch: create it standalone, with no parent and no
-     review-bead dependency. The `discovered-from` link preserves the trail
-     without holding the epic hostage.
-4. **Close the review bead, or reopen it.**
+3. **Run the full test suite** (when `R`'s body directs you to). Infer the runner
+   from the repo's tooling. You run the whole suite *here, at the review bead*,
+   each time this review fires — not per implementation bead. Read pass/fail and file a finding for each red test, the
+   same as any review finding. You need **no** knowledge of test mode, of which
+   tests are this epic's `z` beads, or of any test's source to do this — you run a
+   command, read the result, and file. Your judgment stays blind to test mode.
+4. **File a bead for every finding — it always blocks the review.** As you find
+   each issue (a red suite test, or a review finding), create a bead of type `bug`
+   or `chore`, priority from the scale below, a description naming file paths and
+   line numbers, and `discovered-from:<R>`. **Stamp it with an `agent` label** — and
+   the label does more than route: your **change-locality judgment** sets it, and it
+   **selects the finding's wiring**. An epic-scoped finding **always** blocks the
+   review bead (never a standalone out-of-scope filing); you decide the *handler and
+   its wiring*, never *whether* to block:
+   - **Builder-bound** — the failure should be fixed *in this epic* (a defect in the
+     changed code). The finding is the fix bead `x` (`agent=omg-builder`), armed with
+     a summons bead `y` (`agent=omg-test-planner`) and wired `y → x → R`. This is the
+     ordinary findings loop.
+   - **PM-bound** — this epic's change reddened a **prior-epic** guarantee (a Mode-2
+     collision). The finding is an adjudication bead `m` (`agent=omg-product-manager`),
+     wired **`m` blocks `R`**, with no `y` summons and no fix `x` — there is nothing to
+     fix until the PM decides one is warranted. The PM resolves `m`.
+
+   You **label-and-block** — you do not build either subgraph beyond filing-and-wiring
+   the finding. (A finding genuinely unrelated to this epic — pre-existing tech debt
+   in untouched code — is filed standalone with no review-bead dependency; the
+   `discovered-from` link preserves the trail without holding the epic hostage.)
+   The exact `bd` flags and the full wiring for each case live in the **Verification
+   wiring** section of `omg-epics`; `R`'s own body carries them too, stamped from
+   `omg-epics` at plan time.
+5. **Close the review bead, or reopen it.**
    - If you filed no epic-scoped findings, close the review bead with a reason
      that states the count (e.g. "Review complete. Filed N findings, none
      blocking.").
@@ -51,8 +69,27 @@ you execute those the same way — no differently in kind from the standard step
      (`bd update <review-bead-id> --status open`), then report what you filed.
      Control returns to the foreman: the findings you filed are now ready work, so
      the foreman dispatches them to builders, and when they are done the review
-     bead comes ready again and the foreman dispatches it back to you for a fresh
-     pass. You do not invoke the builder yourself — you file, reopen, and report.
+      bead comes ready again and the foreman dispatches it back to you for a fresh
+      pass. You do not invoke the builder yourself — you file, reopen, and report.
+
+## The dispatch-lifecycle contract
+
+Working `R` or `P`, you leave the bead in **exactly one** of two states before you
+return: **closed** (the review passed with no epic-scoped findings; or the report
+is written) or **reopened-and-blocked-by-a-new-bead** (you filed epic-scoped
+findings and reopened `R`, which the findings now block). Never leave the bead
+`in_progress`; never reopen it unblocked. A dispatch is a single turn.
+
+## The report-writer bead `P`
+
+`P` is a *different* bead from `R`, blocked behind it, dispatched to you by the same
+`agent=omg-reviewer` label once `R` closes. Execute its static body: read every
+child bead's comments (`bd comments <id>`), synthesize the build report with the
+`doc-templates` `build-report` template, write it to the docs tree at the
+resolver-computed path, and **stop**. You perform **no** Hindsight ship, you close
+no other bead, you touch no other work — writing the report is the whole job.
+Give the report a `hindsight` block only if the build carried something worth
+remembering; otherwise omit it so it stays in Git without adding memory noise.
 
 ## Categories to examine
 
@@ -88,14 +125,10 @@ runbook's.
   agent can act without re-hunting.
 - **Unfiled findings.** A finding mentioned only in prose is a finding lost. If
   it is worth raising, it is worth a bead.
-- **Orphaned findings.** Every finding bead carries a `discovered-from` link
-  back to the review bead, so the trail from review to work is intact.
 - **Misfiled findings.** An epic-scoped finding filed standalone lets the epic
-  close over a known defect; an unrelated finding wired to the review bead
-  blocks the epic on work that is not its job. The in-scope/out-of-scope call
-  decides both, so make it deliberately.
+  close over a known defect; a genuinely-unrelated finding wired to the review bead
+  blocks the epic on work that is not its job. The scope call decides both, so make
+  it deliberately.
 - **Closing a blocked review.** If epic-scoped findings exist, the review bead
   goes back to open and the findings get fixed first — a review closed over its
   own blocking findings defeats the gate.
-- **A review bead closed silently.** The closing reason states the finding count
-  so the next agent knows the review actually ran.

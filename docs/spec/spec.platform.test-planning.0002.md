@@ -7,7 +7,7 @@ status: draft
 domain: platform
 supersedes: spec.platform.test-planning.0001
 created_at: 2026-07-02T04:56:45Z
-updated_at: 2026-07-03T04:29:39Z
+updated_at: 2026-07-04T12:00:00Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -103,23 +103,65 @@ the source and mirrors into the harness per the repo's sync discipline.
 | I1 | `opencode/agents/omg-decomposer.md` | **Edit** — becomes the plan-time orchestrator |
 | I2 | `opencode/agents/omg-build-planner.md` | **Create** — the build-judgment planner |
 | I3 | `opencode/agents/omg-test-planner.md` | **Edit** — retarget from v1 to plan-pass + summons authority |
-| I4 | `opencode/agents/omg-tester.md` + `test-writing/SKILL.md` | **Edit** — sole test-writer, hop-2 selector, R17/R18 clauses |
+| I4 | `opencode/agents/omg-tester.md` + `test-writing/SKILL.md` | **Edit** — persona: sole-test-writer identity + R17 *kernel*; **skill**: hop-2 selector write, Case-A/B write behavior, R17 steps, R18 recovery (mechanics out of the persona) |
 | I5 | `opencode/agents/omg-builder.md` + `omg-builder/SKILL.md` | **Edit** — code-only, hop-3 resolve, escape hatch, R17/R18 clauses |
 | I6 | `omg-epics/SKILL.md` **(both trees)** | **Edit** — plan-phase sequence + test-planning wiring + static `R`/`P` blocks |
 | I7 | `omg-foreman/SKILL.md` **(both trees)** | **Edit** — fresh-context test-writer, terminal-branch removal, crash recovery |
 | I8 | `opencode/agents/omg-foreman.md` | **Edit** — persona sheds report/ship narration |
 | I9 | `omg-review/SKILL.md` **(both trees)** | **Edit** — R15 finding wiring + `P` handling + R17 clause |
-| I10 | `opencode/agents/omg-product-manager.md` | **Edit** — Mode-2 adjudication (both topologies) + R17/R18 clauses |
+| I10 | `opencode/agents/omg-product-manager.md` (persona) + `omg-epics/SKILL.md` (wiring) | **Edit** — persona already carries only the product-intent kernel + R17 kernel + pointer to `omg-epics` (Mode-2 wiring/gate mechanics live solely in `omg-epics`, done). **Live work:** author the PM **R18 recovery clause** into `omg-epics` §Mode-2 (R10.7 — it is missing there), and collapse the triplicate `omg-epics` pointer in the persona |
 | I11 | `opencode/agents/omg-reviewer.md` | **Edit** — able to write the report for `P` (grant shape deferred) |
 | I12 | `opencode/commands/omg-decompose.md` | **Edit** — the ask now covers the full plan phase |
 | I13 | `opencode/commands/omg-test-plan.md` | **Retire / remove** — the v1 opt-in surface |
 | I14 | docs→Hindsight **sync command** (name TBD) | **Create — boundary only; behavior deferred** |
+| I15 | `opencode/commands/omg-build.md` | **Edit** — shed the report-synthesis + ship steps; drive drain-and-close only (the terminal report is the dispatched `P` bead; nothing ships). Preserve the build-mode resolution and the `then:` chain |
+| I16 | `opencode/commands/omg-ensure-work-finished.md` | **Edit** — the `then:` follow-up verifies drain / terminal-`P` dispatch / close only; remove every write-the-report-yourself and ship clause, and the dangling `omg-foreman`-skill closeout/shipping reference |
 
 Instruments and properties deliberately **out of scope to change** (a change is a
 build defect): the foreman's **label-only routing invariant** (I7/I8 touch only
 looping mechanics), the `test-writing` skill's grant to anyone but the tester,
 and any reintroduction of a test taxonomy, scoring rubric, or ephemeral bead
 class.
+
+**The who/how/ask split is a build invariant, not a stylistic preference.** Every
+instrument row above that pairs an agent with a skill (I4, I5, I9, I10) means the
+**persona** carries unconditional identity/values and the **skill** carries the
+situational procedure — the `bd` flag sequences, bead-wiring topologies, and
+escalation/recovery step-lists. Baking that conditional procedure into a persona
+loaded on every turn is a **build defect** (see the per-row instrument-shape rules
+and the *Non-Goals* entry). This spec's own I4/I10 requirements were originally
+worded loosely enough to be read as "inline the mechanics in the agent"; the
+corrected wording is authoritative. The tester (`omg-tester.md`) and the PM
+(`omg-product-manager.md`) have since been brought into conformance — their
+mechanics live in the `test-writing` skill and `omg-epics` respectively — so their
+shape rules now stand as regression guards, not pending corrections. Where a built
+instrument still takes the loose reading, the correction moves the mechanics to the
+skill.
+
+**Prose economy is a second, orthogonal build axis — the who/how split is
+necessary but not sufficient.** Content correctly placed in a persona can still
+restate one invariant many times, import a concept only to forbid it, or defend
+against a failure never observed. Every instrument this build creates or edits and
+that carries persona/skill prose (the I1–I10 and I12 rows; the retirement I13, the
+grant-only I11, and the boundary-only I14 have no prose to economize) MUST also
+pass the **"Write for the model"** pass defined in the `authoring-opencode` skill —
+the per-line cut test ("would removing this line cause the agent to make a
+mistake?"), state-each-rule-once, crisp singular negatives with a one-clause
+rationale on non-obvious rules, guardrails earned by observed failures rather than
+anticipated ones, and no concept-leak. This spec does **not** restate those rules;
+the `authoring-opencode` skill is their sole owner, and restating them here would
+duplicate authority that drifts — the very fault the standard names. The two axes
+are independent: passing the who/how placement rule does **not** discharge this
+one, and an over-stated but correctly-placed persona (the `omg-foreman.md` pilot,
+which restates "authors/ships nothing" eight-plus times) is still a build defect.
+**Order of operations:** placement first, economy second — the economy pass runs on
+already-correctly-placed content; it never relocates a rule (that is the who/how
+axis's job) and never strips a kernel a placement rule requires present, and it
+honors the standard's own keep-rules (rationale earns its tokens on non-obvious
+rules; a crisp negative is not a defect; minimal is not the same as short). This
+axis is **scoped to the instruments this build already edits** — an economy sweep
+of untouched OMG instruments is a separate effort (see the review's follow-up-sweep
+note) and widening the diff to reach them is a build defect, not diligence.
 
 ## Requirements
 
@@ -133,11 +175,30 @@ design doc and are not repeated.
 
 ### I1 — `omg-decomposer` becomes the plan-time orchestrator
 
-- **R1.1 [MUST] — Orchestrates, judges nothing.** The decomposer's persona
-  drives the plan phase in fixed order — dispatch the test-planner, then the
-  build-planner, then author `R`, then mint `P` — and **absorbs none of the
-  planning judgment** (no test-scope decisions, no build-completeness decisions
-  of its own). It sequences and wires; the planners judge. (PRD R1; design I1.)
+> **Instrument-shape rule for I1 (who/how/ask; do not violate).** The decomposer
+> **persona** carries only the **unconditional kernel** — *I sequence, I do not
+> judge (I decide neither what to verify nor what to implement); verification is
+> always planned before the build, never toggled* — plus a **pointer** to the
+> `omg-epics` plan-phase sequence. The **ordered step-list** (mint → test-planner →
+> build-planner → author `R` → mint `P` → validate), the **`bd` wiring** (`bd dep
+> add <P> <R>`, the `agent`-label stamp, the `spec_id`/ADR-scan mechanics), and the
+> static-block authoring procedure are **how-to** and live in the **`omg-epics`
+> skill** (with the `bd` forms in `omg-commands`), which the persona points at. **The
+> build MUST NOT restate the ordered step-list or carry `bd` flags in the persona.**
+> The "always-planned, never-toggled" fact is a persona kernel value stated once;
+> the operator-facing "no test-planning flag, no config key" negation is the
+> **command's**, per R12.1, not the persona's. (The built `omg-decomposer.md` had a
+> "What You Know" section duplicating the skill's mechanics and carrying literal `bd`
+> commands; **since corrected** — the section is deleted and the mechanics are homed
+> in the skill, leaving a disposition-only persona. This rule now stands as a
+> regression guard.)
+
+- **R1.1 [MUST] — Orchestrates, judges nothing.** The decomposer's persona drives
+  the plan phase in the fixed order the `omg-epics` plan-phase sequence defines
+  (R6.1 owns the canonical ordered list; the persona does not restate it) and
+  **absorbs none of the planning judgment** (no test-scope decisions, no
+  build-completeness decisions of its own). It sequences and wires; the planners
+  judge. (PRD R1; design I1.)
 - **R1.2 [MUST] — Sequential subagent dispatch, ordering guaranteed.** It
   dispatches the two planners as subagents via the Task tool, each dispatch
   returning before the next, so test-planning strictly precedes build-planning
@@ -155,6 +216,17 @@ design doc and are not repeated.
   design I1, Region 4.)
 
 ### I2 — `omg-build-planner` (new agent)
+
+> **Economy rule for I2 (do not violate).** I2 pairs no dedicated skill (its wiring
+> lives in `omg-epics`, which the persona points at), so the *placement* risk the
+> I1/I4/I5/I9/I10 shape rules guard against is not live here — the persona correctly
+> carries no `bd` flags or step-lists. The live risk is the **economy axis**: the
+> persona states each value (completeness-from-spec, no test scope, test-before-code,
+> the hop-1 stamp) **once each** and does **not** append a "what I do not touch"
+> section that re-enumerates read-only or no-test-scope already stated as values
+> (state-once). It carries **no dolt-sync or dolt-mode prose** — see the central
+> dolt-disclaimer Non-Goal below; mode-agnosticism is true by the agent never
+> touching sync, not by a persona guardrail.
 
 - **R2.1 [MUST] — Read-only on source; mutates only beads.** The build-planner
   writes no source files; it mints and wires beads through `bd`. (The permission
@@ -180,6 +252,22 @@ design doc and are not repeated.
 
 ### I3 — `omg-test-planner` (retargeted from v1)
 
+> **Instrument-shape rule for I3 (who/how/ask; do not violate).** The test-planner
+> **persona** carries the **unconditional kernel** — the confidence-first posture,
+> and the value *a summons bead (`y`/`w₁`) exists only to summon me and I close it in
+> every branch before my run ends, because a summons left open deadlocks its fix
+> forever, so it is never something I infer*. The **conditional mechanics** — the `bd
+> close <y> --reason …` form, the Case-A/Case-B edge wiring, the two-branch
+> uphold-vs-re-plan step-list, and the R18 reclamation-check — are **how-to** and
+> live in the **`omg-epics` §Test-planning wiring** section (verified present: the
+> `bd close <y>` form, the Case A/B edges, and the Mode-1 `w₁` uphold/re-plan
+> resolution are already there), with the `bd` forms in `omg-commands`. The persona
+> already points at that section; it MUST NOT *also* restate the uphold/re-plan
+> step-list or carry `bd` flags. (The built `omg-test-planner.md` had all of it
+> inlined in "Your build-time summons authority" and "The dispatch-lifecycle
+> contract"; **since corrected** — those step-lists are deleted and only the kernel
+> remains. This rule now stands as a regression guard.)
+
 - **R3.1 [MUST] — Read-only on source; confidence-first posture.** The
   test-planner writes no source files (it mints beads and records decisions).
   Plans verification only where it materially increases justified confidence, and
@@ -198,14 +286,19 @@ design doc and are not repeated.
   R2/R3; design I3.)
 - **R3.4 [MUST] — Build-time summons authority (`y`) with mandatory close.** When
   dispatched on a summons bead `y`, it upholds or re-plans the finding's
-  verification and **closes `y` in every branch** (`bd close <y> --reason …`)
-  before its run ends. It must be told this explicitly; it must never infer it.
+  verification and closes `y` in every branch before its run ends. The
+  **mandatory-close is a persona kernel value** (stated unconditionally, in the
+  planner's own voice, with its deadlock rationale — it must never be left to
+  inference); the **branch-by-branch procedure and the `bd close <y> --reason …`
+  form are `omg-epics`'s**, per the I3 shape rule — the persona does not carry them.
   (PRD R11; design I3, Region 2.)
 - **R3.5 [MUST] — Mode-1 escape authority (`w₁`) with mandatory close.** When
   dispatched on a `w₁` bead (a planned test the implementer found wrong or
-  impossible), it either upholds the test (kick back to the implementer with
-  reasoning) or re-plans it (mint a corrected `z′` for the test-writer), and
-  **closes `w₁` in every branch**. (PRD R13 Mode 1; design I3, Region 3.)
+  impossible), it either upholds the test or re-plans it (a corrected `z′` for the
+  test-writer), and closes `w₁` in every branch. The uphold-or-re-plan **step-list
+  and its wiring live in `omg-epics`** (per the I3 shape rule); the persona carries
+  only the kernel that it answers and closes the summons. (PRD R13 Mode 1; design
+  I3, Region 3.)
 - **R3.6 [MUST] — The v1 review-bead-rewrite contract is removed.** The
   "also rewrite `R`" two-step run and the convergence-survey machinery whose job
   was to detect the other review-bead author are **deleted** — the orchestrator
@@ -214,27 +307,68 @@ design doc and are not repeated.
 
 ### I4 — `omg-tester` + `test-writing` skill (the sole test-writer)
 
-- **R4.1 [MUST] — Sole test author, honoring pre-planned beads.** It is the only
-  agent that authors tests, from beads the test-planner minted, honoring each
-  bead's wiring intent (write the failing test for a Case-A bead; author/run the
-  post-fix test for a Case-B bead). It re-decides no scope the planner justified.
-  (PRD R2/R5; design I4.)
-- **R4.2 [MUST] — Writes hop-2 of the metadata chain.** After authoring a test,
-  it writes the **concrete run-selector** (test file + test name/filter) onto
-  that test bead — the only agent that can, since it just wrote the test and
-  knows its real identifier. It does the same for `z′` (Mode-1 re-plan) and `u`
-  (test-update) beads. (PRD R7 hop 2; design I4, metadata-chain section.)
-- **R4.3 [MUST] — Dispatch-lifecycle contract (R17).** Before returning control,
-  it leaves its `z`/`z′`/`u` bead in exactly one of two states: **closed**
-  (success), or **reopened and blocked by a new bead** (could not finish). Never
-  `in_progress`; never reopened-unblocked. A dispatch is a single turn. (PRD R17.)
-- **R4.4 [MUST] — Recovery-aware clause (R18).** If dispatched onto a bead
-  carrying a reclamation comment, it first checks whether the test was already
-  authored (the prior worker may have finished before dying) and closes if so;
-  otherwise it continues the partial work to a clean terminal state (R4.3). (PRD
-  R18; design I4.)
+> **Instrument-shape rule for I4 (who/how/ask; do not violate).** The tester
+> **persona** carries the **unconditional kernel** — the sole-test-author identity
+> and the standing dispositions true in every tester conversation. The
+> **conditional procedure** (the exact `bd` run-selector write, the R17
+> reopened-and-blocked steps for `z`/`z′`/`u`, the R18 recovery check) is
+> **how-to**, and it lives in the **`test-writing` skill** (with the `bd` write
+> itself in `omg-commands` §Bead metadata, which the tester already loads). **The
+> build MUST NOT bake those `bd` flags or step-lists into the persona.** (The built
+> `omg-tester.md` already models this correctly — kernel + skill pointer, with the
+> run-selector write, the Case-A/Case-B write behavior, the R17 file-and-block
+> steps, and the R18 recovery all homed in the `test-writing` skill and no `bd`
+> flags inline; R4.1–R4.4 are the rule that keeps a future build from regressing
+> it, not a correction of a still-present defect.)
+
+- **R4.1 [MUST] — Persona kernel: sole test author, honoring pre-planned beads.**
+  The persona states, as identity, that the tester is the **only** agent that
+  authors tests, works from beads the confidence planner minted, and re-decides no
+  scope the planner justified. The Case-A/Case-B *write-behavior* semantics ("write
+  the failing test for a Case-A bead; author/run the post-fix test for a Case-B
+  bead") are procedure and live in the **`test-writing` skill**. (PRD R2/R5;
+  design I4.)
+- **R4.2 [MUST] — Hop-2 run-selector: the ownership is kernel, the write is skill.**
+  The persona may state the **fact** that the tester is the only agent that can
+  stamp a test's concrete run-selector (it just wrote the test and knows the real
+  identifier). The **write mechanic** — the exact `bd` set-metadata command, and
+  that it is done for `z`/`z′`/`u` alike — lives in the **`test-writing` skill**
+  (pointing at `omg-commands` §Bead metadata for the `bd` form). The persona must
+  **not** carry the `bd update … run_selector=…` command. (PRD R7 hop 2; design I4,
+  metadata-chain section; `omg-commands` §Bead metadata.)
+- **R4.3 [MUST] — Dispatch-lifecycle contract (R17): kernel in persona, steps in
+  skill.** The persona carries the R17 **kernel** as a value in the tester's own
+  voice: *a dispatch is a single turn; you return the bead closed, or reopened and
+  blocked by a new bead — never `in_progress`, never reopened-unblocked.* The
+  `z`/`z′`/`u` **bead-binding** and the reopened-and-blocked **procedure** (file
+  bead → wire block → reset → stop) live in the **`test-writing` skill**. (PRD
+  R17; design I4, R17 section.)
+- **R4.4 [MUST — skill, not persona] — Recovery-aware clause (R18).** The R18
+  behavior (on a bead carrying a reclamation comment, first check whether the test
+  was already authored — close if so — else continue the partial work to a clean
+  terminal state) is **wholly conditional**, so it has **no persona kernel** and is
+  authored in the **`test-writing` skill**, not the persona. (PRD R18; design I4.)
 
 ### I5 — `omg-builder` + `omg-builder` skill (the implementation agent)
+
+> **Instrument-shape rule for I5 (who/how/ask; do not violate).** The builder
+> **persona** carries the **unconditional kernel** — the code-only identity, the
+> "red is normal, never edit a test to pass" honesty value, and the R17 kernel —
+> and it **points to** the `omg-builder` skill for the escape-hatch and recovery
+> **procedure**. The **mechanics** (classify Mode 1/2 by run-selector match, `bd`
+> create `w₁`/`w₂`, `bd dep add`, the mandatory `bd update <x> --status open
+> --assignee ""` reset, the R18 recovery check) live in the **`omg-builder`
+> skill** (and the reset is also owned verbatim by `omg-epics` §escape-hatch).
+> **The `bd` flags MUST NOT appear in the persona.** (The built `omg-builder.md`
+> models the `bd`-flags-and-pointer split correctly — the escape-hatch/Mode-1-2/
+> recovery mechanics are in the skill, the persona points at it, no `bd` flags
+> inline. **One gap the build must close:** the R17 single-turn kernel currently
+> lives *only* in the skill's escape-hatch section (§"dispatch-lifecycle contract")
+> and is **absent from the persona** — unlike the tester/PM/foreman personas, which
+> carry it. R5.8 requires promoting that kernel sentence into the persona in the
+> builder's own voice, leaving the escape-hatch *application* in the skill per R5.6.
+> Read R5.5–R5.8 as *persona states the value, skill states the procedure*, not as
+> *inline the mechanics in the persona*.)
 
 - **R5.1 [MUST] — The existing test-writing charter is deleted outright.** The
   persona's sentence stating the builder writes tests is **removed**, not merely
@@ -278,8 +412,31 @@ design doc and are not repeated.
   carrying a reclamation comment, it first checks whether the implementation is
   already complete and closes if so; otherwise it picks up the partial work and
   continues to a clean terminal state. (PRD R18; design I5.)
+- **R5.8 [MUST] — Dispatch-lifecycle contract (R17): kernel in persona.** The
+  builder persona carries the R17 **kernel** as a value in the builder's own voice:
+  *a dispatch is a single turn; you return the bead closed, or reopened and blocked
+  by a new bead — never `in_progress`, never reopened-unblocked.* This is
+  unconditional builder identity (true of every dispatched bead, not only the
+  escape-hatch case), and the builder is the agent most likely to strand a bead
+  `in_progress` because it claims-then-implements — so the kernel belongs in the
+  persona, mirroring R4.3 (tester) and R10.6 (PM). R5.6 governs how the escape-hatch
+  *procedure* (skill) frames itself as the reopened-and-blocked branch of this same
+  contract; R5.8 is the persona-resident kernel that procedure is one instance of.
+  (The built `omg-builder.md` had carried the kernel **only** in the `omg-builder`
+  skill's escape-hatch section; **since corrected** — it is promoted into the
+  persona, and the skill's escape-hatch framing remains as the situational
+  application.) (PRD R17; design I5, R17 section.)
 
 ### I6 — `omg-epics` skill wiring (both trees)
+
+> **Economy note for I6 (state-once within the skill).** R6.2, R6.4, R6.7, and
+> R6.8 each mandate a rule (author-`R`-once, label-selects-wiring, the static `P`
+> block, the terminal carve-out) that the skill must carry — but each is stated
+> **once**, at its most prominent home; the two static blocks (`R` and `P`) carry
+> their load-bearing qualifiers **verbatim** (R6.5), and surrounding prose **points
+> at** the blocks rather than re-narrating their contents. The per-rule AC-I6
+> checklist verifies each rule is *present*, not that it is *repeated*; a skill that
+> restates the carve-out or the `R`-once rule in three places fails AC-economy.
 
 - **R6.1 [MUST] — The plan-phase sequence is stated as skill instruction.** The
   skill states the canonical order: mint the epic → dispatch test-planner →
@@ -357,6 +514,25 @@ design doc and are not repeated.
 
 ### I7 — `omg-foreman` skill (both trees)
 
+> **Progressive-disclosure decision for I7 (do not "helpfully" split).** The three
+> build modes stay **inline** in the skill body; they are **not** moved to per-mode
+> reference files. They total ~23 lines that share one spine (dispatch via the Task
+> tool; the mode changes only context-reuse), cross-reference each other, and carry
+> a body-resident gotcha (the `multi_agents` file-clobber guard, which the standard
+> says keep in the body). Splitting them buys negligible context back while adding a
+> fragile load-trigger at the most timing-sensitive moment (first dispatch). A future
+> build must not split them under a generic "one reference per variant" reading;
+> revisit only if a mode grows past ~40 lines. This overrules the original pilot
+> review's progressive-disclosure flag, deliberately.
+>
+> The skill's non-obvious rationales **survive** the economy pass: retry-count-on-the-
+> bead-for-statelessness (R7.7), observe-*that*-not-*why* (R7.8, stated once — the
+> failure-mode bullet compresses to a bare reminder), the run-start-vs-drain-time
+> distinction (R7.5, stated distinctly but compressed to "the action is identical"),
+> and the accepted-residual-risk note. What is cut is the ~4 restatements of "authors
+> nothing / ships nothing" (one survives, at the Closing section) and the heavy
+> emphasis-bolding.
+
 - **R7.1 [MUST] — Routing invariant untouched; changes confined to looping
   mechanics.** All three changes below live in the skill's build-modes / looping
   mechanics; the label-only, stateless, no-special-case **routing invariant does
@@ -419,69 +595,171 @@ design doc and are not repeated.
 
 ### I8 — `omg-foreman` agent persona
 
-- **R8.1 [MUST] — The persona sheds all report/ship narration.** Any persona text
-  saying the foreman writes the build report or ships to memory is **removed**.
-  The foreman dispatches, full stop — it holds no terminal state and no
-  authoring/shipping role. (PRD R16, G8; design I8.)
+> **Economy rule for I8 (the pilot; do not violate).** `omg-foreman.md` is the
+> AC-economy exemplar: the "authors nothing / ships nothing / the report is a
+> dispatched bead" invariant currently appears **eight-plus times** across the
+> description, opening, "How you think," "What you refuse" (twice), "How you work,"
+> and "Boundaries." It is stated **once**, at its most prominent home (the opening),
+> and every other copy is cut. Two concept-leaks are struck: the *"if you catch
+> yourself writing code / reviewing a diff"* litany (the foreman's normal path never
+> reaches a code editor — compress to the positive "you dispatch, you don't build")
+> and the *"shipping to durable memory / left the automated flow"* explanations
+> (the foreman has no ship path; that boundary's home is the skill's Closing section
+> and the Preconditions, not the persona). The "How you think" section's re-narration
+> of the skill's dispatch loop and recovery procedure is cut to its unconditional
+> kernels (route-by-label; trust-the-graph; durable-truth-is-the-bead-comment;
+> observe-*that*-not-*why*). **Keep-rules hold:** the do-not-shortcut-dispatch-because-
+> it-looked-small refusal is a real observed temptation and **survives** (once); the
+> observe-that-not-why rationale **survives**. Requirement text below is
+> value-shaped and traced in several ACs — the persona still carries a **single**
+> copy of each rule, not one per trace.
+
+- **R8.1 [MUST] — The persona sheds all report/ship narration, stated once.** Any
+  persona text saying the foreman writes the build report or ships to memory is
+  **removed**; the invariant it protects (the foreman dispatches, full stop — it
+  holds no terminal state and no authoring/shipping role) is stated **once**, at its
+  most prominent home, not restated across sections. The requirement is traced in
+  several ACs (AC-I14, AC-no-auto-ship), but that is spec bookkeeping — the persona
+  carries a single copy. (PRD R16, G8; design I8.)
 - **R8.2 [MUST] — Routing description unchanged.** The persona's description of
   label-only, stateless dispatch is not altered except to remove the terminal
   narration. (PRD G6/R9.)
 
 ### I9 — `omg-review` skill (both trees)
 
-- **R9.1 [MUST] — The R15 red-suite finding wiring, reviewer stays blind.** The
-  skill states that the reviewer, executing `R`, runs the full suite (R6.3) and
-  on red files a finding that **always blocks** `R`; its change-locality judgment
-  sets the `agent` label, which selects the wiring (R6.4): builder-bound → fix
-  `x` + summons `y` (`y → x → R`); PM-bound → adjudication `m` (`m` blocks `R`),
-  no `y`, no `x`. The reviewer labels-and-blocks; it builds neither subgraph
-  beyond filing-and-wiring the finding, and it learns **no** test-awareness — its
-  judgment stays blind to test mode. (PRD R11/R15, G4; design I9.)
+> **Instrument-shape rule for I9 (who/how/ask; do not violate).** The reviewer
+> **persona** (`omg-reviewer.md`) carries the **unconditional kernel** — the
+> find-and-file identity, the *blind-to-test-mode* anti-value, the *writes the
+> report and ships nothing* boundary, and the **R17 kernel in the persona** (in the
+> reviewer's own voice, mirroring the tester/builder/PM — R9.3). The reviewer's own
+> **decision** — change-locality → `agent` label → which of two wirings, and
+> label-and-block — lives in the **`omg-review` skill**; but the **`bd` finding
+> wiring itself** (builder-bound `x`+`y` vs PM-bound `m`, the `--parent`/
+> `--no-inherit-labels`/`no --ephemeral`/`bd dep add` flags) has **one owner —
+> `omg-epics` §Verification wiring** (the same single-owner ruling the Non-Goals make
+> for the PM's Mode-2 wiring, shared across reviewer/PM/foreman) — so the skill
+> **points at** `omg-epics` for the flags rather than restating them, and the static
+> `P` body likewise lives once. **The `bd` wiring MUST NOT be authored into the
+> reviewer persona, nor restated in the `omg-review` skill.** (The built
+> `omg-reviewer.md` modeled the *no-`bd`-in-persona* split correctly, and **two gaps
+> have since been closed:** the R17 kernel is now promoted into the persona (it had
+> been present only in the skill — R9.3), and the `omg-review` skill's inlined
+> finding-wiring `bd` flags are demoted to a pointer at `omg-epics`, which owns them
+> verbatim (R9.1). The reviewer *labels-and-blocks*; it carries neither subgraph's
+> `bd` mechanics. These rules now stand as regression guards.)
+
+- **R9.1 [MUST] — The R15 red-suite finding wiring: the reviewer's decision in the
+  skill, the `bd` flags in `omg-epics`, reviewer stays blind.** The skill states the
+  reviewer's **decision and boundary**: executing `R`, it runs the full suite (R6.3)
+  and on red files a finding that **always blocks** `R`; its change-locality judgment
+  sets the `agent` label, which selects the wiring (R6.4) — builder-bound → fix `x` +
+  summons `y` (`y → x → R`); PM-bound → adjudication `m` (`m` blocks `R`), no `y`, no
+  `x` — and it also carries the out-of-scope carve-out (a genuinely-unrelated finding
+  is filed standalone with a `discovered-from` link and no `R` dependency). The
+  **exact `bd` flags** (`--parent`, `--no-inherit-labels`, `no --ephemeral`, the
+  `bd dep add` edges) are **not restated in the `omg-review` skill** — they have one
+  owner, `omg-epics` §Verification wiring (verified present verbatim), which the skill
+  **points at**; restating them is the single-owner-drift defect the Non-Goals forbid.
+  The reviewer labels-and-blocks; it builds neither subgraph beyond filing-and-wiring
+  the finding, and it learns **no** test-awareness — its judgment stays blind to test
+  mode. (PRD R11/R15, G4; design I9.)
 - **R9.2 [MUST] — The reviewer handles the terminal `P` bead.** The skill states
   the reviewer also executes the `P` bead — a **different** bead from `R` —
   running its static body to write the build report and **stop** (no ship). This
   realizes the memory-lifecycle-ADR §5 "review agent synthesizes the
   build-record" role as a dispatched bead. (PRD R16, G8; design I9, Region 4.)
-- **R9.3 [MUST] — Dispatch-lifecycle contract (R17).** The skill states that the
-  reviewer, working `R` or `P`, returns the bead closed or reopened-and-blocked,
-  never `in_progress`. (PRD R17; design I9.)
+- **R9.3 [MUST] — Dispatch-lifecycle contract (R17): kernel in persona, binding in
+  skill.** The reviewer **persona** carries the R17 **kernel** as a value in the
+  reviewer's own voice: *a dispatch is a single turn; you return the bead closed, or
+  reopened and blocked by a new bead — never `in_progress`, never reopened-unblocked.*
+  This mirrors the tester (R4.3), builder (R5.8), and PM (R10.6) — the reviewer
+  strands `R`/`P` by the same claim-then-work mechanism, so the kernel belongs in the
+  persona. The `R`/`P`-specific **binding** (which state applies when findings are
+  filed) lives in the **`omg-review` skill**. (The built `omg-reviewer.md` had carried
+  the R17 contract **only** in the skill; **since corrected** — the kernel is
+  promoted into the persona.) (PRD R17; design I9.)
 - **R9.4 [MUST] — Edit the source tree; mirror to the harness.** As R6.10. (Design
   I9, two-tree rule.)
 
 ### I10 — `omg-product-manager` agent (Mode-2 adjudicator)
 
-- **R10.1 [MUST] — Build-time Mode 2 (`w₂` blocking an open `x`).** The PM
-  resolves by kick-back (comment the correction on `x`) or by minting a
-  test-update `u` wired `u` blocks `x`; records the decision as comments on `w₂`
-  and `x`; and **closes `w₂`**. (PRD R13 Mode 2; design I10, Region 3.)
-- **R10.2 [MUST] — Review-time Mode 2 (`m` blocking `R`, no open `x`).** The PM
-  resolves by:
-  - **kick-back** → mint a builder fix `x_m` **and** its verification summons
-    `y_m` (`agent=omg-test-planner`), wiring `y_m` blocks `x_m` and `x_m` blocks
-    `R` — a **PM-minted fix is still a fix, and its verification is planned
-    before it is built** (this must not be the one path that escapes verification
-    planning); or
-  - **test-update** → mint `u` wired **`u` blocks `R`** (not `x` — there is none);
-  then **close `m`**. (PRD R15; design I10, Region 3b.)
-- **R10.3 [MUST] — Cannot-decide → human gate, not a label.** On the cannot-decide
-  branch (either topology) the PM places a **human gate** on the finding bead
-  (`bd gate create --type=human --blocks <w₂>` / `--blocks <m>`) and does **not**
-  close it — so the epic pauses cleanly and does not appear done. (PRD R15;
-  design I10.)
-- **R10.4 [MUST] — Decisions recorded as comments for the report-writer.** Every
-  Mode-2 decision is recorded as bead comments the `P` bead folds into the build
-  report. It reaches Hindsight **only** when the deliberate docs→Hindsight sync
-  command is later invoked — never automatically. (PRD R13/R16, G8; design I10.)
-- **R10.5 [MUST] — Uses Hindsight for product-intent judgment.** The PM consults
-  Hindsight memory (why prior guarantees exist) when adjudicating a Mode-2
-  collision. (PRD R13; design I10.)
-- **R10.6 [MUST] — Dispatch-lifecycle contract (R17).** Working a `w₂`/`m` bead,
-  the PM returns it **closed** (decision made) or **held by a human gate** (its
-  bounded exception), never `in_progress`, never reopened-unblocked; a single
-  turn. (PRD R17; design I10.)
-- **R10.7 [MUST] — Recovery-aware clause (R18).** If dispatched onto a `w₂`/`m`
-  bead carrying a reclamation comment, the PM first checks whether the
-  adjudication was already recorded before re-adjudicating. (PRD R18; design I10.)
+> **Instrument-shape rule for I10 (who/how/ask; do not violate).** The PM
+> **persona** carries only the **unconditional kernel** — the standing product
+> disposition true in *every* PM conversation. The **conditional Mode-2 wiring**
+> (topology-specific `bd` create/dep/gate/close flags for `w₂`/`m`/`x_m`/`y_m`/`u`)
+> is **procedure**, and it already lives — verbatim — in the `omg-epics`
+> **Verification wiring** section, which the PM loads. **The build MUST NOT restate
+> those mechanics in the persona; it leaves a pointer instead.** Duplicating
+> conditional procedure into an agent loaded on every turn is the misfile this
+> requirement exists to prevent (a `permission.skill` deny or a Test-1a check would
+> flag it): the mechanics have exactly one owner (`omg-epics`), so a load-bearing
+> qualifier is corrected in one place, not two. **No new `pm-adjudication` skill is
+> created** — `omg-epics` is the single wiring-owner (see the decision recorded in
+> *Non-Goals*). (The built `omg-product-manager.md` already models this correctly —
+> kernel + pointer, with no `w₂`/`m`/`x_m`/`y_m` wiring inline; this rule now stands
+> as a regression guard, not a pending deletion. The PM's R18 recovery clause
+> (R10.7) — which belongs in `omg-epics`, not the persona — had been missing from
+> `omg-epics` §Mode-2; it **has since been authored there**, so R10.7 is now met.)
+
+- **R10.1 [MUST] — Persona kernel: product intent is the PM's to defend, even
+  after the fact.** The persona states, as an unconditional value: the PM is the
+  authority on *why* something was built and that authority does not expire when
+  the code ships; when a change collides with an earlier decision's guarantee
+  ("was that behavior still supposed to hold?"), that is a product judgment and is
+  the PM's to make — not a build defect for someone else to patch around. **No
+  topology, no bead names, no `bd` flags in the persona.** (PRD R13/R15; design
+  I10.)
+- **R10.2 [MUST] — Mechanics stay in `omg-epics`; the persona points, it does not
+  restate.** The build-time (`w₂` blocking an open `x`) and review-time (`m`
+  blocking `R`, no open `x`) resolution wirings — kick-back, test-update, the
+  PM-minted `x_m`+`y_m` summons, the mandatory closes — are **not** authored into
+  the persona. They are the `omg-epics` Verification wiring section's content
+  (already present verbatim). The persona carries a single **pointer**: when a
+  ruling must reshape the graph, the PM shapes it through `bd` and reaches for the
+  `omg-epics` verification-wiring section for the exact topology rather than
+  improvising. **Verified by the persona's *absence* of the `w₂`/`m`/`x_m`/`y_m`
+  wiring, not its presence.** (PRD R13/R15; design I10, Regions 3/3b; `omg-epics`
+  §Verification wiring — owner.)
+- **R10.3 [MUST] — Human gate, not a label: kernel is the pause-cleanly value; the
+  command lives in `omg-epics`.** The persona may carry the **value** that a
+  genuine product decision the PM cannot make is a clean pause for a human, not a
+  guess it forces. The **mechanic** — `bd gate create --type=human --blocks
+  <w₂>`/`--blocks <m>`, and *why a `human` label alone re-dispatches forever* —
+  is `omg-epics` §"Human gate, not human label" and is **not** restated in the
+  persona. (PRD R15; design I10; `omg-epics`.)
+- **R10.4 [MUST] — Persona kernel: rulings are recorded durably and never
+  auto-shipped to memory.** The persona states, as an unconditional value: the PM
+  records every ruling where the work can see it (on the bead), never only inside
+  its own context; and a ruling reaches durable memory **only** when a human
+  deliberately invokes the docs→Hindsight sync command — never as a side effect of
+  deciding. The specific "the `P` bead folds the comments into the report"
+  *mechanic* is `omg-epics`/the static `P` block, not persona text. (PRD R13/R16,
+  G8; design I10.)
+- **R10.5 [MUST] — Persona kernel: never rule on intent from memory alone.** The
+  persona states, as an unconditional value, that the PM consults Hindsight for
+  *why* a prior guarantee exists before ruling on whether it still should —
+  because the record of past intent is what distinguishes load-bearing from stale.
+  (PRD R13; design I10.)
+- **R10.6 [MUST] — Dispatch-lifecycle contract (R17): the unconditional kernel is
+  persona, the `w₂`/`m` binding is skill.** The persona carries the R17 **kernel**
+  as a value in the PM's own voice: *a dispatch is a single turn; you return the
+  bead closed, or held by a human gate (the PM's one bounded exception) — never
+  `in_progress`, never reopened-unblocked.* The `w₂`/`m`-specific application and
+  the reopened-and-blocked mechanics live with the wiring in `omg-epics`. (PRD
+  R17; design I10, R17 section.)
+- **R10.7 [MUST — skill, not persona] — Recovery-aware clause (R18).** The R18
+  behavior ("if dispatched onto a `w₂`/`m` bead carrying a reclamation comment,
+  check whether the adjudication was already recorded before re-adjudicating") is
+  **wholly conditional** — gated on a rare recovery situation — so it has **no
+  persona kernel** and is authored in the PM's Mode-2 procedure in `omg-epics`,
+  **not** in the persona. Placing it in the persona is a build defect of the same
+  kind I10 corrects. **Status: this clause had been missing from `omg-epics` §Mode-2
+  (and correctly absent from the persona); it has since been authored there**,
+  modeled on the `omg-builder` skill's "Recovery: picking up a reclaimed bead"
+  section: check whether the ruling was already recorded (the comment on `x`/`m`, or
+  the `x_m`/`u` beads already minted) and close without re-adjudicating or
+  double-minting; otherwise resume to a clean terminal state (closed, or held by a
+  human gate). (PRD R18; design I10.)
 
 ### I11 — `omg-reviewer` agent (able to write the report)
 
@@ -524,6 +802,43 @@ design doc and are not repeated.
   handling are a separate effort, reconciled against
   `adr.platform.memory-lifecycle.0001`. Building any of it under this spec is out
   of scope. (PRD Deferred; design I14.)
+
+### I15 — `/omg-build` command (the foreman's ask, de-shipped)
+
+- **R15.1 [MUST] — The ask drives drain-and-close only; report-synthesis and ship
+  steps are removed.** The `/omg-build` command is the foreman's ask, and it must
+  match the terminal-branch removal (R7.3) and the no-auto-ship boundary (R14.1).
+  Its body **must not** instruct the foreman to synthesize the build report or ship
+  to Hindsight — the report is the dispatched `P` bead's job (surfacing on the queue
+  by label), and shipping left the automated flow. The command drives the
+  `omg-foreman` skill to loop the ready queue, dispatch the terminal beads by label
+  like any other, and close the epic when close-eligible. Its frontmatter
+  `description` and body framing (e.g. "all the way to shipped memory") are
+  corrected to end at close, not ship. **The build-mode resolution block and the
+  `then:` chain are preserved.** (PRD R16, G8; design I7, Region 4; R7.3/R14.1.)
+  - *(Why this is a distinct row, not covered by I7/I8:* the spec removed the
+    terminal branch from the foreman **skill** and **persona** but left the two
+    commands that *drive* the foreman still ordering it. Without this row, the
+    build's own scoping fence — "scoped to the instruments this build already edits"
+    — would forbid the fix as scope-creep, and the terminal branch would survive in
+    the one place a user actually invokes. The built `omg-build.md` had contradicted
+    the feature ("close it, then write the build report and ship to Hindsight"); it
+    **has since been corrected** to drive drain-and-close only.)*
+
+### I16 — `/omg-ensure-work-finished` command (the `then:` follow-up, de-shipped)
+
+- **R16.1 [MUST] — The follow-up verifies drain / terminal-dispatch / close only.**
+  The `then:`-chain target must be corrected in the same build as I15, or the
+  terminal branch re-enters through the follow-up. It checks: epic not fully drained
+  → resume the dispatch loop; the terminal `P` bead not yet dispatched/closed → it
+  is a ready bead dispatched by label (**never** "write the report yourself"); epic
+  close-eligible but not closed → close it. **Every** "shipped to Hindsight," "write
+  the report from the child bead comments," and "shipping order" clause is removed,
+  and the dangling reference to the `omg-foreman` skill's (deleted) closeout/shipping
+  sections is dropped. (PRD R16, G8; design I7, Region 4; R7.3/R14.1. The built
+  `omg-ensure-work-finished.md` had mandated the foreman author the report and ship —
+  the same contradiction as I15, and it is the chain target I15 preserves; it **has
+  since been corrected** in the same pass.)
 
 ## Inputs and Outputs
 
@@ -667,6 +982,55 @@ Inherited from the PRD and design; the build must not quietly reintroduce any:
   short-term cost is a looser, noisier context, an *inefficiency* this build
   accepts, not a correctness or feature gap. A builder must **not** treat the
   absence of `permission` blocks as an oversight to "helpfully" fill.
+  - **Capability the correction must preserve (in scope), distinct from scoping
+    (deferred).** Demoting an agent's mechanics into a skill only works if the
+    agent can **load** that skill. "The PM can load `omg-epics`" (and the tester
+    `test-writing`/`omg-commands`, the builder `omg-builder`, the reviewer
+    `omg-review`) is a **capability** — in scope, and satisfied under opencode's
+    default-allow whenever the agent has no `skill:` deny-list removing it. The
+    build must **not** author a `permission.skill` allow-list to deliver it. **Hard
+    constraint handed to the deferred permissions effort:** when that effort
+    eventually scopes each agent's `skill:` block, it **MUST** include the skill
+    that carries the agent's demoted mechanics — for the PM, `omg-epics` **must be
+    in the allow-list**. Omitting it would silently sever the agent from its own
+    procedure and re-wedge the workflow the moment the block lands. (Design OQ-F
+    permission-scoping; I10 D-note.)
+- **No new `pm-adjudication` (or per-agent adjudication) skill is created.** The
+  Mode-2 verification wiring is dependency-graph mechanics shared across the
+  reviewer (files `m`/`x`+`y`), the PM (resolves them), and the foreman (dispatches
+  by label); it has **one** owner — `omg-epics` §Verification wiring — so a single
+  verbatim source stays authoritative and cannot drift edge-for-edge across two
+  files. Splitting it out to trim the PM's context is the *deferred* permissions
+  optimization done in the wrong instrument; a later build must **not** "helpfully"
+  mint a PM-only wiring skill. (I10 decision; design constraint 4.)
+- **No conditional procedure baked into any agent persona (the who/how/ask
+  split).** An agent file is loaded into *every* conversation that agent has, so
+  it carries only **unconditional** content — identity, values, anti-values true in
+  every situation. **Situational procedure** — `bd` flag sequences, bead-wiring
+  topologies, escalation/recovery step-lists gated on a particular workflow moment
+  — is **how-to** and belongs in that workflow's **skill**, with the persona
+  carrying at most the unconditional *kernel* of the value plus a **pointer** to
+  the skill. Restating conditional mechanics in a persona (as an
+  earlier draft of `omg-tester.md` did and an earlier `omg-product-manager.md` did,
+  both since corrected) is a **build defect**, not a helpful redundancy. (This is
+  the misfile the whole I4/I10 correction addresses; see the per-instrument shape
+  rules on I4, I5, I9, I10, and design constraint 4.)
+- **No dolt-sync / dolt-mode disclaimer in any bead-mutating agent persona.** A
+  persona paragraph telling an agent it "never names a `bd dolt commit/push/pull`"
+  and "never reads or branches on the dolt mode" is **concept-leak** — it imports
+  the sync verbs, the dolt mode, and the embedded/server distinction only to forbid
+  them, on an agent whose entire path is `bd create`/`bd dep add`/metadata stamps
+  and never reaches sync. Mode-agnosticism is true **by construction** (the agent
+  never touches sync), enforced by the *absence* of sync commands from the runbooks
+  it loads — not by a persona sentence. Its one legitimate home is
+  `adr.platform.beads-sync-ownership.0001` plus this spec's Preconditions; a persona
+  must not restate it. (This disclaimer currently appears verbatim in
+  `omg-build-planner.md` and `omg-test-planner.md`; the build strikes it from those
+  two — which this build already edits — as part of the economy pass. An agent that
+  *operationally reports* the mode, like the onboarder, is not affected; that is an
+  earned operational mention, not a forbid-only disclaimer. Other agents carrying
+  the same disclaimer but not otherwise touched by this build are swept by the
+  separate follow-up economy effort, not here.)
 - This spec does **not** re-specify the termination proof, the alternatives, or
   the mechanism's correctness argument — those are owned by the design doc.
 
@@ -693,17 +1057,24 @@ to requirements.
   pass (R3.3); carries the `y` and `w₁` mandatory-close authorities (R3.4/R3.5);
   and the v1 review-bead-rewrite + convergence-survey machinery is **gone**
   (R3.6) — verified by its absence.
-- **AC-I4 (tester):** `omg-tester.md` / `test-writing` is the sole test author
-  honoring pre-planned beads (R4.1); writes the hop-2 run-selector onto `z`/`z′`/
-  `u` (R4.2); states the R17 contract (R4.3) and the R18 recovery-aware clause
-  (R4.4).
+- **AC-I4 (tester):** the **who/how split holds** — `omg-tester.md` carries the
+  sole-test-author identity (R4.1) and the R17 **kernel** sentence (R4.3), and the
+  **`test-writing` skill** carries the mechanics: the Case-A/Case-B write behavior
+  (R4.1), the hop-2 run-selector write for `z`/`z′`/`u` (R4.2, `bd` form via
+  `omg-commands`), the R17 reopened-and-blocked steps (R4.3), and the R18
+  recovery-aware procedure (R4.4). **Verified two ways:** the identity/kernel is
+  present in the persona, **and** the `bd`-flag mechanics (`--set-metadata
+  run_selector=…`, the file-and-block step-list, the reclamation-check) are
+  **absent** from the persona and **present** in the skill. A persona that still
+  inlines those mechanics **fails** this AC.
 - **AC-I5 (builder):** `omg-builder.md` / skill has the "and write tests"
   sentence **deleted** (R5.1) — verified by grep returning nothing; resolves the
   hop-3 done-target via metadata only (R5.2); runs only the focused target
   (R5.3); treats red as normal and escalates only when stuck, never editing the
   test (R5.4); carries the two-mode escape hatch **with the mandatory `x`-reset**
-  (R5.5) framed as the R17 contract (R5.6); and the R18 recovery-aware clause
-  (R5.7).
+  (R5.5) framed as the R17 contract (R5.6); carries the **R17 kernel sentence in the
+  persona** in the builder's own voice (R5.8) — verified present in the persona, not
+  only in the skill; and the R18 recovery-aware clause (R5.7).
 - **AC-I6 (epics wiring):** both `omg-epics` trees carry the plan-phase sequence
   (R6.1), the author-`R`-once-from-static-block rule (R6.2), the full-suite step
   in the `R` block (R6.3), the always-blocks + label-selects-wiring rule with
@@ -734,22 +1105,35 @@ to requirements.
 - **AC-I8 (foreman persona):** `omg-foreman.md` has all report/ship narration
   **removed** (R8.1) — verified by grep — and its routing description otherwise
   intact (R8.2).
-- **AC-I9 (review skill):** both `omg-review` trees carry the R15 finding wiring
-  with the reviewer staying test-blind (R9.1), the `P`-handling clause that
-  writes-and-stops (R9.2), the R17 clause (R9.3). **Test-blindness is verified by
-  reading, not by a word-grep** (the skill legitimately mentions the full-suite
-  run per R6.3, so a grep for "test" would false-fail): the checkable property is
-  that the reviewer gains **no test-mode branching, no awareness of `z` beads, and
-  no behavior conditioned on verification state** — it labels-and-blocks by
-  change-locality and otherwise executes its work order unchanged. Edits in the
-  source `opencode/` tree, mirrored into `.opencode/` (R9.4) — mirror-match is a
-  tooling check, not a feature gate.
-- **AC-I10 (PM):** `omg-product-manager.md` carries both Mode-2 topologies
-  (R10.1/R10.2) including the **PM-minted fix gets `y_m` verification** clause,
-  the cannot-decide **human gate not label** rule (R10.3), the record-for-report
-  clause with **no automatic Hindsight write** (R10.4), the Hindsight-consult
-  clause (R10.5), the R17 contract (R10.6), and the R18 recovery-aware clause
-  (R10.7).
+- **AC-I9 (review + reviewer):** both `omg-review` trees carry the reviewer's
+  finding **decision** (change-locality → label → wiring, always-blocks, the
+  out-of-scope carve-out) with the reviewer staying test-blind (R9.1), the
+  `P`-handling clause that writes-and-stops (R9.2). **The `bd` finding-wiring flags
+  are *absent* from the `omg-review` skill** — it points at `omg-epics` §Verification
+  wiring for them (R9.1); a skill that restates the `--parent`/`no --ephemeral`/
+  `bd dep add` flags fails this AC. The **reviewer persona carries the R17 kernel**
+  in its own voice (R9.3) — verified present in the persona, not only in the skill.
+  **Test-blindness is verified by reading, not by a word-grep** (the skill
+  legitimately mentions the full-suite run per R6.3, so a grep for "test" would
+  false-fail): the checkable property is that the reviewer gains **no test-mode
+  branching, no awareness of `z` beads, and no behavior conditioned on verification
+  state** — it labels-and-blocks by change-locality and otherwise executes its work
+  order unchanged. Edits in the source `opencode/` tree, mirrored into `.opencode/`
+  (R9.4) — mirror-match is a tooling check, not a feature gate.
+- **AC-I10 (PM):** the **who/how split holds** — `omg-product-manager.md` carries
+  only the **kernel**: the product-intent-authority value (R10.1), the
+  record-durably/never-auto-ship value (R10.4), the Hindsight-consult value
+  (R10.5), the R17 **kernel** sentence (R10.6), and a **pointer** to the
+  `omg-epics` verification-wiring section (R10.2). The **`omg-epics`** Verification
+  wiring section carries the mechanics (already present verbatim): both Mode-2
+  topologies including the **PM-minted fix gets `y_m` verification** clause
+  (R10.2), the cannot-decide **human gate not label** command (R10.3), and the
+  R18 recovery-aware procedure (R10.7). **Verified two ways:** the kernel values +
+  the pointer are present in the persona, **and** the `w₂`/`m`/`x_m`/`y_m` `bd`
+  wiring, the `bd gate create` command, and the reclamation-check are **absent**
+  from the persona. A persona that still restates the Mode-2 wiring **fails** this
+  AC. **No `pm-adjudication` skill exists** (the wiring's sole owner is
+  `omg-epics`).
 - **AC-I11 (reviewer can write the report):** `omg-reviewer.md` gains a write
   capability sufficient for the `P` bead to author the build report into the docs
   tree (R11.1). The *scoping* of that grant is **not** a gate for this build
@@ -764,11 +1148,36 @@ to requirements.
   (R7.3) and (b) the foreman persona's **ship narration is gone** (R8.1) — the two
   paths that ship today; (c) the `P` block **writes-and-stops** with no ship call
   (R6.7/R9.2); (d) the PM's Mode-2 handling **only records comments**, introducing
-  no ship call (R10.4). The sync command's behavior is not built here
-  (R14.1/R14.2).
+  no ship call (R10.4); (e) the **`/omg-build` command and its `then:` target
+  (`/omg-ensure-work-finished`) contain no report-synthesis step and no ship call**
+  (R15.1/R16.1) — verified by their absence; these are live shipping loci that
+  re-enter the removed branch the moment they are invoked. The sync command's
+  behavior is not built here (R14.1/R14.2).
+- **AC-I15/I16 (foreman commands de-shipped):** `/omg-build` drives drain-and-close
+  only, preserving the build-mode resolution and `then:` chain (R15.1);
+  `/omg-ensure-work-finished` verifies drain/terminal-dispatch/close only, with
+  every ship and write-the-report-yourself clause removed and the dangling
+  `omg-foreman`-skill closeout/shipping reference dropped (R16.1). Verified by
+  reading both command bodies and their frontmatter descriptions.
 - **AC-untouched:** `git diff` after the build changes **no** foreman *routing*
   logic (only looping mechanics), and reintroduces **no** taxonomy, scoring
   rubric, or ephemeral bead class anywhere.
+- **AC-economy (judgment read, like AC-I9):** each prose-bearing instrument this
+  build touches (I1–I10, I12) passes the `authoring-opencode` **"Write for the
+  model"** pass. This is a **reading against a decision procedure**, not a grep:
+  for each line, *would removing it cause the agent to make a mistake?* — and no
+  invariant is stated more than once, no concept is imported solely to forbid it,
+  and no guardrail defends a failure the agent's normal path never reaches. The
+  worked exemplar of the defect is the `omg-foreman.md` pilot's eight-plus
+  restatements of "authors/ships nothing"; an instrument that reads that way
+  **fails** this AC. The read **inherits the standard's keep-rules** — it is not a
+  "make it shorter" or "delete the negatives" pass: a one-clause rationale on a
+  non-obvious rule, a crisp singular negative, and a tight judgment-carrying
+  paragraph all **survive**; stripping a kernel a who/how placement rule requires
+  present is itself a defect. Discharged by the same authoring-SME + PM/architect
+  read that clears the who/how ACs (AC-I4/AC-I9/AC-I10), run **after** the who/how
+  placement is correct. Scoped to touched instruments only; it does not gate an
+  economy pass of untouched OMG instruments.
 
 ### Feature acceptance (runtime — exercised on first dogfood, not a build gate)
 
@@ -827,8 +1236,12 @@ how cleanly or promptly a mechanism works.
   part of the deferred permissions effort (see the Non-Goal on permission
   frontmatter), **not** something this build settles. This build grants a working
   write capability; the tightening is deferred. (PRD OQ-F; design I11.)
-- **OQ-6 — `/omg-test-plan` retirement cleanup.** Any references to the retired
-  command elsewhere in the instruments/docs must be swept. (Design OQ-C.)
+- **OQ-6 — `/omg-test-plan` retirement + stale-shipping-framing cleanup.** Any
+  references to the retired command elsewhere in the instruments/docs must be swept
+  (done in the instrument tree and `USAGE.md`). Additionally, "shipped memory" /
+  "ship to Hindsight" framing in command bodies and frontmatter descriptions is
+  swept as part of I15/I16 (the `/omg-build` and `/omg-ensure-work-finished`
+  corrections). (Design OQ-C.)
 - **OQ-7 — The sync command's name and behavior.** Deferred to its own effort,
   reconciled against `adr.platform.memory-lifecycle.0001`. (PRD OQ-G; design I14.)
 

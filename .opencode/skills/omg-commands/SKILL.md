@@ -223,6 +223,43 @@ record of what was proposed and why it was replaced.
 Deleting from Hindsight and re-ingesting the clean version keeps memory accurate;
 keeping the bead keeps the history auditable.
 
+## Bead metadata (the done-target chain)
+
+Custom metadata is a queryable JSON object on a bead. The verification workflow
+rides two fields on it — the **done-target metadata chain** that lets an
+implementer find which focused test proves its bead is done **without reading any
+test source**:
+
+- **`test_beads`** on an *implementation* bead — the id(s) of the test bead(s) the
+  implementation must satisfy. Written by the **build planner** at plan time (the
+  test beads already exist, so their ids are stable).
+- **`run_selector`** on a *test* bead — the concrete runnable identifier (test file
+  + name/filter) of the authored test. Written by the **test-writer** right after
+  it writes the test, the only agent that knows the real identifier.
+
+**Field-name rule (verified on `bd 1.0.5`).** `--set-metadata key=value` requires
+keys matching `[a-zA-Z_][a-zA-Z0-9_.]*` — **a hyphen is rejected**, so the fields
+use underscores (`test_beads`, `run_selector`), never hyphens. `--metadata '<json>'`
+accepts any key but is the whole-object form; prefer `--set-metadata` for a single
+field.
+
+```bash
+# Hop 1 — build planner stamps the test bead id(s) at mint (or on update):
+bd create "Implement X" --parent <epic> --metadata '{"test_beads":"<z-id>"}' …
+bd update <impl-id> --set-metadata "test_beads=<z-id-1>,<z-id-2>"   # if it folds many
+
+# Hop 2 — test-writer stamps the run-selector after authoring the test:
+bd update <z-id> --set-metadata "run_selector=<file>:<name-or-filter>"
+
+# Hop 3 — implementer reads its own bead's test_beads, then each test bead's selector:
+bd show <impl-id> --long --json | jq '.[0].metadata.test_beads'
+bd show <z-id>    --long --json | jq '.[0].metadata.run_selector'
+```
+
+`bd show <id> --long --json` is what surfaces the `metadata` object — the plain
+`bd show --json` summary omits it. Resolve the whole chain through these `bd`
+queries only; never open a test file to find the selector.
+
 ## Comments
 
 Comments are append-only, timestamped, attributed records on an issue. Use them
