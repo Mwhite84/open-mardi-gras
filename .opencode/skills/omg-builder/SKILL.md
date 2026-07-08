@@ -127,9 +127,8 @@ or the escape hatch's reopen-and-block).
   test file — so your bead still works once the test-directory read-deny lands.
 - **Running the whole suite per bead.** You run only your focused target; the full
   suite runs once at the review bead, not once per implementation bead.
-- **Escalating without the `x`-reset.** Filing `w₁`/`w₂` and stopping without
-  `bd update <x> --status open --assignee ""` leaves `x` `in_progress`, invisible
-  to `bd ready` forever — the epic wedges. The reset is mandatory, not optional.
+- **Escalating without the `x`-reset.** See step 3 of the escape hatch — the
+  reset is mandatory; the epic wedges without it.
 - **A thin record.** The report-writer bead writes the build report from your
   comments. A deviation, discovery, or decision you leave only in your head is lost
   when your session ends — comment it before you close.

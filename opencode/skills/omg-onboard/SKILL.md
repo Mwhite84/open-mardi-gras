@@ -27,11 +27,16 @@ answers is a defect. Before any question, gather:
    exist, and in what `dolt_mode` (`jq -r '.dolt_mode' .beads/metadata.json`)?
    `server` vs `embedded` changes the beads setup and the workers' sync discipline.
 3. **The project `opencode.json`** — existing `references` and
-   `permission.external_directory` entries. opencode reads it from **either**
-   `opencode.json` at the worktree root **or** `.opencode/opencode.json`; check
-   both, and write to whichever the repo already uses (default to
-   `.opencode/opencode.json` if neither exists, to keep config together with the
-   other `.opencode/` files). A satellite needs these; check what is already there
+   `permission.external_directory` entries. opencode reads project config from
+   **both** `opencode.json` at the worktree root **and** `.opencode/opencode.json`,
+   and **deep-merges** them; they are not an either/or. On a conflicting key the
+   `.opencode/opencode.json` value wins (it loads after the root file). So **read
+   both** before proposing anything — a `references` or `external_directory` entry
+   you think is missing may live in the other file, and a value you add to the root
+   file can be silently overridden by the one in `.opencode/`. When you write (see
+   below), prefer `.opencode/opencode.json` so your entries are on the winning side;
+   if only the root file exists, write there rather than splitting config across two
+   places. A satellite needs these entries; check what is already in both files
    before proposing more.
 4. **The mode argument** the command passed (`solo` | `centralized` | `satellite`).
    If it contradicts an existing `.workflow.yaml` `mode`, stop and reconcile with

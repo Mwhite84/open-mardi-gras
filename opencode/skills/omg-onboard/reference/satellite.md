@@ -9,9 +9,11 @@ it belongs to and its own folder name.
 
 - Read this repo's `.workflow.yaml` (may be absent or partial).
 - Read `.beads/metadata.json` / `config.yaml` (beads may already be set up).
-- Read the project `opencode.json` — it may be at the worktree root
-  (`opencode.json`) **or** at `.opencode/opencode.json`; check both — for existing
-  `references` and `permission.external_directory`.
+- Read the project `opencode.json` — opencode reads **both** the worktree-root
+  `opencode.json` **and** `.opencode/opencode.json` and deep-merges them, so read
+  both for existing `references` and `permission.external_directory`. An entry you
+  need may already live in the other file. On a conflicting key, the
+  `.opencode/opencode.json` value wins (it loads after the root file).
 - Establish **where the central repo is.** If `.workflow.yaml` already has
   `central_repo`, use it. Otherwise ask the user for the path to the centralized
   docs repo (relative to this repo, absolute, or `~/`). It must contain a
@@ -51,9 +53,13 @@ the content and the destination path.
 
 This is the permission plumbing that lets the satellite read and **write** the
 central tree. It is the most-forgotten step and the most likely first-run break.
-Merge into the **existing** `opencode.json` — at the worktree root *or*
-`.opencode/opencode.json`, whichever the repo uses — and do not drop keys already
-there. If neither exists, create `.opencode/opencode.json`:
+Merge into the **existing** config without dropping keys already there. Because
+opencode merges both files with `.opencode/opencode.json` winning on conflict,
+choose the target deliberately: if `.opencode/opencode.json` exists, write there
+(the winning side); if only the root `opencode.json` exists, write there; if both
+exist, write into `.opencode/opencode.json` so your `references` and
+`external_directory` entries cannot be overridden by it. If neither exists, create
+`.opencode/opencode.json`:
 
 ```json
 {

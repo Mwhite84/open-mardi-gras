@@ -29,15 +29,25 @@ rooms; your own references tell you how to furnish or inspect them.
 
 ## The templates
 
-Each file in `templates/` is the canonical skeleton for one doc type:
+Each file in `templates/` is the canonical skeleton for one doc type. The
+**id type segment** is the bare document type — it is what goes in the `id`'s
+first dotted segment and names the doc's folder (see *Minting the `id`* and
+*Placing the document*). It is **not** necessarily the template filename: copy
+the file named below, but mint the id with the type segment named below.
 
-- PRD → `templates/prd.md`
-- Spec → `templates/spec.md`
-- Roadmap → `templates/roadmap.md`
-- User story → `templates/user-story.md`
-- Design doc → `templates/design-doc.md`
-- ADR → `templates/adr.md`
-- Build report → `templates/build-report.md`
+| Doc type | Template file | id type segment | Folder |
+| --- | --- | --- | --- |
+| PRD | `templates/prd.md` | `prd` | `docs/prd/` |
+| Spec | `templates/spec.md` | `spec` | `docs/spec/` |
+| Roadmap | `templates/roadmap.md` | `roadmap` | `docs/roadmap/` |
+| User story | `templates/user-story.md` | `user-story` | `docs/user-story/` |
+| Design doc | `templates/design-doc.md` | `design` | `docs/design/` |
+| ADR | `templates/adr.md` | `adr` | `docs/adr/` |
+| Build report | `templates/build-report.md` | `build-report` | `docs/build-report/` |
+
+Note the design doc: its template file is `design-doc.md`, but its id type
+segment is the **bare type `design`**, so it lands in `docs/design/` — never
+`design-doc`. Do not read the type segment off the template filename.
 
 If a document type has no template here, it has no canonical form yet — tell the
 user that **oc-smith** can author one so the format is fixed going forward.
@@ -46,7 +56,13 @@ user that **oc-smith** can author one so the format is fixed going forward.
 
 The frontmatter `id` is the document's stable identity (per ADR-0001 — a dotted
 `type.domain.topic.NNNN`, e.g. `adr.subscriptions.metering-period.0002`). The
-trailing `NNNN` must not collide with an existing document sharing the prefix.
+leading `type` segment is the **bare document type**, never a `-doc`/`-record`
+suffix and never blindly the template filename: `prd` (not `prd-doc`), `adr` (not
+`adr-record`), `spec`, `roadmap`, `user-story`, `build-report`, and — the one
+that trips people up — `design` (the template file is `design-doc.md`, but the id
+type segment is `design`). Take the type segment from the table above, not from
+the filename you copied. The trailing `NNNN` must not collide with an existing
+document sharing the prefix.
 Do **not** eyeball the next number — run the script and use what it returns:
 
 ```
@@ -79,7 +95,9 @@ path or take one from the invoking command. A document is written to:
 - **`<type>`** is the first dotted segment of the `id`
   (`adr.platform.metering-period.0001` → `adr`). Every id carries it (ADR-0001's
   `type.domain.topic.NNNN` grammar guarantees it), so every doc type lands in its
-  own subfolder with no per-type configuration.
+  own subfolder with no per-type configuration. Because the id's type segment is
+  the **bare type** (see *Minting the `id`*), this folder is the bare type too — a
+  design doc lands in `docs/design/`, not `docs/design-doc/`.
 
 So `adr.platform.metering-period.0001` is written to
 `<docs_base>/adr/adr.platform.metering-period.0001.md`. Create the `<type>`

@@ -3,6 +3,7 @@ description: Coding agent for the OMG workflow. Builds a single bead the foreman
 mode: subagent
 permission:
   todowrite: deny
+  bash: allow
   skill:
     "omg-builder": allow
     "omg-epics": allow
