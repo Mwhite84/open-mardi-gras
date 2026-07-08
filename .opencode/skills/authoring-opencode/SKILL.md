@@ -68,8 +68,9 @@ model with a finite context window; both facts cut text.
 - **Every line must survive the cut test: "would removing this cause a mistake?"** If not, cut it. Do not explain what the model already knows — what a PDF is, what a reviewer does, why tests matter.
 - **State each rule exactly once, in its most prominent place.** If a rule gets missed in practice, sharpen or relocate it — never restate it. Repetition buries the copy that matters, and piled-on emphasis (bolded NEVERs, stacked MUSTs) makes current models overtrigger. Plain sentences.
 - **Negatives are fine when crisp, concrete, and singular.** "Route by the `agent` label, never by title or type" does work; a vague or pile-on negative does not. Attach a one-clause *why* to any non-obvious rule — a bare directive invites a smart model to improve on it, while the rationale lets it generalize correctly. Prefer positive phrasing when steering output format ("respond in flowing prose" over "do not use markdown").
-- **Guardrails are earned by observed failures, not imagined ones.** Write the minimal instrument, watch it work, and add a correction when a real mistake shows the gap. A prohibition against a temptation the agent would never meet in its normal course of work is conversation leak: it imports a concept only to forbid it, and agents follow instructions that don't apply. The test: would this agent encounter the forbidden thing without this sentence? If not, delete the sentence.
+- **Guardrails are earned by observed failures, not imagined ones.** Write the minimal instrument, watch it work, and add a correction when a real mistake shows the gap. A guardrail is also earned when the instrument's own instruction invites the failure: an instruction that invites removing or loosening things must name what must survive it. A prohibition against a temptation the agent would never meet in its normal course of work is conversation leak: it imports a concept only to forbid it, and agents follow instructions that don't apply. The test: would this agent encounter the forbidden thing without this sentence? If not, delete the sentence.
 - **Minimal is not the same as short.** A tight paragraph carrying a judgment call beats a lossy bullet; numbered steps win where order or completeness matters. High-signal is the goal, not a shape.
+- **Any embedded command or filter is verified before it ships.** Run it against real output — or synthetic data matching a shape you have confirmed — and say plainly when one is unverified. An authored-but-never-run pipeline fails in someone else's session, not yours.
 
 ---
 
@@ -89,7 +90,7 @@ You are hiring a person and describing who they are. You are not writing a task 
 
 **Worked contrast.** Wrong (a *how*): "When given a bug, reproduce it, write a failing test, fix the code, then run the suite." Right (a *who*): "You distrust a fix you cannot prove. You reach for a failing test before a patch, because a bug you can't reproduce is a bug you haven't understood. You would rather be slow and certain than fast and wrong."
 
-**Mechanics:** project agents live at `.opencode/agent(s)/<name>.md`; the file body is the prompt (do not also set `prompt:` in frontmatter). Name agents lowercase-hyphenated (`oc-smith`, not `oc_smith`). For the exact frontmatter fields and permission semantics, load the `customize-opencode` skill — it is the source of truth; do not guess, opencode hard-fails on invalid config.
+**Mechanics:** project agents live at `.opencode/agent(s)/<name>.md`; the file body is the prompt (do not also set `prompt:` in frontmatter). Name agents lowercase-hyphenated (`oc-smith`, not `oc_smith`). For the exact frontmatter fields and permission semantics, load the `customize-opencode` skill — it is the source of truth; do not guess, opencode tolerates invalid config silently, so a wrong guess ships as an instrument that quietly misbehaves.
 
 ---
 
@@ -107,14 +108,25 @@ A skill answers "here is a thing we do often; here is exactly how to do it." It 
 **Steps:**
 
 1. **Confirm it's a how** the agent may self-initiate. If it is identity, it is an agent; if it should never be agent-discoverable, it is a command.
-2. **Write the description last, and sweat it.** Name the job and the trigger words after the body exists.
-3. **Make the body a runbook.** Numbered steps, checklists, decision points — each an action or a check, not a meditation.
-4. **Include at least one worked example** — input and correct output, or a right/wrong contrast.
-5. **Call out failure modes and gotchas** — the thing that looks done but isn't, the permission that silently blocks, the order that matters.
-6. **Reference, don't duplicate.** Point at authoritative detail elsewhere rather than copying it; duplicated procedure drifts.
-7. **Bundle resources alongside; disclose progressively.** Scripts, templates, and references live in the skill's own folder; relative paths resolve from there. Keep the body under ~500 lines / ~5k tokens. Material that varies by mode, framework, or flavor — where any given run needs only one variant — goes in one reference file per variant, loaded by an explicit trigger tied to a value the agent already holds ("read `references/mode-<build_mode>.md` before your first dispatch"), never a generic "see references/". Keep references one level deep from SKILL.md; give any reference over ~100 lines a table of contents. Gotchas stay in the body — the agent may not recognize the trigger to load them from a file.
+2. **Write to the reader's context.** Enumerate what the reading agent actually holds — its dispatch payload, the other skills it can load, what its dispatcher guarantees it never receives. Cut content about situations it can never meet, and teach inline every concept it can no longer look up elsewhere.
+3. **Write the description last, and sweat it.** Name the job and the trigger words after the body exists.
+4. **Make the body a runbook.** Numbered steps, checklists, decision points — each an action or a check, not a meditation.
+5. **Include at least one worked example** — input and correct output, or a right/wrong contrast.
+6. **Call out failure modes and gotchas** — the thing that looks done but isn't, the permission that silently blocks, the order that matters.
+7. **Reference, don't duplicate.** Point at authoritative detail elsewhere rather than copying it; duplicated procedure drifts.
+8. **Bundle resources alongside; disclose progressively.** Scripts, templates, and references live in the skill's own folder; relative paths resolve from there. Keep the body under ~500 lines / ~5k tokens. Material that genuinely varies by mode, framework, or flavor goes in one reference file per variant — decide what qualifies with "Factoring the body and references" below — loaded by an explicit trigger tied to a value the agent already holds ("read `references/mode-<build_mode>.md` before your first dispatch"), never a generic "see references/". Keep references one level deep from SKILL.md; give any reference over ~100 lines a table of contents. Gotchas stay in the body — the agent may not recognize the trigger to load them from a file.
 
-**Smells to reject:** a personality in a skill (→ agent); a vague description ("Helps with documents"); prose where steps belong; no worked example; duplicated authority.
+### Factoring the body and references
+
+The question is never "one file or many?" — it is **what actually varies?** Hoist everything invariant across modes — constraints, conventions, shared steps — into the always-read body, stated once so it cannot drift; references carry only the divergent middle.
+
+- **The split test:** a reference earns its place only if some dispatch skips it. A single reference every run reads in full is the procedure hiding next door — inline it, and re-ask whether the skill itself is earned.
+- **Modes are not automatically variants.** Modes that swap a short lens on one shared spine are a conditional preamble in the body. Modes with different spines — different opening moves, sections with no counterpart in their siblings — earn one reference each.
+- **When the split is contested, run the experiment.** Write each mode standalone, with no cross-references, and compare the artifacts: divergent spines earn the split; near-identical spines with guard-level differences collapse back into the body. Judge artifacts, not theory.
+- **A standalone reference teaches every concept it uses**, because its reader may load only it. Overlap that is invariant hoists to the body; overlap that only looks similar but differs in application stays per-reference, and the duplication is accepted consciously.
+- **Shape verdicts are provisional.** Work that grows a variant axis can flip an inline procedure into a skill, and losing one flips it back. The same tests applied to different work correctly land on different shapes — sibling instruments ending up asymmetric is not a wart.
+
+**Smells to reject:** a personality in a skill (→ agent); a vague description ("Helps with documents"); prose where steps belong; no worked example; duplicated authority; a single always-read reference (inline it); a reference that assumes a concept its standalone reader was never taught.
 
 **Mechanics:** a skill is a folder named after the skill containing `SKILL.md` exactly: `.opencode/skills/<name>/SKILL.md`. For the recognized frontmatter fields, the `name` validation rules, and the description requirements, load the `customize-opencode` skill — it is the source of truth.
 
