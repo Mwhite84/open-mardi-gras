@@ -52,6 +52,6 @@ Read the reference for your mode (above) and follow it. It handles the review be
 
 ## 6. Validate the graph
 
-Run `bd swarm validate <epic>` (confirms no cycles) and `bd dep tree <epic>` (a visual check). Confirm the shape holds: the review bead depends on every open work child, the report-writer bead depends on the review bead, and nothing depends on the report-writer bead — it is the last thing to run.
+Run `bd swarm validate <epic>` (confirms no cycles) and `bd dep tree --direction up <epic>` (a visual check — `--direction up` is required to show the epic's full tree). Confirm the shape holds: the review bead depends on every open work child, the report-writer bead depends on the review bead, and nothing depends on the report-writer bead — it is the last thing to run.
 
 Then show the final structure and stop for review.

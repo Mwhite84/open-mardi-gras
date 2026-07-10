@@ -38,7 +38,7 @@ In the experimental `multi_agents` build mode, the foreman fans out one worker p
 
 ```
 bd dep add <dependent> <dependency>    # "dependent" is blocked by "dependency"
-bd dep tree <epic-id>                  # Visual dependency graph
+bd dep tree --direction up <epic-id>   # Visual dependency graph (--direction up shows the epic's full tree)
 bd swarm validate <epic-id>            # Validate DAG structure (no cycles)
 bd blocked --json                      # Show all blocked issues
 ```
@@ -86,7 +86,7 @@ The plan-time orchestrator (`omg-decomposer`) drives the whole plan phase in thi
 
 5. **Mint the terminal report-writer bead `P`**, from the static `P` block below, stamped `agent=omg-reviewer`, `--parent <epic> --no-inherit-labels`, wired **`R` blocks `P` / `P` depends on `R`** (`bd dep add <P> <R>`). `P` is the last child to come ready; minting it here moves the epic's terminal work onto the graph.
 
-6. **Validate** (`bd swarm validate`, `bd dep tree`) and run the refinement passes.
+6. **Validate** (`bd swarm validate`, `bd dep tree --direction up`) and run the refinement passes.
 
 **The terminal carve-out on "R blocked by all children."** Step 4's rule is "`R` blocked by all other **work** children" — `P` is the exception. `P` depends on `R` (step 5), so `R` must **not** be wired to depend on `P`; doing both would create a cycle. When you validate, confirm `R` depends on every work child and `P` depends on `R`, and nothing depends on `P`.
 
@@ -214,7 +214,7 @@ Two serialization rules, both stated as **serialization** — one bead blocks th
 
 After wiring dependencies, always:
 1. `bd swarm validate <epic-id>` — check for cycles and structural issues
-2. `bd dep tree <epic-id>` — visually confirm the dependency graph looks right
+2. `bd dep tree --direction up <epic-id>` — visually confirm the dependency graph looks right (`--direction up` shows the epic's full tree)
 
 ## Refinement Passes
 

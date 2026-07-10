@@ -69,7 +69,7 @@ non-negotiable shape** because your bead is already claimed (`in_progress`) and
 
 **Classify the failure by run output, never by reading the test.** Match the
 failing test's selector (as the runner reports it) against this epic's planned
-test beads' `run_selector`s (visible via `bd dep tree <epic>` and the `z` beads'
+test beads' `run_selector`s (visible via `bd dep tree --direction up <epic>` and the `z` beads'
 metadata):
 
 - **Mode 1 — the failing test is one of *this epic's* planned tests** (its selector
