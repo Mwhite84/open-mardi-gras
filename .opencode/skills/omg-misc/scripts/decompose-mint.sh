@@ -32,6 +32,9 @@ die() {
 }
 
 SPEC="${1:-}"
+# opencode's `@file` attach syntax passes the token through with a literal
+# leading `@` (e.g. `@docs/spec.md`); strip it so the path resolves on disk.
+SPEC="${SPEC#@}"
 [ -n "$SPEC" ] || die "usage: decompose-mint.sh <spec-file>"
 [ -f "$SPEC" ] || die "spec file not found: $SPEC"
 command -v yq >/dev/null 2>&1 || die "yq not found"
