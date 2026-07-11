@@ -21,13 +21,14 @@ form: what to verify when building one, and what to catch when reviewing one.
 ## Status and immutability
 
 - Confirm the status is present and accurate. `status` records where the decision
-  stands (Proposed, Accepted, Superseded, Deprecated). It is an ordinary,
-  editable field — marking an ADR `Accepted` does **not** freeze it.
+  stands (draft, proposed, final, superseded, deprecated — `final` is the classic
+  ADR "Accepted"). It is an ordinary, editable field — marking an ADR `final`
+  does **not** freeze it.
 - **Immutability attaches at *ship*, not at a status value and not at mint.** A
   decision is frozen only once it ships to Hindsight (a bead reaching
   `hindsight=shipped`); see **Immutability and Supersession** in `omg-commands`
   for the authoritative rule. Until then the ADR is a working file in the tree —
-  including an Accepted-but-unshipped one — and you **refine it in place.** Do not
+  including a `final`-but-unshipped one — and you **refine it in place.** Do not
   supersede an ADR that has not shipped; editing your own un-shipped draft is the
   normal way to incorporate review findings.
 - **Supersession is for shipped decisions only.** Once an ADR has shipped, its

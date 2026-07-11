@@ -4,11 +4,13 @@
 > weighed, the choice made, and the consequences accepted. An ADR is frozen once
 > it ships to memory — supersede a shipped ADR with a new one rather than editing
 > it. Before it ships, it is a working file and is refined in place; marking it
-> Accepted does not freeze it.
+> `final` does not freeze it.
 
 ## Status
 
-Proposed | Accepted | Superseded by ADR-NNN | Deprecated
+draft | proposed | final | superseded | deprecated
+
+(`final` is the classic ADR "Accepted". A superseding ADR's id goes in the `superseded_by:` frontmatter field, not in the status text. This section mirrors the frontmatter `status` for human readers.)
 
 ## Context
 

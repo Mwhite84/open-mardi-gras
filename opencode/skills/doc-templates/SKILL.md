@@ -145,6 +145,28 @@ resolved from `.workflow.yaml` (`resolve-workflow.sh hindsight.bank`, which
 inherits the central bank in a satellite), and the `document_id` is the top-level
 `id`. You author only `strategy` and `tags`.
 
+## Document status
+
+`status:` is a frontmatter field, and its legal values come from the frontmatter contract (`adr.platform.frontmatter-schema.0001`, A5): `draft`, `proposed`, `final`, `deprecated`, `superseded`. The rows below specialize what those values *mean* per doc type; no doc type invents other values.
+
+| Doc type | Working | Terminal | End-of-life | Meaning notes |
+|---|---|---|---|---|
+| PRD | draft, proposed | final | superseded, deprecated | proposed = circulated for review; final = approved direction |
+| Spec | draft, proposed | final | superseded, deprecated | final = approved to decompose and build against |
+| Roadmap | draft, proposed | final | superseded | a roadmap revision is committed (final) or replaced by the next (superseded), never edited once superseded |
+| User story | draft, proposed | final | deprecated, superseded | final = refined and ready to build; deprecated = dropped, will not be built |
+| Design doc | draft, proposed | final | superseded, deprecated | final = the design of record |
+| ADR | draft, proposed | final | superseded, deprecated | final is the classic ADR "Accepted"; superseded pairs with the `superseded_by:` frontmatter id |
+| Build report | draft | final | superseded | a record: final at epic close; changed only by supersession |
+
+Three rules govern the field:
+
+- **Status is descriptive — never a gate and never a freeze.** The ship signal is solely the presence of the `hindsight` block (contract A3), and immutability attaches at *ship* (`hindsight=shipped`), not at any status value. Marking a doc `final` does not freeze it; it is still refined in place until it ships.
+- **Ship expectation.** A document is *expected* to be `final` before it ships to Hindsight. An agent about to ship a `draft` or `proposed` doc flags it to the user rather than shipping silently — this is authoring guidance, not a contract gate; hardening it into a mechanical gate is a deferred future ADR (the contract's status-transition ADR).
+- **`superseded`/`deprecated` on a tree doc is bookkeeping.** The authoritative supersession of *shipped* memory is the hindsight supersession flow (see *Immutability and Supersession* in `omg-commands`); setting `status: superseded` retracts nothing by itself.
+
+Status lives in frontmatter only: templates do not carry a body `## Status` section — except the ADR, whose body `## Status` is the classic ADR shape, kept as a human-readable mirror of the frontmatter value.
+
 ## Frontmatter conventions
 
 Every template carries frontmatter, and some fields are easy to fill dishonestly.
