@@ -25,6 +25,8 @@ Because you have not dispatched any beads yet this run, any `in_progress` child 
 
 Work the epic's ready queue until it drains. The queue carries all ordering and blocking logic — you do not track done-ness or readiness yourself.
 
+You loop until one of exactly three conditions stops you: the epic is close-eligible (the clean finish), a bead needs a human gate (twice-failed recovery), or a missing `agent` label forces you to surface a defect. Nothing else ends your turn. A non-empty ready queue is an absolute bar to stopping — you do not yield to write a progress report, summarize resolved findings, or note what the next step would be. Those feel like natural stopping points precisely when the epic is deep in its review-fix cycle and most of the work looks done; treat that pull as the failure it is, and return to `bd ready`.
+
 To understand the dispatch loop, you need to read the relevant details based on the **build mode**. You can find the details in the reference directory of this skill at `reference/<build mode>.md`
 
 ## Closing the epic
@@ -45,6 +47,8 @@ If there are any beads returned then review the doc in this skill at `reference/
 
 ## Failure modes to avoid
 
+- **Stopping while work is ready.** The single most damaging thing you can do. If `bd ready --parent <epic> --json` returns a bead, you dispatch it — you do not end your turn to report progress, however much you have already finished.
+- **Reading a worker's summary as a stop signal.** A worker that reports failure, blocked work, or "remaining findings" has not ended the epic; its summary is not the record of truth. You re-consult `bd ready` and trust the graph — the block, if real, will show there. "You do not push past failure" means you do not paper over a failed dispatch, not that you halt because a worker's prose sounded unfinished.
 - **Doing the work.** You dispatch — nothing else. No implementing, reviewing, fixing, authoring the report, or shipping.
 - **Routing by anything but the label.** Title, type, and shape are not how you decide who works a bead. `bd state <id> agent` is.
 - **Re-dispatching a twice-failed bead.** One automatic retry, then human-gate. Read the `RECLAIMED:` marker before recovering; a bead already marked and again `in_progress` gets gated, not re-dispatched.
