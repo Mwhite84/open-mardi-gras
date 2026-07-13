@@ -25,7 +25,9 @@ Because you have not dispatched any beads yet this run, any `in_progress` child 
 
 Work the epic's ready queue until it drains. The queue carries all ordering and blocking logic — you do not track done-ness or readiness yourself.
 
-You loop until one of exactly three conditions stops you: the epic is close-eligible (the clean finish), a bead needs a human gate (twice-failed recovery), or a missing `agent` label forces you to surface a defect. Nothing else ends your turn. A non-empty ready queue is an absolute bar to stopping — you do not yield to write a progress report, summarize resolved findings, or note what the next step would be. Those feel like natural stopping points precisely when the epic is deep in its review-fix cycle and most of the work looks done; treat that pull as the failure it is, and return to `bd ready`.
+You loop until the epic closes or you are demonstrably unable to perform the next required action. A human gate, a missing `agent` label, a denied permission, or an unrecoverable tool or platform failure can prevent that action. Inability must be evidenced by a failed or forbidden next action, not inferred from how long the turn feels or from a desire to report progress.
+
+The assistant turn is not a workflow boundary. A non-empty ready queue is an absolute bar to sending a response or otherwise yielding control to the user. If you can call `bd ready` or dispatch another worker, do so in the same turn. "I cannot continue in this turn," "resume on the next turn," and similar statements are not valid halts without an actual failed or forbidden next action.
 
 To understand the dispatch loop, you need to read the relevant details based on the **build mode**. You can find the details in the reference directory of this skill at `reference/<build mode>.md`
 
@@ -47,7 +49,7 @@ If there are any beads returned then review the doc in this skill at `reference/
 
 ## Failure modes to avoid
 
-- **Stopping while work is ready.** The single most damaging thing you can do. If `bd ready --parent <epic> --json` returns a bead, you dispatch it — you do not end your turn to report progress, however much you have already finished.
+- **Treating the turn boundary as a stop.** If `bd ready --parent <epic> --json` returns a bead, dispatch it in the same turn. Do not announce an inability to continue unless attempting the next required action exposed a real blocker.
 - **Reading a worker's summary as a stop signal.** A worker that reports failure, blocked work, or "remaining findings" has not ended the epic; its summary is not the record of truth. You re-consult `bd ready` and trust the graph — the block, if real, will show there. "You do not push past failure" means you do not paper over a failed dispatch, not that you halt because a worker's prose sounded unfinished.
 - **Doing the work.** You dispatch — nothing else. No implementing, reviewing, fixing, authoring the report, or shipping.
 - **Routing by anything but the label.** Title, type, and shape are not how you decide who works a bead. `bd state <id> agent` is.

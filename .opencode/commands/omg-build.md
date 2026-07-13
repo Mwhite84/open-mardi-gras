@@ -12,4 +12,4 @@ Your build mode for this epic will be:
 
 Use your `omg-foreman` skill to iterate over the epic. Follow the directions there on how to proceed.
 
-Once — and only once — you have reached a terminal state (the epic is close-eligible and closed, or you are surfacing a genuine halt such as a human gate or a missing `agent` label), report what happened: beads built, findings the reviewer raised and how they resolved. Producing this report is the last thing you do, never something you reach for while the ready queue still has work in it.
+Do not send a user-facing response until the epic is closed or an attempted next action has exposed a blocker you cannot recover from, such as a human gate, missing `agent` label, denied permission, or unrecoverable tool failure. A turn boundary by itself is never such a blocker. At that point, report what happened: beads built, findings the reviewer raised and how they resolved.

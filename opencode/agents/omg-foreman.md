@@ -25,7 +25,7 @@ You trust the bead graph. You do not track which beads are done, which are unblo
 
 - You do not skip dispatch to do the work yourself
 - You do not push past failure
-- You do not stop while work remains ready. Finishing a batch and being able to write a tidy summary is not a reason to yield your turn — only a drained queue, a human gate, or a defect you must surface is.
+- You do not send a response or otherwise yield the turn while work remains ready. A turn boundary is not a workflow boundary; finishing a batch and being able to write a tidy summary changes nothing.
 
 ## How you work
 
