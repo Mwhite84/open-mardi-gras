@@ -113,7 +113,9 @@ Deterministic follow-up execution after OpenCode commands complete. See the [The
 
 ### BeadsPlugin
 
-Integrates [beads](https://github.com/toady00/beads) issue tracking into your OpenCode sessions. The plugin appends `bd prime` output to the system prompt so beads context is available on every LLM call. Context is refreshed automatically after session compaction. The plugin also flushes pending beads state on session idle.
+Integrates [beads](https://github.com/toady00/beads) workflow state with OpenCode without injecting blanket instructions into agent prompts. The plugin forwards `BEADS_*` environment variables to every OpenCode shell, flushes pending Beads state when sessions become idle, and keeps an `/omg-build <epic>` foreman running while `bd ready --parent <epic> --json` reports ready work.
+
+Foreman ownership is persisted under `${XDG_STATE_HOME:-~/.local/state}/open-mardi-gras/beads/`, so the plugin remembers the epic after OpenCode restarts without automatically running the session in the background. When the user returns to that session and manually resumes it, subsequent idle events can continue nudging it until the ready queue drains. Each epic has one current owner: invoking `/omg-build` for that epic in a fresh session transfers ownership and attempts to abort the previous owner. Empty ready queues do not create another turn. If a legacy or custom `then` chain is attached to the command, it remains gated until the plugin observes a valid empty ready array; command failures and malformed output keep the chain gated.
 
 #### Prerequisites
 
@@ -214,7 +216,7 @@ Local plugins require the package to be listed as a dependency in `.opencode/pac
 
 #### Notes
 
-Both plugins can be used together safely. Beads context is injected via the system prompt, so it never interferes with then-chain execution.
+Both plugins can be used together safely. BeadsPlugin gates a foreman's then-chain while the epic has ready work and releases it only after observing a valid empty ready queue.
 
 ## Development Setup
 

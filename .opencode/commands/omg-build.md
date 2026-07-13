@@ -1,7 +1,6 @@
 ---
 description: Run an epic end to end — dispatch its ready queue by label, drive the build/review loop, recover crash-stranded beads, and close the epic. The terminal report is a dispatched bead; nothing ships.
 agent: omg-foreman
-then: /omg-ensure-work-finished
 ---
 
 Your epic id for this work is:

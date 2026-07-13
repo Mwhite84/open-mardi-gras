@@ -62,6 +62,13 @@ This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get sta
   `BeadsPlugin`'s `shell.env` hook forwards all `BEADS_*` vars into every shell
   OpenCode spawns (primary and subagent) so dispatched subagents resolve the
   same backend the primary does. Without it, subagent `bd` calls fail.
+- `BeadsPlugin` persists one `/omg-build` owner per epic outside the repo under
+  `${XDG_STATE_HOME:-~/.local/state}/open-mardi-gras/beads/`, keyed by the
+  project directory. A fresh `/omg-build <epic>` session transfers ownership;
+  deleting the owning session removes it. Restoring this state must never start
+  a background turn at plugin initialization; it only enables later idle-event
+  nudges after the user resumes that session. Do not move this runtime state
+  into `.opencode/` or inject it into agent prompts.
 
 ## Quick Reference
 
