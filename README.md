@@ -135,24 +135,22 @@ These are only required if you use BeadsPlugin. ThenChainingPlugin has no extern
 > lands on `master` and is published, the plain `npx @toady00/open-mardi-gras
 > setup` command will be the way to install.
 
-Run the setup command to install workflow files (commands, agents, skills, prompts) into your project:
+Run the setup command to install the workflow agents, commands, and skills into your project:
 
 ```bash
 npx 'github:Toady00/open-mardi-gras#rearchitect' setup
 ```
 
-This copies the packaged contents of `opencode/` into your `.opencode/` directory. Run it again after upgrading to pick up new versions of the workflow files.
+This copies the packaged `opencode/agents`, `opencode/commands`, and `opencode/skills` directories into your `.opencode/` directory. It also creates or updates `.opencode/opencode.json` and adds `@toady00/open-mardi-gras` to the `plugin` array without duplicating an existing version-pinned entry. Run setup again after upgrading to pick up new versions of the workflow files.
 
 After running setup, open opencode in your project and:
 
-1. Run `/omg-hindsight-setup` to set up the project's Hindsight memory.
-2. Run `/omg-onboard {solo|centralized|satellite}` to wire up the rest of the workflow. The onboard command determines and writes the proper `.workflow.yaml` for your repo's role.
+1. Restart opencode so it loads the installed plugin and instruments.
+2. Run `/omg-onboard {solo|centralized|satellite}` and follow its instructions to wire and verify the workflow. It will direct you to `/omg-hindsight-setup` if the project's Hindsight memory or guidance still needs setup.
 
-### Plugin Installation
+### Manual Plugin Configuration
 
-#### From npm (recommended)
-
-Add the package name to the `plugin` array in your `opencode.json` config file. This can be either project-level or global:
+The setup command configures the npm plugin automatically. To configure it manually instead, add the package name to the `plugin` array in your `opencode.json` config file. This can be either project-level or global:
 
 - **Project**: `opencode.json` in your project root
 - **Global**: `~/.config/opencode/opencode.json`
