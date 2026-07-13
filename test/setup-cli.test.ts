@@ -57,18 +57,54 @@ describe("configurePlugin", () => {
     tempDirs.push(root)
     const destRoot = join(root, ".opencode")
     await mkdir(destRoot)
-    await writeFile(
-      join(destRoot, "opencode.json"),
-      JSON.stringify({ model: "provider/model", plugin: ["another-plugin"] }),
-    )
+    const original = `{
+  "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": ["amazon-bedrock", "synthetic"],
+  "agent": {
+    "build":       {"model": "openai/gpt-5.6-terra-fast"},
+    "omg-builder": {"model": "openai/gpt-5.6-terra-fast"}
+  }
+}
+`
+    await writeFile(join(destRoot, "opencode.json"), original)
 
     expect(configurePlugin(destRoot)).toBe("added")
 
-    expect(JSON.parse(await readFile(join(destRoot, "opencode.json"), "utf-8"))).toEqual({
-      model: "provider/model",
-      plugin: ["another-plugin", "@toady00/open-mardi-gras"],
-      $schema: "https://opencode.ai/config.json",
-    })
+    expect(await readFile(join(destRoot, "opencode.json"), "utf-8")).toBe(`{
+  "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": ["amazon-bedrock", "synthetic"],
+  "agent": {
+    "build":       {"model": "openai/gpt-5.6-terra-fast"},
+    "omg-builder": {"model": "openai/gpt-5.6-terra-fast"}
+  },
+  "plugin": ["@toady00/open-mardi-gras"]
+}
+`)
+  })
+
+  it("preserves formatting while appending to an existing plugin array", async () => {
+    const root = await mkdtemp(join(tmpdir(), "omg-setup-"))
+    tempDirs.push(root)
+    const destRoot = join(root, ".opencode")
+    const original = `{
+  "plugin": [
+    "another-plugin"
+  ],
+  "agent": {"build": {"model": "provider/model"}}
+}
+`
+    await mkdir(destRoot)
+    await writeFile(join(destRoot, "opencode.json"), original)
+
+    expect(configurePlugin(destRoot)).toBe("added")
+    expect(await readFile(join(destRoot, "opencode.json"), "utf-8")).toBe(`{
+  "plugin": [
+    "another-plugin",
+    "@toady00/open-mardi-gras"
+  ],
+  "agent": {"build": {"model": "provider/model"}}
+}
+`)
   })
 
   it("does not duplicate an existing pinned plugin entry", async () => {

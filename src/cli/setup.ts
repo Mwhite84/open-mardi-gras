@@ -48,12 +48,108 @@ function isConfiguredPlugin(entry: unknown): boolean {
   )
 }
 
+function findStringEnd(source: string, start: number): number {
+  let escaped = false
+  for (let index = start + 1; index < source.length; index++) {
+    if (!escaped && source[index] === '"') return index
+    escaped = !escaped && source[index] === "\\"
+    if (source[index] !== "\\") escaped = false
+  }
+  throw new Error("unterminated JSON string")
+}
+
+function findTopLevelProperty(source: string, name: string): { keyStart: number; valueStart: number } {
+  let depth = 0
+  for (let index = 0; index < source.length; index++) {
+    const character = source[index]
+    if (character === '"') {
+      const end = findStringEnd(source, index)
+      if (depth === 1 && JSON.parse(source.slice(index, end + 1)) === name) {
+        let colon = end + 1
+        while (/\s/.test(source[colon] ?? "")) colon++
+        if (source[colon] === ":") {
+          let valueStart = colon + 1
+          while (/\s/.test(source[valueStart] ?? "")) valueStart++
+          return { keyStart: index, valueStart }
+        }
+      }
+      index = end
+    } else if (character === "{" || character === "[") {
+      depth++
+    } else if (character === "}" || character === "]") {
+      depth--
+    }
+  }
+  throw new Error(`top-level "${name}" property was not found`)
+}
+
+function findArrayEnd(source: string, start: number): number {
+  let depth = 0
+  for (let index = start; index < source.length; index++) {
+    const character = source[index]
+    if (character === '"') {
+      index = findStringEnd(source, index)
+    } else if (character === "[") {
+      depth++
+    } else if (character === "]" && --depth === 0) {
+      return index
+    }
+  }
+  throw new Error("plugin array was not closed")
+}
+
+function addPluginToSource(source: string, config: Record<string, unknown>): string {
+  const serializedPlugin = JSON.stringify(PLUGIN_PACKAGE)
+  const plugins = config.plugin
+  if (Array.isArray(plugins)) {
+    const { valueStart } = findTopLevelProperty(source, "plugin")
+    const arrayEnd = findArrayEnd(source, valueStart)
+    const inside = source.slice(valueStart + 1, arrayEnd)
+    if (inside.trim() === "") {
+      return `${source.slice(0, valueStart + 1)}${serializedPlugin}${source.slice(valueStart + 1)}`
+    }
+
+    const trailingWhitespace = inside.match(/\s*$/)?.[0] ?? ""
+    const insertionAt = arrayEnd - trailingWhitespace.length
+    const newline = source.includes("\r\n") ? "\r\n" : "\n"
+    let separator = ", "
+    if (inside.includes("\n")) {
+      const currentLine = source.slice(source.lastIndexOf("\n", insertionAt - 1) + 1, insertionAt)
+      const indentation = currentLine.match(/^\s*/)?.[0] ?? ""
+      separator = `,${newline}${indentation}`
+    }
+    return `${source.slice(0, insertionAt)}${separator}${serializedPlugin}${source.slice(insertionAt)}`
+  }
+
+  const objectEnd = source.lastIndexOf("}")
+  const beforeEnd = source.slice(0, objectEnd)
+  const trailingWhitespace = beforeEnd.match(/\s*$/)?.[0] ?? ""
+  const insertionAt = objectEnd - trailingWhitespace.length
+  const hasProperties = Object.keys(config).length > 0
+  if (!source.includes("\n")) {
+    const separator = hasProperties ? ", " : ""
+    return `${source.slice(0, insertionAt)}${separator}"plugin": [${serializedPlugin}]${source.slice(insertionAt)}`
+  }
+
+  const newline = source.includes("\r\n") ? "\r\n" : "\n"
+  let indentation = "  "
+  if (hasProperties) {
+    const firstKey = Object.keys(config)[0]
+    const { keyStart } = findTopLevelProperty(source, firstKey)
+    indentation = source.slice(source.lastIndexOf("\n", keyStart - 1) + 1, keyStart)
+  }
+  const separator = hasProperties ? "," : ""
+  return `${source.slice(0, insertionAt)}${separator}${newline}${indentation}"plugin": [${serializedPlugin}]${source.slice(insertionAt)}`
+}
+
 export function configurePlugin(destRoot: string): "added" | "present" {
   const configPath = join(destRoot, "opencode.json")
   let config: Record<string, unknown> = {}
+  let source: string | undefined
 
   try {
-    const parsed = JSON.parse(readFileSync(configPath, "utf-8")) as unknown
+    source = readFileSync(configPath, "utf-8")
+    const parsed = JSON.parse(source) as unknown
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("the top-level value must be a JSON object")
     }
@@ -72,17 +168,19 @@ export function configurePlugin(destRoot: string): "added" | "present" {
 
   const pluginEntries: unknown[] = Array.isArray(plugins) ? (plugins as unknown[]) : []
   const pluginAlreadyConfigured = pluginEntries.some(isConfiguredPlugin)
-  const schemaWasMissing = config.$schema === undefined
-  config.$schema ??= "https://opencode.ai/config.json"
-  if (!pluginAlreadyConfigured) {
-    config.plugin = [...pluginEntries, PLUGIN_PACKAGE]
-  }
+  if (pluginAlreadyConfigured) return "present"
 
-  if (!pluginAlreadyConfigured || schemaWasMissing) {
-    mkdirSync(destRoot, { recursive: true })
-    writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`)
-  }
-  return pluginAlreadyConfigured ? "present" : "added"
+  mkdirSync(destRoot, { recursive: true })
+  const updatedSource =
+    source === undefined
+      ? `${JSON.stringify(
+          { $schema: "https://opencode.ai/config.json", plugin: [PLUGIN_PACKAGE] },
+          null,
+          2,
+        )}\n`
+      : addPluginToSource(source, config)
+  writeFileSync(configPath, updatedSource)
+  return "added"
 }
 
 export function setup(): void {
