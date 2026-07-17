@@ -61,8 +61,9 @@ work it:
 
 ## The resolver is your oracle
 
-The single source of truth for *derived* config is the resolver,
-`.opencode/skills/doc-templates/scripts/resolve-workflow.sh <key>`. After you write
+The single source of truth for *derived* config is the resolver. Resolve its
+location through `${OPENCODE_CONFIG_DIR:-.opencode}` and fall back to `.opencode`
+when that file is not there. After you write
 (or stage) a `.workflow.yaml`, the resolver tells you what the effective config
 actually is — `mode`, `docs_root`, `docs_base`, `hindsight.url/bank/guidance`,
 `central_repo`. It also **fails loud** on every misconfiguration the design forbids
@@ -128,7 +129,7 @@ Run the checks for the mode (the references list the exact commands):
 - **The resolver yields a complete effective config** — no fail-loud errors for any
   key the mode needs.
 - **The minter resolves and reaches the tree** —
-  `.opencode/skills/doc-templates/scripts/next-id.sh <a.test.prefix>` returns an id
+  `next-id.sh <a.test.prefix>` returns an id
   without error. For a satellite this proves read/bash reach the central tree
   across the external-directory boundary.
 - **A test write into the docs subtree succeeds** — for a satellite, write (then

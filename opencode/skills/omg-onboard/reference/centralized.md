@@ -58,8 +58,10 @@ nothing — work tracking lives in the satellites.
 ## 6. Verify (run every check; report pass/fail)
 
 ```bash
-RES=".opencode/skills/doc-templates/scripts/resolve-workflow.sh"
-NID=".opencode/skills/doc-templates/scripts/next-id.sh"
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+RES="$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh"
+NID="$OMG_CONFIG_DIR/skills/doc-templates/scripts/next-id.sh"
 
 # a) resolver yields a complete effective config
 for k in mode docs_root docs_base hindsight.url hindsight.bank hindsight.guidance; do

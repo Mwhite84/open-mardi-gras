@@ -66,7 +66,9 @@ document sharing the prefix.
 Do **not** eyeball the next number — run the script and use what it returns:
 
 ```
-.opencode/skills/doc-templates/scripts/next-id.sh <type.domain.topic>
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/next-id.sh" ] || OMG_CONFIG_DIR=".opencode"
+"$OMG_CONFIG_DIR/skills/doc-templates/scripts/next-id.sh" <type.domain.topic>
 ```
 
 Pass the prefix **without** the counter; the script scans every doc's
@@ -88,7 +90,7 @@ path or take one from the invoking command. A document is written to:
 ```
 
 - **`<docs_base>`** comes from the resolver:
-  `.opencode/skills/doc-templates/scripts/resolve-workflow.sh docs_base`. In a
+  `OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"; [ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"; "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" docs_base`. In a
   `solo`/`centralized` repo this is the repo's own base; in a `satellite` it is the
   repo's sibling directory inside the **central** docs tree. Either way the
   resolver returns an absolute path — use it verbatim.
@@ -120,7 +122,7 @@ mean, and which `strategy` fits is the project's tagging intent, and it lives in
 the project's **`hindsight.md`**. So when you fill this block:
 
 1. **Locate `hindsight.md` via the resolver**, not by assuming the repo root:
-   `.opencode/skills/doc-templates/scripts/resolve-workflow.sh hindsight.guidance`
+   `OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"; [ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"; "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" hindsight.guidance`
    returns the path. In a `satellite` repo this is the **central** repo's
    `hindsight.md` (the single shared tagging intent), not a local one — which is
    correct, since a satellite ships to the one shared bank. Read that file.

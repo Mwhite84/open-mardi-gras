@@ -40,7 +40,9 @@ TMP="$(mktemp -d)"
 DOC="docs/decisions/adr.platform.frontmatter-schema.0001.md"   # the file to ship
 # Resolve the connection through the resolver, never raw yq — a satellite has no
 # local hindsight block; it inherits the central one.
-RES=".opencode/skills/doc-templates/scripts/resolve-workflow.sh"
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+RES="$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh"
 URL="$(bash "$RES" hindsight.url)"
 BANK="$(bash "$RES" hindsight.bank)"
 ```

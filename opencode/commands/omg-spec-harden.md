@@ -10,7 +10,7 @@ multiple times until no issues remain.
 First, gather your inputs:
 1. Read the spec at `$1` thoroughly, including its `id` in the frontmatter.
 2. Find every ADR produced for this spec: scan the shared docs tree
-   (!`.opencode/skills/doc-templates/scripts/resolve-workflow.sh docs_root`)
+   (!`OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"; [ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"; "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" docs_root`)
    for ADR files (`id` starting `adr.`) whose `produced_for` frontmatter equals
    this spec's `id`. The resolver returns the whole shared root, so this finds
    ADRs wherever they live in the tree (central or this repo's subtree). Those are

@@ -49,7 +49,9 @@ TMP="$(mktemp -d)"
 BEAD="sc-7acd"
 # Resolve the connection through the resolver, never raw yq (satellite inherits
 # the central bank/url).
-RES=".opencode/skills/doc-templates/scripts/resolve-workflow.sh"
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+RES="$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh"
 URL="$(bash "$RES" hindsight.url)"
 BANK="$(bash "$RES" hindsight.bank)"
 ```

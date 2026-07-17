@@ -14,29 +14,28 @@ instruments and **dogfoods** them. Two directories look alike and are not. Do
 not confuse them.
 
 - **`opencode/` (no leading dot) is the PRODUCT.** It is the source of truth for
-  the OMG instruments this repo ships. When you edit an OMG agent, skill, or
-  command as a deliverable of this project, it lives here. **This is almost
-  always where your changes belong.**
-- **`.opencode/` (leading dot) is the DOGFOODING HARNESS** plus repo-local dev
-  tooling. opencode loads it to run *this* repo. It contains a working copy of
-  most OMG instruments (so we use the product on itself) **and** things that are
-  not part of OMG at all and must never be shipped from here — e.g. the
-  `oc-smith` agent (a repo-local authoring tool), and the dev plugins under
-  `.opencode/plugins/`.
+  the OMG agents, skills, commands, scripts, templates, and reference files this
+  repo ships. This repo also dogfoods the product directly by setting
+  `OPENCODE_CONFIG_DIR` to this directory, so a shipped instrument should exist
+  here and only here.
+- **`.opencode/` (leading dot) is the LOCAL HARNESS.** It contains repo-local
+  configuration, development plugins, dependencies, and helper instruments used
+  only to work on this repo. Examples include the `oc-smith` agent, the `/craft`
+  command, the `authoring-opencode` skill, `.opencode/opencode.json`, and the dev
+  plugins under `.opencode/plugins/`.
 
-Two consequences worth internalizing:
+Consequences worth internalizing:
 
-- **Some OMG instruments live ONLY in `opencode/`, never in `.opencode/`** —
-  deliberately. The `omg-test-planner`, for instance, plans verification over
-  built code; this repo is entirely markdown prose with no test framework to
-  plan against, so the planner has no operational role here and is not mirrored
-  into `.opencode/`. Its absence from `.opencode/` is correct, **not** a broken
-  path or a missing file.
-- **Before "fixing" anything in `.opencode/`, ask whether it is the harness or
-  the product.** A change to a dogfooded instrument that should ship belongs in
-  `opencode/` (and may then be mirrored into `.opencode/` for dogfooding). A
-  change to `oc-smith` or a dev plugin is harness-only and must not leak into
-  the product.
+- Do not mirror shipped OMG instruments into `.opencode/`. If an agent, skill,
+  command, script, template, or reference file is part of the package users get,
+  edit it under `opencode/`.
+- Do not move harness-only helpers into `opencode/`. A change to `oc-smith`,
+  `/craft`, `authoring-opencode`, local config, package files, or dev plugins is
+  repo-local and must not leak into the npm package.
+- Some product resources execute from shell snippets. Those snippets must resolve
+  `${OPENCODE_CONFIG_DIR:-.opencode}` first and fall back to `.opencode` when the
+  resource is not there, so this repo's direct dogfooding and normal installed
+  repos both work.
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 

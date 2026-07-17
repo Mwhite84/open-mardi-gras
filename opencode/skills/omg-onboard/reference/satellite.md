@@ -102,8 +102,10 @@ Confirm the mode: `jq -r '.dolt_mode' .beads/metadata.json`.
 ## 6. Verify (run every check; report pass/fail with the command)
 
 ```bash
-RES=".opencode/skills/doc-templates/scripts/resolve-workflow.sh"
-NID=".opencode/skills/doc-templates/scripts/next-id.sh"
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+RES="$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh"
+NID="$OMG_CONFIG_DIR/skills/doc-templates/scripts/next-id.sh"
 
 # a) resolver yields a complete effective config (each must succeed, non-empty)
 for k in mode central_repo docs_root docs_base hindsight.url hindsight.bank hindsight.guidance; do

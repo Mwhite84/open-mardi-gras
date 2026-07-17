@@ -83,12 +83,6 @@ After approving the plan, run:
 
 The foreman dispatches the planned work to the appropriate builder, tester, product, architecture, and review agents. It drives the build and review loop until the epic is complete or reaches a blocker that needs human input. The terminal work writes a build report; the build command does not automatically publish documents to Hindsight.
 
-If you need to return to an interrupted epic and explicitly verify that no work remains, run:
-
-```text
-/omg-ensure-work-finished <epic-id>
-```
-
 ## Command Reference
 
 | Command | Purpose |
@@ -100,4 +94,3 @@ If you need to return to an interrupted epic and explicitly verify that no work 
 | `/omg-spec-harden <spec>` | Finish the spec as a complete implementation contract |
 | `/omg-decompose <spec>` | Create and validate the epic's implementation and verification plan |
 | `/omg-build <epic>` | Orchestrate implementation, testing, review, and the build report |
-| `/omg-ensure-work-finished <epic>` | Resume or verify completion of an interrupted epic |
