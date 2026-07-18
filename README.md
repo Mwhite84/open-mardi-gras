@@ -99,9 +99,13 @@ Conditional chaining, parallel execution, result interpolation between steps, an
 
 ## Installation
 
+No manual `npm install` is required. Run the setup command in the repository you want to onboard:
+
 ```bash
-npm install @toady00/open-mardi-gras
+npx @toady00/open-mardi-gras setup
 ```
+
+Setup adds the package to the `plugin` array in your OpenCode configuration. OpenCode then installs the plugin automatically at startup.
 
 ## Plugins
 
