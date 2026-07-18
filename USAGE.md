@@ -4,10 +4,10 @@ OMG provides a guided path from repository setup, through product and architectu
 
 ## 1. Install the workflow
 
-The `rearchitect` branch is currently a prerelease, so run its setup command directly from GitHub in the repository you want to onboard:
+Run the setup command in the repository you want to onboard:
 
 ```bash
-npx 'github:Toady00/open-mardi-gras#rearchitect' setup
+npx @toady00/open-mardi-gras setup
 ```
 
 The setup command:
@@ -18,12 +18,6 @@ The setup command:
 - Avoids adding a duplicate when the plugin is already configured, including when it is version-pinned.
 
 Run setup again after upgrading to refresh the installed instruments. Restart opencode after setup so it loads the plugin and the new instruments.
-
-Once this branch is published to npm, the normal installation command will be:
-
-```bash
-npx @toady00/open-mardi-gras setup
-```
 
 ## 2. Onboard the repository
 

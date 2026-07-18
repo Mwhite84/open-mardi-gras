@@ -128,17 +128,10 @@ These are only required if you use BeadsPlugin. ThenChainingPlugin has no extern
 
 #### Setup
 
-> **Pre-release notice.** The `rearchitect` branch is a pre-release experiment
-> that will likely be merged back into `master` in the future. For now it is
-> **not** published to npm, so the command below — installing directly from the
-> git branch — is the **only** proper way to install this pre-release. Once it
-> lands on `master` and is published, the plain `npx @toady00/open-mardi-gras
-> setup` command will be the way to install.
-
 Run the setup command to install the workflow agents, commands, and skills into your project:
 
 ```bash
-npx 'github:Toady00/open-mardi-gras#rearchitect' setup
+npx @toady00/open-mardi-gras setup
 ```
 
 This copies the packaged `opencode/agents`, `opencode/commands`, and `opencode/skills` directories into your `.opencode/` directory. It also creates or updates `.opencode/opencode.json` and adds `@toady00/open-mardi-gras` to the `plugin` array without duplicating an existing version-pinned entry. Run setup again after upgrading to pick up new versions of the workflow files.
