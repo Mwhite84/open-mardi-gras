@@ -118,4 +118,29 @@ describe("PluginCoordinator", () => {
       expect(coord.isChainActive("any")).toBe(false)
     })
   })
+
+  describe("chain gates", () => {
+    it("reports a blocked session and fires its callback when unblocked", () => {
+      const coord = new PluginCoordinator()
+      const blocked = new Set(["foreman"])
+      const callback = mock(() => {})
+      coord.registerChainGate({ isChainBlocked: (sessionID) => blocked.has(sessionID) })
+
+      expect(coord.isChainBlocked("foreman")).toBe(true)
+      expect(coord.isChainBlocked("other")).toBe(false)
+      coord.onChainUnblocked("foreman", callback)
+      blocked.delete("foreman")
+      coord.notifyChainUnblocked("foreman")
+      expect(callback).toHaveBeenCalledTimes(1)
+    })
+
+    it("can cancel a deferred chain callback during ownership transfer", () => {
+      const coord = new PluginCoordinator()
+      const callback = mock(() => {})
+      coord.onChainUnblocked("old-owner", callback)
+      coord.cancelChainUnblocked("old-owner")
+      coord.notifyChainUnblocked("old-owner")
+      expect(callback).not.toHaveBeenCalled()
+    })
+  })
 })

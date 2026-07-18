@@ -113,7 +113,9 @@ Deterministic follow-up execution after OpenCode commands complete. See the [The
 
 ### BeadsPlugin
 
-Integrates [beads](https://github.com/toady00/beads) issue tracking into your OpenCode sessions. The plugin appends `bd prime` output to the system prompt so beads context is available on every LLM call. Context is refreshed automatically after session compaction. The plugin also flushes pending beads state on session idle.
+Integrates [beads](https://github.com/toady00/beads) workflow state with OpenCode without injecting blanket instructions into agent prompts. The plugin forwards `BEADS_*` environment variables to every OpenCode shell, flushes pending Beads state when sessions become idle, and keeps an `/omg-build <epic>` foreman running while `bd ready --parent <epic> --json` reports ready work.
+
+Foreman ownership is persisted under `${XDG_STATE_HOME:-~/.local/state}/open-mardi-gras/beads/`, so the plugin remembers the epic after OpenCode restarts without automatically running the session in the background. When the user returns to that session and manually resumes it, subsequent idle events can continue nudging it until the ready queue drains. Each epic has one current owner: invoking `/omg-build` for that epic in a fresh session transfers ownership and attempts to abort the previous owner. Empty ready queues do not create another turn. If a legacy or custom `then` chain is attached to the command, it remains gated until the plugin observes a valid empty ready array; command failures and malformed output keep the chain gated.
 
 #### Prerequisites
 
@@ -126,19 +128,29 @@ These are only required if you use BeadsPlugin. ThenChainingPlugin has no extern
 
 #### Setup
 
-Run the setup command to install workflow files (commands, agents, skills, prompts) into your project:
+> **Pre-release notice.** The `rearchitect` branch is a pre-release experiment
+> that will likely be merged back into `master` in the future. For now it is
+> **not** published to npm, so the command below — installing directly from the
+> git branch — is the **only** proper way to install this pre-release. Once it
+> lands on `master` and is published, the plain `npx @toady00/open-mardi-gras
+> setup` command will be the way to install.
+
+Run the setup command to install the workflow agents, commands, and skills into your project:
 
 ```bash
-npx @toady00/open-mardi-gras setup
+npx 'github:Toady00/open-mardi-gras#rearchitect' setup
 ```
 
-This copies the packaged contents of `opencode/` into your `.opencode/` directory and writes a `.workflow.yaml` config file. Run it again after upgrading to pick up new versions of the workflow files.
+This copies the packaged `opencode/agents`, `opencode/commands`, and `opencode/skills` directories into your `.opencode/` directory. It also creates or updates `.opencode/opencode.json` and adds `@toady00/open-mardi-gras` to the `plugin` array without duplicating an existing version-pinned entry. Run setup again after upgrading to pick up new versions of the workflow files.
 
-### Plugin Installation
+After running setup, open opencode in your project and:
 
-#### From npm (recommended)
+1. Restart opencode so it loads the installed plugin and instruments.
+2. Run `/omg-onboard {solo|centralized|satellite}` and follow its instructions to wire and verify the workflow. It will direct you to `/omg-hindsight-setup` if the project's Hindsight memory or guidance still needs setup.
 
-Add the package name to the `plugin` array in your `opencode.json` config file. This can be either project-level or global:
+### Manual Plugin Configuration
+
+The setup command configures the npm plugin automatically. To configure it manually instead, add the package name to the `plugin` array in your `opencode.json` config file. This can be either project-level or global:
 
 - **Project**: `opencode.json` in your project root
 - **Global**: `~/.config/opencode/opencode.json`
@@ -202,7 +214,7 @@ Local plugins require the package to be listed as a dependency in `.opencode/pac
 
 #### Notes
 
-Both plugins can be used together safely. Beads context is injected via the system prompt, so it never interferes with then-chain execution.
+Both plugins can be used together safely. BeadsPlugin gates a foreman's then-chain while the epic has ready work and releases it only after observing a valid empty ready queue.
 
 ## Development Setup
 

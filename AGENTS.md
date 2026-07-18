@@ -1,12 +1,41 @@
 # Agent Instructions
 
-This project has a slight meta or recursive side to it that all agents should
-be aware of. The development of this opencode plugin, represented in this code
-base, is being done with the aid of opencode. In this opencode environment,
-there are plugins installed via `.opencode/plugins/`. These have nothing to do
-with the plugin we are building. Do not confused development tools and plugins
-in the `.opencode` directory with the purpose of the plugin we are building in
-this repo. This plugin under development will be installed via npm pacakge.
+**Important** ask me at the beginning of every session if I want to discuss how/when to ship the centralized repo docs to the git remote.
+
+This repo is the **source of the OMG family of opencode instruments** — the
+agents, skills, and commands that make up the OMG workflow — together with the
+supporting beads and then-chaining plugins. Producing those instruments is the
+entire point of the repo. It is published as an npm package.
+
+## `opencode/` vs `.opencode/` — read this before touching either
+
+This repo has a meta/recursive character: it both **produces** opencode
+instruments and **dogfoods** them. Two directories look alike and are not. Do
+not confuse them.
+
+- **`opencode/` (no leading dot) is the PRODUCT.** It is the source of truth for
+  the OMG agents, skills, commands, scripts, templates, and reference files this
+  repo ships. This repo also dogfoods the product directly by setting
+  `OPENCODE_CONFIG_DIR` to this directory, so a shipped instrument should exist
+  here and only here.
+- **`.opencode/` (leading dot) is the LOCAL HARNESS.** It contains repo-local
+  configuration, development plugins, dependencies, and helper instruments used
+  only to work on this repo. Examples include the `oc-smith` agent, the `/craft`
+  command, the `authoring-opencode` skill, `.opencode/opencode.json`, and the dev
+  plugins under `.opencode/plugins/`.
+
+Consequences worth internalizing:
+
+- Do not mirror shipped OMG instruments into `.opencode/`. If an agent, skill,
+  command, script, template, or reference file is part of the package users get,
+  edit it under `opencode/`.
+- Do not move harness-only helpers into `opencode/`. A change to `oc-smith`,
+  `/craft`, `authoring-opencode`, local config, package files, or dev plugins is
+  repo-local and must not leak into the npm package.
+- Some product resources execute from shell snippets. Those snippets must resolve
+  `${OPENCODE_CONFIG_DIR:-.opencode}` first and fall back to `.opencode` when the
+  resource is not there, so this repo's direct dogfooding and normal installed
+  repos both work.
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
@@ -32,6 +61,13 @@ This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get sta
   `BeadsPlugin`'s `shell.env` hook forwards all `BEADS_*` vars into every shell
   OpenCode spawns (primary and subagent) so dispatched subagents resolve the
   same backend the primary does. Without it, subagent `bd` calls fail.
+- `BeadsPlugin` persists one `/omg-build` owner per epic outside the repo under
+  `${XDG_STATE_HOME:-~/.local/state}/open-mardi-gras/beads/`, keyed by the
+  project directory. A fresh `/omg-build <epic>` session transfers ownership;
+  deleting the owning session removes it. Restoring this state must never start
+  a background turn at plugin initialization; it only enables later idle-event
+  nudges after the user resumes that session. Do not move this runtime state
+  into `.opencode/` or inject it into agent prompts.
 
 ## Quick Reference
 

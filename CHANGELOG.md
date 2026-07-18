@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Replace automatic `bd prime` system-prompt injection with a durable `/omg-build` foreman watchdog that preserves ownership across OpenCode restarts and resumes ready work after the user continues the restored session.
+- Transfer an epic's watchdog ownership to a fresh `/omg-build` session while preventing multiple tracked owners.
+- Gate then-chaining for tracked foreman sessions until `bd ready --parent <epic> --json` returns a valid empty array.
+- Remove the redundant `then` follow-up from the shipped `/omg-build` command.
+
 ## 0.4.2 - 2026-06-28
 
 ### Fixed
