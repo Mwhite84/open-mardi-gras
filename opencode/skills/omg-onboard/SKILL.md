@@ -73,8 +73,8 @@ unresolvable path). Use it as the validator: a clean resolver run is the proof t
 
 ## Writing config you may not be permitted to write
 
-`.workflow.yaml` and `opencode.json` live at the repo root, which may be outside
-your edit scope. Do not pre-flight your own permissions — just attempt the write.
+`.workflow.yaml` and the project opencode config may be outside your edit scope.
+Do not pre-flight your own permissions — just attempt the write.
 One of three things happens, and all are fine:
 
 - **The write succeeds** (you had access, or the user approved the prompt). Done.

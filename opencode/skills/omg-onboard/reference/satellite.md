@@ -59,34 +59,49 @@ choose the target deliberately: if `.opencode/opencode.json` exists, write there
 (the winning side); if only the root `opencode.json` exists, write there; if both
 exist, write into `.opencode/opencode.json` so your `references` and
 `external_directory` entries cannot be overridden by it. If neither exists, create
-`.opencode/opencode.json`:
+`.opencode/opencode.json`.
+
+Derive the config values from the resolved central repo, not by copying
+`central_repo` verbatim:
+
+- A local reference `path` is relative to the **config file that declares it**.
+  Render a path from the target config's directory to the resolved central repo.
+  Thus a sibling written as `../platform-docs` in root `opencode.json` becomes
+  `../../platform-docs` in `.opencode/opencode.json`.
+- An `external_directory` rule matches the canonical external path used by the
+  permission engine. Render this one as an absolute or `~/` path so its meaning
+  does not change with config placement.
+
+For example, if the satellite is `~/code/monolith`, the central repo is
+`~/code/platform-docs`, and the target is `.opencode/opencode.json`:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
   "references": {
     "platform-docs": {
-      "path": "../platform-docs",
+      "path": "../../platform-docs",
       "description": "Centralized platform docs — PRDs, specs, ADRs, journey maps to reference by id"
     }
   },
   "permission": {
     "external_directory": {
-      "../platform-docs/**": "allow"
+      "~/code/platform-docs/**": "allow"
     }
   }
 }
 ```
 
-- The `references` path and the `external_directory` path must both name the same
-  central repo as `central_repo` in `.workflow.yaml` (the ADR's "same path in two
-  systems"). Keep them in agreement.
+- The `references` path and the `external_directory` path must both resolve to the
+  same central repo as `central_repo` in `.workflow.yaml` (the ADR's "same path in
+  two systems"). They need not be textually identical because each system resolves
+  paths from a different base.
 - A `reference` auto-allows *reads*; the `external_directory: allow` is what permits
   **writing** the build report and other docs back into the central tree, and bash
   (the id-minter) reaching it. Without it, reads work and writes silently prompt or
   fail.
-- If the user keeps the central repo somewhere absolute or under `~/`, use that form
-  (`~/code/platform-docs/**`) consistently in both keys.
+- If `central_repo` is already absolute or under `~/`, the reference may keep that
+  form; only relative references need rebasing for the target config directory.
 
 ## 5. Beads
 
