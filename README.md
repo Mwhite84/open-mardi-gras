@@ -169,13 +169,13 @@ You can also pin a specific version directly in the plugin entry:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@toady00/open-mardi-gras@0.4.2"]
+  "plugin": ["@toady00/open-mardi-gras@1.0.0"]
 }
 ```
 
-- `@toady00/open-mardi-gras@0.4.2` - exact pin, best cache behavior
+- `@toady00/open-mardi-gras@1.0.0` - exact pin, best cache behavior
 - `@toady00/open-mardi-gras` - always track latest
-- Semver ranges like `@toady00/open-mardi-gras@^0.4.2` work, but may reinstall on every startup due to OpenCode's current cache behavior
+- Semver ranges like `@toady00/open-mardi-gras@^1.0.0` work, but may reinstall on every startup due to OpenCode's current cache behavior
 
 #### Upgrading
 
