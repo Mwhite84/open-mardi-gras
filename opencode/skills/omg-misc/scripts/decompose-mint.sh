@@ -31,22 +31,24 @@ die() {
   exit 1
 }
 
-SPEC="${1:-}"
-# opencode's `@file` attach syntax passes the token through with a literal
-# leading `@` (e.g. `@docs/spec.md`); strip it so the path resolves on disk.
-SPEC="${SPEC#@}"
-[ -n "$SPEC" ] || die "usage: decompose-mint.sh <spec-file>"
-[ -f "$SPEC" ] || die "spec file not found: $SPEC"
-command -v yq >/dev/null 2>&1 || die "yq not found"
-command -v jq >/dev/null 2>&1 || die "jq not found"
-command -v bd >/dev/null 2>&1 || die "bd not found"
-
 # resolve-workflow.sh lives in the doc-templates skill; find it relative to this
 # script's own location so we never guess at repo layout.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESOLVE="$SCRIPT_DIR/../../doc-templates/scripts/resolve-workflow.sh"
 [ -x "$RESOLVE" ] || RESOLVE="$(command -v resolve-workflow.sh || true)"
 [ -x "$RESOLVE" ] || die "cannot locate resolve-workflow.sh (looked beside this script and on PATH)"
+
+SPEC_RESOLVER="$SCRIPT_DIR/resolve-decompose-spec.sh"
+[ -x "$SPEC_RESOLVER" ] || die "cannot locate executable resolve-decompose-spec.sh beside this script"
+resolve_error=""
+if ! SPEC="$("$SPEC_RESOLVER" "${1:-}" "$RESOLVE" 2>&1)"; then
+  resolve_error="$SPEC"
+  die "$resolve_error"
+fi
+
+command -v yq >/dev/null 2>&1 || die "yq not found"
+command -v jq >/dev/null 2>&1 || die "jq not found"
+command -v bd >/dev/null 2>&1 || die "bd not found"
 
 # Strip a file's leading YAML frontmatter block, emitting only the body.
 strip_frontmatter() {
