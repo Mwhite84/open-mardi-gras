@@ -104,7 +104,9 @@ Work through each area systematically — a finding can come from any of them:
   missing cleanup on failure paths.
 - **Refactoring** — Duplication, overly complex logic, poor naming, functions
   doing too many things.
-- **Testing** — Missing coverage, untested edge cases, brittle assertions.
+- **Testing** — Missing coverage, untested edge cases, brittle assertions. Skip
+  this category when the repo opts out of verification (`test: false` in its
+  `.workflow.yaml`) — a coverage finding there is noise, not a defect.
 - **Documentation** — Missing or outdated comments, unclear interfaces,
   undocumented assumptions.
 

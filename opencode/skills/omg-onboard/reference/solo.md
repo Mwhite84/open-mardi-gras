@@ -34,6 +34,11 @@ hindsight:
 Ask for `hindsight.url`/`bank` if discovery did not supply them. Attempt the write;
 if refused, emit the content and the destination path.
 
+An optional top-level `test: false` opts the repo out of verification: decompose
+plans no test beads and the review runs no suite. Suggest it only when the repo's
+artifacts have no meaningful test harness (e.g. pure terraform); absent means
+testing is on — only the explicit `false` opts out.
+
 ## 4. The `hindsight.md`
 
 A solo repo owns its `hindsight.md` at the root. If absent, tell the user to run

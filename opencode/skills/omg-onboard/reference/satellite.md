@@ -49,6 +49,13 @@ If a `hindsight` block exists in a satellite's file, **remove it** — the resol
 rejects it, and it would imply a second bank. Attempt the write; if refused, emit
 the content and the destination path.
 
+An optional top-level `test: false` opts the repo out of verification: decompose
+plans no test beads and the review runs no suite. Suggest it only when the repo's
+artifacts have no meaningful test harness (e.g. pure terraform). Unlike
+`hindsight`, this key is **local-only** — a satellite that opts out sets it in its
+own file, and nothing is inherited from the center: testability is a property of
+the code repo, and the docs hub must not switch testing off for its satellites.
+
 ## 4. Write (or emit) `opencode.json` wiring
 
 This is the permission plumbing that lets the satellite read and **write** the

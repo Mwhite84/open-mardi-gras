@@ -5,13 +5,23 @@ description: The decomposer's runbook for driving an OMG epic's plan phase — d
 
 # Decompose
 
-You have been handed an **epic id** and a **mode** — a fresh mint or a refinement pass (a re-run over an epic you already decomposed). Drive the plan phase over that epic in the fixed order below. The epic carries the spec it was minted from and its ADR beads already exist — work entirely off the epic. Verification planning is standard and non-optional.
+You have been handed an **epic id** and a **mode** — a fresh mint or a refinement pass (a re-run over an epic you already decomposed). Drive the plan phase over that epic in the fixed order below. The epic carries the spec it was minted from and its ADR beads already exist — work entirely off the epic. Verification planning is standard; the one way out of it is explicit — the mint report carries a **Verification: opted out** line when the repo sets `test: false` in its `.workflow.yaml`, and step 1 branches on that line.
 
 Pass the mode through to the planners, whose fresh and refinement procedures differ. Your own terminal-bead procedure does not branch on it: reconcile the graph from what actually exists so an interrupted prior run can resume safely.
 
 ## 1. Dispatch the confidence planner
 
 Hand the epic id and your mode to `omg-test-planner` as a subagent, and wait for it to return. It owns the test beads.
+
+**When the mint report says the repo opted out of verification**, do not dispatch the planner for a plan pass. Instead:
+
+- Record the blanket no-test decision on the epic — unless a prior run already did (check `bd comments <epic>`):
+
+  ```bash
+  bd comment <epic> "No test beads for any obligation: this repo opts out of verification (test: false in .workflow.yaml)."
+  ```
+
+- If the epic already has test beads — minted on a pass before the repo opted out — dispatch `omg-test-planner` once in **targeted-concern** mode with one concern: the repo now opts out of verification, so close every open test bead on this epic. Wait for its report; the build planner in step 2 then reconciles its wiring against the emptied test set.
 
 ## 2. Dispatch the build planner
 
@@ -32,6 +42,8 @@ Hunt the cross-slice problems neither planner could catch from its own beads:
 
 - **A spec obligation with an implementation bead but no test and no recorded no-test decision** — a gap between the planners. Verification was neither planned nor consciously declined.
 - **A test bead that blocks no implementation bead** — the test proves a behavior nothing implements, or the build planner missed the wiring.
+
+In an opted-out epic the blanket comment is the recorded no-test decision for every obligation, so the first seam cannot fire; the seam to hunt instead is **any open test bead at all** — send it back to the test planner to close.
 
 Group every problem you find by the planner that owns it, then send back — **test planner first, because the build planner's wiring depends on the test set**:
 

@@ -17,6 +17,9 @@
 #                This is a refinement pass.   (epic already existed)
 #                  — or —
 #                This is freshly minted.      (epic created this run)
+#              plus a third line when the repo opts out of verification
+#              (.workflow.yaml sets test: false):
+#                **Verification:** opted out — …
 #   Failure -> a STOP directive addressed to the agent, and a non-zero exit.
 #
 # Usage: decompose-mint.sh <spec-file>
@@ -37,6 +40,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESOLVE="$SCRIPT_DIR/../../doc-templates/scripts/resolve-workflow.sh"
 [ -x "$RESOLVE" ] || RESOLVE="$(command -v resolve-workflow.sh || true)"
 [ -x "$RESOLVE" ] || die "cannot locate resolve-workflow.sh (looked beside this script and on PATH)"
+
+# Verification policy — 'false' only when this repo's .workflow.yaml explicitly
+# sets test: false (the resolver enforces local-only; central never decides this).
+TEST_POLICY="$("$RESOLVE" test)" || die "resolve-workflow could not resolve the 'test' key"
 
 SPEC_RESOLVER="$SCRIPT_DIR/resolve-decompose-spec.sh"
 [ -x "$SPEC_RESOLVER" ] || die "cannot locate executable resolve-decompose-spec.sh beside this script"
@@ -118,3 +125,6 @@ while IFS= read -r adr_file; do
 done < <(grep -rlE '^id:[[:space:]]*adr\.' "$DOCS_ROOT" 2>/dev/null || true)
 
 printf '**Epic id:** %s\n%s\n' "$epic" "$status"
+if [ "$TEST_POLICY" = "false" ]; then
+  printf '**Verification:** opted out — this repo sets test: false in .workflow.yaml.\n'
+fi
