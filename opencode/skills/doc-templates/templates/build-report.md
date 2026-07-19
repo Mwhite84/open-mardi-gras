@@ -1,17 +1,34 @@
+---
+schema_version: 1
+id:            # mint with next-id.sh — never hand-pick (see Minting the `id`)
+type: build-report
+title:         # human title
+status: draft
+domain:        # the id's second dotted segment
+created_at:    # date -u +"%Y-%m-%dT%H:%M:%SZ" — the real instant, UTC
+updated_at:    # refresh on every edit, UTC
+produced_for:  # the spec id this report records the build of
+hindsight:     # present ⇒ this doc ships to memory; only the user removes this block
+  strategy:    # optional bank retain strategy per hindsight.md — delete this line for the bank default
+  tags:        # key:value list, chosen by judgment from hindsight.md
+---
+
 # Build Report: <Spec / Epic Name>
 
 > Build report. Records the delta between what an epic's spec planned and what was
 > actually built — the deviations, discovered constraints, and decisions made
 > during implementation — so memory holds the outcome, not just the plan. Authored
 > by the foreman at epic close from the workers' bead comments. Frozen once it
-> ships to memory; supersede rather than edit. A report with nothing to record
-> stays in Git (no `hindsight` block) rather than adding noise to memory.
+> ships to memory; supersede rather than edit. Even a report with nothing to
+> record ships: at minimum it records that the spec was built and when the
+> build completed.
 
 ## Summary
 
 What the epic set out to build and, in a sentence or two, how closely the build
 matched the plan. State plainly whether there were material deviations or it was
-built as specified.
+built as specified, and when the build completed — a real UTC timestamp per the
+frontmatter conventions, not a guess.
 
 ## Deviations from the Spec
 

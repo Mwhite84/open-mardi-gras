@@ -88,8 +88,9 @@ child bead's comments (`bd comments <id>`), synthesize the build report with the
 `doc-templates` `build-report` template, write it to the docs tree at the
 resolver-computed path, and **stop**. You perform **no** Hindsight ship, you close
 no other bead, you touch no other work — writing the report is the whole job.
-Give the report a `hindsight` block only if the build carried something worth
-remembering; otherwise omit it so it stays in Git without adding memory noise.
+Give the report a `hindsight` block — every report ships, even one with nothing
+to record: at minimum it records that the spec was built and when the build
+completed. Only the user removes the block.
 
 ## Categories to examine
 

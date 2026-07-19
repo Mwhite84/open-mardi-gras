@@ -1,3 +1,17 @@
+---
+schema_version: 1
+id:            # mint with next-id.sh — never hand-pick (see Minting the `id`)
+type: spec
+title:         # human title — the epic minted from this spec inherits it
+status: draft
+domain:        # the id's second dotted segment
+created_at:    # date -u +"%Y-%m-%dT%H:%M:%SZ" — the real instant, UTC
+updated_at:    # refresh on every edit, UTC
+hindsight:     # present ⇒ this doc ships to memory; only the user removes this block
+  strategy:    # optional bank retain strategy per hindsight.md — delete this line for the bank default
+  tags:        # key:value list, chosen by judgment from hindsight.md
+---
+
 # <System / Component Name> — Spec
 
 > Specification. Defines what the system or component must do, precisely enough

@@ -1,3 +1,19 @@
+---
+schema_version: 1
+id:            # mint with next-id.sh — never hand-pick (see Minting the `id`)
+type: adr
+title:         # human title — beads minted from this document inherit it
+status: draft
+domain:        # the id's second dotted segment
+created_at:    # date -u +"%Y-%m-%dT%H:%M:%SZ" — the real instant, UTC
+updated_at:    # refresh on every edit, UTC
+produced_for:  # id of the spec this decision serves — decomposition finds ADRs by scanning this
+# superseded_by: <id of the replacing ADR, when status becomes superseded>
+hindsight:     # present ⇒ this doc ships to memory; only the user removes this block
+  strategy:    # optional bank retain strategy per hindsight.md — delete this line for the bank default
+  tags:        # key:value list, chosen by judgment from hindsight.md
+---
+
 # ADR <number>: <Title>
 
 > Architecture Decision Record. Captures one decision: its context, the options

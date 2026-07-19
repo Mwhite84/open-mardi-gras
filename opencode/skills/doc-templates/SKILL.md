@@ -22,6 +22,11 @@ rooms; your own references tell you how to furnish or inspect them.
 - **Creating a document:** copy the matching template from `templates/` as the
   skeleton, then fill each section using your agent's own reference for that doc
   type. Keep the section structure; do not invent rival layouts.
+  Each template opens with a frontmatter skeleton — fill every field (its
+  comments point at the sections below; always give a real `title`, since beads
+  minted from the document inherit it). The skeleton's `hindsight` block ships
+  the document by default — fill its `tags` and `strategy` per *Filling the
+  `hindsight` block*; only the user removes the block.
 - **Reviewing a document:** check the document carries the template's sections
   and shape. A missing or malformed section is a form defect. Whether the
   *content* of a section is sound is a separate judgment your own reference
@@ -110,12 +115,14 @@ every repo's tree has an identical internal shape (per
 
 ## Filling the `hindsight` block
 
-A document that should become memory carries a `hindsight` block — its presence
-is the ship signal (per `adr.platform.frontmatter-schema.0001`). The block holds
-the per-document half of a Hindsight retain call: an optional `strategy` and a
-list of free-form `key:value` `tags`. A document with **no** `hindsight` block
-stays in Git only and never ships; omit the block when the document is not
-memory.
+Every document an agent authors carries a `hindsight` block — its presence is
+the ship signal (per `adr.platform.frontmatter-schema.0001`), and the policy is
+ship-by-default. The block holds the per-document half of a Hindsight retain
+call: an optional `strategy` and a list of free-form `key:value` `tags`. A
+document with **no** block stays in Git only and never ships — but removing the
+block is the **user's** explicit opt-out, never the agent's. Do not omit or
+strip it on your own judgment; if a document seems like memory noise, say so and
+let the user remove it.
 
 The contract names **no** tag vocabulary — *which* tags to write, what they
 mean, and which `strategy` fits is the project's tagging intent, and it lives in

@@ -8,9 +8,9 @@ This is the terminal report-writer bead for the epic. When you execute it:
    `next-id.sh` as `build-report.<domain>.<topic>.NNNN`, `type: build-report`, and
    `produced_for: <spec-id>`.
 3. **Write it to the docs tree** at the resolver-computed path
-   (`<docs_base>/build-report/<id>.md`). Give it a `hindsight` block **iff** the
-   build carried something worth remembering (deltas worth recalling); otherwise
-   omit the block so it stays in Git without adding memory noise.
+   (`<docs_base>/build-report/<id>.md`). Give it a `hindsight` block — every
+   report ships, even one with nothing to record: at minimum it records that the
+   spec was built and when the build completed. Only the user removes the block.
 4. **Stop.** Do not ship to Hindsight, do not close the epic, do not touch any
    other bead. Writing the report is the whole job; shipping is a separate
    human-invoked command.
