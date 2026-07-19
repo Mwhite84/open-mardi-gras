@@ -63,6 +63,7 @@ exit 0
     join(bin, "resolve-workflow.sh"),
     `#!/usr/bin/env bash
 case "$1" in
+  test) printf 'true\\n' ;;
   docs_root) printf '%s\\n' '${docs}' ;;
   *) exit 1 ;;
 esac
