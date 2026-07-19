@@ -1,9 +1,9 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "bun:test"
 
-import { configurePlugin, getWorkflowFiles } from "../src/cli/setup"
+import { configurePlugin, copyWorkflowFile, getWorkflowFiles } from "../src/cli/setup"
 
 const tempDirs: string[] = []
 
@@ -35,6 +35,36 @@ describe("getWorkflowFiles", () => {
       "commands/omg-zeta.md",
       "skills/omg-commands/SKILL.md",
     ])
+  })
+})
+
+describe("copyWorkflowFile", () => {
+  it("makes copied shell scripts executable", async () => {
+    const root = await mkdtemp(join(tmpdir(), "omg-setup-"))
+    tempDirs.push(root)
+    const sourceRoot = join(root, "source")
+    const destRoot = join(root, "destination")
+    const file = join("skills", "example", "script.sh")
+    await mkdir(join(sourceRoot, "skills", "example"), { recursive: true })
+    await writeFile(join(sourceRoot, file), "#!/bin/sh\n", { mode: 0o600 })
+
+    copyWorkflowFile(sourceRoot, destRoot, file)
+
+    expect((await stat(join(destRoot, file))).mode & 0o111).toBe(0o111)
+  })
+
+  it("does not make copied non-shell files executable", async () => {
+    const root = await mkdtemp(join(tmpdir(), "omg-setup-"))
+    tempDirs.push(root)
+    const sourceRoot = join(root, "source")
+    const destRoot = join(root, "destination")
+    const file = join("skills", "example", "SKILL.md")
+    await mkdir(join(sourceRoot, "skills", "example"), { recursive: true })
+    await writeFile(join(sourceRoot, file), "# Example\n", { mode: 0o600 })
+
+    copyWorkflowFile(sourceRoot, destRoot, file)
+
+    expect((await stat(join(destRoot, file))).mode & 0o111).toBe(0)
   })
 })
 

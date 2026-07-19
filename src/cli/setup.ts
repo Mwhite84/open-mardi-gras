@@ -1,9 +1,11 @@
 import {
+  chmodSync,
   copyFileSync,
   mkdirSync,
   readFileSync,
   readdirSync,
   realpathSync,
+  statSync,
   writeFileSync,
 } from "node:fs"
 import { dirname, join, resolve } from "node:path"
@@ -38,6 +40,15 @@ export function getWorkflowFiles(sourceRoot = resolve(__dirname, "../../opencode
   return WORKFLOW_DIRECTORIES.flatMap((directory) =>
     collectRelativeFiles(join(sourceRoot, directory)).map((file) => join(directory, file)),
   ).sort()
+}
+
+export function copyWorkflowFile(sourceRoot: string, destRoot: string, file: string): void {
+  const src = join(sourceRoot, file)
+  const dest = join(destRoot, file)
+
+  mkdirSync(dirname(dest), { recursive: true })
+  copyFileSync(src, dest)
+  if (file.endsWith(".sh")) chmodSync(dest, statSync(dest).mode | 0o111)
 }
 
 function isConfiguredPlugin(entry: unknown): boolean {
@@ -193,12 +204,8 @@ export function setup(): void {
   let copied = 0
   const errors: string[] = []
   for (const file of filesToCopy) {
-    const src = join(sourceRoot, file)
-    const dest = join(destRoot, file)
-
     try {
-      mkdirSync(dirname(dest), { recursive: true })
-      copyFileSync(src, dest)
+      copyWorkflowFile(sourceRoot, destRoot, file)
       console.log(`  copied: .opencode/${file}`)
       copied++
     } catch (err) {
