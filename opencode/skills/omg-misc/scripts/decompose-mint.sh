@@ -92,7 +92,14 @@ while IFS= read -r adr_file; do
   [ "$(yq --front-matter=extract -r '.produced_for // ""' "$adr_file" 2>/dev/null || true)" = "$spec_id" ] || continue
   printf '%s\n' "$existing_spec_ids" | grep -Fxq "$aid" && continue   # already minted
 
-  atitle="$(yq --front-matter=extract -r '.title' "$adr_file")"
+  # Title is optional frontmatter (same contract as the spec title above); fall
+  # back to the body's first '#' heading — the ADR template guarantees one —
+  # and finally to the ADR id.
+  atitle="$(yq --front-matter=extract -r '.title // ""' "$adr_file")"
+  [ "$atitle" != "null" ] || atitle=""
+  [ -n "$atitle" ] || atitle="$(strip_frontmatter "$adr_file" \
+    | awk '/^#+[[:space:]]/ { sub(/^#+[[:space:]]*/, ""); sub(/[[:space:]]+$/, ""); print; exit }')"
+  [ -n "$atitle" ] || atitle="$aid"
   atype="$(yq --front-matter=extract -r '.type' "$adr_file")"        # 'adr' → bd aliases to 'decision'
   ameta="$(yq --front-matter=extract -o=json -I=0 '.' "$adr_file")"
   abead="$(strip_frontmatter "$adr_file" \
