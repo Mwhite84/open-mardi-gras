@@ -7,10 +7,7 @@ description: The decomposer's runbook for driving an OMG epic's plan phase — d
 
 You have been handed an **epic id** and a **mode** — a fresh mint or a refinement pass (a re-run over an epic you already decomposed). Drive the plan phase over that epic in the fixed order below. The epic carries the spec it was minted from and its ADR beads already exist — work entirely off the epic. Verification planning is standard and non-optional.
 
-Steps 1, 2, 3, and 6 are the same in either mode. The review and report-writer beads (steps 4–5) are where fresh and refinement diverge — a fresh pass creates them; a refinement pass finds and reconciles them so nothing is duplicated. When you reach step 4, read the one reference that matches your mode and follow it for steps 4 and 5:
-
-- **Fresh mint** → `references/fresh.md`
-- **Refinement pass** → `references/refinement.md`
+Pass the mode through to the planners, whose fresh and refinement procedures differ. Your own terminal-bead procedure does not branch on it: reconcile the graph from what actually exists so an interrupted prior run can resume safely.
 
 ## 1. Dispatch the confidence planner
 
@@ -46,9 +43,19 @@ Group every problem you find by the planner that owns it, then send back — **t
 
 Then **re-review** the settled graph from the top of this step. A fix can open a new seam; loop until a review pass finds nothing. Only then go on.
 
-## 4–5. Author or reconcile the review and report-writer beads
+## 4–5. Ensure and reconcile the terminal beads
 
-Read the reference for your mode (above) and follow it. It handles the review bead and the report-writer bead — creating them on a fresh pass, finding and reconciling them on a refinement pass.
+Converge the epic onto exactly one review bead and one report-writer bead: the review depends on every work child, the report-writer depends on the review, and nothing depends on the report-writer — it is the last thing to run. The `ensure-terminal-beads.sh` script does this idempotently — run it with the epic id:
+
+```bash
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -x "$OMG_CONFIG_DIR/skills/omg-misc/scripts/ensure-terminal-beads.sh" ] || OMG_CONFIG_DIR=".opencode"
+"$OMG_CONFIG_DIR/skills/omg-misc/scripts/ensure-terminal-beads.sh" <epic>
+```
+
+On success it prints the two terminal bead ids (`review: <id>` / `report: <id>`). On failure it stops loud with a message naming the problem and any bead ids involved — surface it to the user, or fix the named condition (e.g. close a duplicate Review bead) and re-run.
+
+The script never replaces the body of an existing terminal bead during reconciliation: it may carry execution history or deliberate corrections. The canonical body is used when creating a missing bead; the stable title, agent state, and graph position identify and repair an existing one.
 
 ## 6. Validate the graph
 
