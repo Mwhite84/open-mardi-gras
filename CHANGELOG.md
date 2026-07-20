@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 - 2026-07-20
+
+### Fixed
+
+- Remove verification-planning beads deterministically when a repository opts out with `test: false`.
+- Prevent unrelated review findings from blocking an epic and route disputed findings through self-contained adjudication beads.
+
 ## 1.1.0 - 2026-07-19
 
 ### Added
