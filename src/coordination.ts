@@ -15,9 +15,15 @@ export interface ChainStateProvider {
   hasActiveChain(sessionID: string): boolean
 }
 
+export interface ChainGateProvider {
+  isChainBlocked(sessionID: string): boolean
+}
+
 export class PluginCoordinator {
   private providers: ChainStateProvider[] = []
   private pendingCallbacks: Map<string, () => void> = new Map()
+  private gateProviders: ChainGateProvider[] = []
+  private pendingUnblockedCallbacks: Map<string, () => void> = new Map()
 
   /**
    * Register a chain state provider. Called by ThenChainingPlugin during init.
@@ -25,6 +31,33 @@ export class PluginCoordinator {
    */
   registerChainState(provider: ChainStateProvider): void {
     this.providers.push(provider)
+  }
+
+  registerChainGate(provider: ChainGateProvider): void {
+    this.gateProviders.push(provider)
+  }
+
+  isChainBlocked(sessionID: string): boolean {
+    return this.gateProviders.some((provider) => provider.isChainBlocked(sessionID))
+  }
+
+  onChainUnblocked(sessionID: string, callback: () => void): void {
+    this.pendingUnblockedCallbacks.set(sessionID, callback)
+  }
+
+  notifyChainUnblocked(sessionID: string): void {
+    const callback = this.pendingUnblockedCallbacks.get(sessionID)
+    if (!callback) return
+    this.pendingUnblockedCallbacks.delete(sessionID)
+    try {
+      callback()
+    } catch {
+      // A plugin callback cannot be allowed to break chain event handling.
+    }
+  }
+
+  cancelChainUnblocked(sessionID: string): void {
+    this.pendingUnblockedCallbacks.delete(sessionID)
   }
 
   /**
@@ -39,8 +72,7 @@ export class PluginCoordinator {
   /**
    * Queue a callback to fire when notifyChainComplete is called for this
    * session. Deduplicates: if a callback is already queued for the session,
-   * it is replaced (not stacked). This handles multiple compactions during
-   * a single chain — only one re-injection fires.
+   * it is replaced rather than stacked.
    */
   onChainComplete(sessionID: string, callback: () => void): void {
     this.pendingCallbacks.set(sessionID, callback)
@@ -57,10 +89,7 @@ export class PluginCoordinator {
       try {
         callback()
       } catch {
-        // Callback errors must not propagate to the caller.
-        // The callback is provided by BeadsPlugin; if it throws
-        // synchronously, swallowing the error prevents crashing
-        // the ThenChainingPlugin's event handler.
+        // Callback errors must not propagate to chain event handling.
       }
     }
   }

@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.1.0 - 2026-07-19
+
+### Added
+
+- Add document frontmatter skeletons, default Hindsight shipping metadata, and a `test: false` opt-out for verification planning.
+
+### Changed
+
+- Resolve centralized satellite specs and terminal review/report beads consistently during decomposition.
+
+### Fixed
+
+- Preserve executable permissions on workflow scripts installed by setup.
+- Resolve satellite OpenCode paths relative to the correct repository and fall back to ADR headings or IDs when titles are absent.
+
+## 1.0.0 - 2026-07-18
+
+### Changed
+
+- Replace automatic `bd prime` system-prompt injection with a durable `/omg-build` foreman watchdog that preserves ownership across OpenCode restarts and resumes ready work after the user continues the restored session.
+- Transfer an epic's watchdog ownership to a fresh `/omg-build` session while preventing multiple tracked owners.
+- Gate then-chaining for tracked foreman sessions until `bd ready --parent <epic> --json` returns a valid empty array.
+- Remove the redundant `then` follow-up from the shipped `/omg-build` command.
+
+## 0.4.2 - 2026-06-28
+
+### Fixed
+
+- Forward `BEADS_*` environment variables into subagent shells so `bd` commands use the same backend as the primary session.
+
+## 0.4.1 - 2026-06-28 [YANKED]
+
+Yanked because it contained no user-facing changes.
+
 ## 0.4.0 - 2026-04-07
 
 ### Changed

@@ -1,330 +1,303 @@
 import { describe, expect, it, mock } from "bun:test"
+import { mkdtemp } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import type { PluginInput } from "@opencode-ai/plugin"
-import { BeadsPlugin } from "./beads.js"
+import { BeadsPlugin, collectBeadsEnv } from "./beads.js"
 
-function createMockShell(primeOutput = "mock beads context") {
-  const commitCalls: number[] = []
-  const primeCalls: number[] = []
-  let callCount = 0
+let nextID = 0
 
-  // The $ template tag returns an object with .quiet() and .text() methods
-  const $ = (strings: TemplateStringsArray) => {
-    const cmd = strings[0]
-    callCount++
-    if (cmd.includes("bd dolt commit")) {
-      commitCalls.push(callCount)
-      return { quiet: mock(() => Promise.resolve()) }
+async function stateDirectory(): Promise<string> {
+  return mkdtemp(join(tmpdir(), `omg-beads-${nextID++}-`))
+}
+
+function createMockShell(options?: {
+  ready?: Record<string, string>
+  readyError?: Error
+  readyPromise?: Promise<string>
+  commitError?: Error
+}) {
+  const commands: string[] = []
+
+  const $ = (strings: TemplateStringsArray, ...values: unknown[]) => {
+    const command = strings.reduce(
+      (result, part, index) => result + part + (index < values.length ? String(values[index]) : ""),
+      "",
+    )
+    commands.push(command)
+
+    if (command.startsWith("bd ready")) {
+      const epicID = String(values[0])
+      return {
+        text: mock(() => {
+          if (options?.readyError) return Promise.reject(options.readyError)
+          if (options?.readyPromise) return options.readyPromise
+          return Promise.resolve(options?.ready?.[epicID] ?? "[]")
+        }),
+        quiet: mock(() => Promise.resolve()),
+      }
     }
-    if (cmd.includes("bd prime")) {
-      primeCalls.push(callCount)
-      return { text: mock(() => Promise.resolve(primeOutput)) }
-    }
+
     return {
-      quiet: mock(() => Promise.resolve()),
       text: mock(() => Promise.resolve("")),
+      quiet: mock(() =>
+        options?.commitError ? Promise.reject(options.commitError) : Promise.resolve(),
+      ),
     }
   }
 
-  return { $: $ as unknown as PluginInput["$"], commitCalls, primeCalls }
+  return { $: $ as unknown as PluginInput["$"], commands }
 }
 
-function createMockClient() {
-  const logCalls: Array<{ level: string; message: string }> = []
-
+function createMockClient(options?: { promptError?: Error; abortError?: Error }) {
+  const logs: Array<{ level: string; message: string }> = []
+  const prompts: Array<{ sessionID: string; agent?: string; text: string }> = []
+  const aborts: string[] = []
   const client = {
     app: {
-      log: mock(async (opts: any) => {
-        logCalls.push({ level: opts.body.level, message: opts.body.message })
+      log: mock(async (input: { body: { level: string; message: string } }) => {
+        logs.push(input.body)
         return {}
+      }),
+    },
+    session: {
+      promptAsync: mock(async (input: { path: { id: string }; body: { agent?: string; parts: Array<{ text: string }> } }) => {
+        if (options?.promptError) throw options.promptError
+        prompts.push({
+          sessionID: input.path.id,
+          agent: input.body.agent,
+          text: input.body.parts[0].text,
+        })
+        return { data: undefined }
+      }),
+      abort: mock(async (input: { path: { id: string } }) => {
+        aborts.push(input.path.id)
+        if (options?.abortError) throw options.abortError
+        return { data: true }
       }),
     },
   } as unknown as PluginInput["client"]
 
-  return { client, logCalls }
+  return { client, logs, prompts, aborts }
+}
+
+async function createHooks(options?: {
+  stateDirectory?: string
+  ready?: Record<string, string>
+  readyError?: Error
+  readyPromise?: Promise<string>
+  commitError?: Error
+  promptError?: Error
+  abortError?: Error
+}) {
+  const state = options?.stateDirectory ?? (await stateDirectory())
+  const shell = createMockShell(options)
+  const client = createMockClient(options)
+  const hooks = await BeadsPlugin({ stateDirectory: state })({
+    client: client.client,
+    $: shell.$,
+    directory: "/project",
+  } as unknown as PluginInput)
+  return { hooks, state, ...shell, ...client }
+}
+
+async function runBuild(
+  hooks: Awaited<ReturnType<typeof createHooks>>["hooks"],
+  sessionID: string,
+  epicID: string,
+) {
+  await hooks["command.execute.before"]!(
+    { command: "omg-build", sessionID, arguments: epicID },
+    { parts: [] },
+  )
+}
+
+async function idle(
+  hooks: Awaited<ReturnType<typeof createHooks>>["hooks"],
+  sessionID: string,
+) {
+  await hooks.event!({
+    event: { type: "session.idle", properties: { sessionID } },
+  } as any)
+  await Bun.sleep(0)
 }
 
 describe("BeadsPlugin", () => {
-  it("returns a valid Plugin factory function", () => {
-    const plugin = BeadsPlugin()
-    expect(typeof plugin).toBe("function")
+  it("does not expose a system transform or invoke bd prime", async () => {
+    const { hooks, commands } = await createHooks()
+    expect(hooks["experimental.chat.system.transform"]).toBeUndefined()
+    expect(commands.some((command) => command.includes("bd prime"))).toBe(false)
   })
 
-  it("initializes and returns hooks", async () => {
-    const { client } = createMockClient()
-    const { $ } = createMockShell()
-    const plugin = BeadsPlugin()
-    const hooks = await plugin({
-      client,
-      $,
-      directory: "/tmp",
-    } as unknown as PluginInput)
-    expect(hooks).toBeDefined()
-    expect(hooks["experimental.chat.system.transform"]).toBeDefined()
-    expect(hooks.event).toBeDefined()
-    // Should NOT have chat.message (we moved to system.transform)
-    expect(hooks["chat.message"]).toBeUndefined()
+  it("nudges only an omg-build owner with ready work", async () => {
+    const { hooks, prompts, commands } = await createHooks({
+      ready: { "omg-epic": '[{"id":"omg-work"}]' },
+    })
+    await hooks["command.execute.before"]!(
+      { command: "other", sessionID: "other-session", arguments: "omg-epic" },
+      { parts: [] },
+    )
+    await idle(hooks, "other-session")
+    await runBuild(hooks, "foreman-session", "omg-epic")
+    await idle(hooks, "foreman-session")
+
+    expect(prompts).toHaveLength(1)
+    expect(prompts[0]).toEqual({
+      sessionID: "foreman-session",
+      agent: "omg-foreman",
+      text: expect.stringContaining("bd ready --parent omg-epic --json"),
+    })
+    expect(commands).toContain("bd ready --parent omg-epic --json")
   })
 
-  describe("experimental.chat.system.transform", () => {
-    it("appends beads context to system prompt on first call", async () => {
-      const { client } = createMockClient()
-      const { $ } = createMockShell("beads prime output")
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      const system: string[] = ["existing system prompt"]
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system },
-      )
-
-      expect(system.length).toBe(2)
-      expect(system[0]).toBe("existing system prompt")
-      expect(system[1]).toContain("<beads-context>")
-      expect(system[1]).toContain("beads prime output")
-      expect(system[1]).toContain("<beads-guidance>")
-    })
-
-    it("caches context and reuses on subsequent calls", async () => {
-      const { client } = createMockClient()
-      const { $, primeCalls } = createMockShell("cached output")
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      const system1: string[] = []
-      const system2: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system1 },
-      )
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system2 },
-      )
-
-      // bd prime should only be called once (cached)
-      expect(primeCalls.length).toBe(1)
-      // Both calls should have the context appended
-      expect(system1.length).toBe(1)
-      expect(system2.length).toBe(1)
-      expect(system1[0]).toContain("cached output")
-      expect(system2[0]).toContain("cached output")
-    })
-
-    it("handles different sessions independently", async () => {
-      const { client } = createMockClient()
-      const { $, primeCalls } = createMockShell("session context")
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      const system1: string[] = []
-      const system2: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system1 },
-      )
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s2" } as any,
-        { system: system2 },
-      )
-
-      // Each session triggers its own bd prime call
-      expect(primeCalls.length).toBe(2)
-      expect(system1.length).toBe(1)
-      expect(system2.length).toBe(1)
-    })
-
-    it("does not append when bd prime returns empty", async () => {
-      const { client } = createMockClient()
-      const { $ } = createMockShell("")
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      const system: string[] = ["existing"]
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system },
-      )
-
-      // Should not have appended anything
-      expect(system.length).toBe(1)
-      expect(system[0]).toBe("existing")
-    })
-
-    it("skips when sessionID is missing", async () => {
-      const { client } = createMockClient()
-      const { $, primeCalls } = createMockShell("output")
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      const system: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        {} as any,
-        { system },
-      )
-
-      expect(primeCalls.length).toBe(0)
-      expect(system.length).toBe(0)
-    })
+  it("does not nudge after a valid empty ready queue", async () => {
+    const { hooks, prompts } = await createHooks({ ready: { "omg-empty": "[]" } })
+    await runBuild(hooks, "empty-session", "omg-empty")
+    await idle(hooks, "empty-session")
+    expect(prompts).toHaveLength(0)
   })
 
-  describe("event: session.idle", () => {
-    it("runs bd dolt commit on session idle", async () => {
-      const { client } = createMockClient()
-      const { $, commitCalls } = createMockShell()
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      await hooks.event!({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "s1" },
-        },
-      } as any)
-
-      expect(commitCalls.length).toBeGreaterThan(0)
-    })
+  it("rejects a missing or unsafe epic id", async () => {
+    const { hooks, logs, commands } = await createHooks()
+    await hooks["command.execute.before"]!(
+      { command: "omg-build", sessionID: "bad-session", arguments: "$(unsafe)" },
+      { parts: [] },
+    )
+    await idle(hooks, "bad-session")
+    expect(commands.some((command) => command.startsWith("bd ready"))).toBe(false)
+    expect(logs.some((log) => log.message.includes("requires a valid epic id"))).toBe(true)
   })
 
-  describe("event: session.compacted", () => {
-    it("refreshes context on next system.transform after compaction", async () => {
-      const { client } = createMockClient()
-      const { $, primeCalls } = createMockShell("prime output")
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $,
-        directory: "/tmp",
-      } as unknown as PluginInput)
+  it("keeps failures and invalid JSON from nudging", async () => {
+    const invalid = await createHooks({ ready: { "omg-invalid": "not-json" } })
+    await runBuild(invalid.hooks, "invalid-session", "omg-invalid")
+    await idle(invalid.hooks, "invalid-session")
+    expect(invalid.prompts).toHaveLength(0)
+    expect(invalid.logs.some((log) => log.message.includes("invalid bd ready JSON"))).toBe(true)
 
-      // First system.transform — fetches and caches
-      const system1: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system1 },
-      )
-      expect(primeCalls.length).toBe(1)
+    const failed = await createHooks({ readyError: new Error("bd unavailable") })
+    await runBuild(failed.hooks, "failed-session", "omg-failed")
+    await idle(failed.hooks, "failed-session")
+    expect(failed.prompts).toHaveLength(0)
+    expect(failed.logs.some((log) => log.message.includes("readiness check failed"))).toBe(true)
 
-      // Trigger compaction
-      await hooks.event!({
-        event: {
-          type: "session.compacted",
-          properties: { sessionID: "s1" },
-        },
-      } as any)
+    const nonArray = await createHooks({ ready: { "omg-object": "{}" } })
+    await runBuild(nonArray.hooks, "object-session", "omg-object")
+    await idle(nonArray.hooks, "object-session")
+    expect(nonArray.prompts).toHaveLength(0)
+    expect(nonArray.logs.some((log) => log.message.includes("non-array JSON"))).toBe(true)
 
-      // Next system.transform should re-fetch (cache was invalidated)
-      const system2: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system2 },
-      )
+    const promptFailure = await createHooks({
+      ready: { "omg-prompt": '[{"id":"work"}]' },
+      promptError: new Error("session unavailable"),
+    })
+    await runBuild(promptFailure.hooks, "prompt-session", "omg-prompt")
+    await idle(promptFailure.hooks, "prompt-session")
+    expect(promptFailure.logs.some((log) => log.message.includes("readiness check failed"))).toBe(true)
+  })
 
-      // bd prime called twice: once initial, once after compaction refresh
-      expect(primeCalls.length).toBe(2)
-      expect(system2.length).toBe(1)
-      expect(system2[0]).toContain("<beads-context>")
+  it("deduplicates concurrent idle readiness checks", async () => {
+    let resolveReady!: (value: string) => void
+    const readyPromise = new Promise<string>((resolve) => {
+      resolveReady = resolve
+    })
+    const fixture = await createHooks({ readyPromise })
+    await runBuild(fixture.hooks, "concurrent-session", "omg-concurrent")
+
+    await Promise.all([
+      fixture.hooks.event!({ event: { type: "session.idle", properties: { sessionID: "concurrent-session" } } } as any),
+      fixture.hooks.event!({ event: { type: "session.idle", properties: { sessionID: "concurrent-session" } } } as any),
+    ])
+    resolveReady('[{"id":"work"}]')
+    await Bun.sleep(0)
+
+    expect(fixture.commands.filter((command) => command.startsWith("bd ready"))).toHaveLength(1)
+    expect(fixture.prompts).toHaveLength(1)
+  })
+
+  it("restores an owner without running it until that session becomes idle", async () => {
+    const state = await stateDirectory()
+    const first = await createHooks({ stateDirectory: state })
+    await runBuild(first.hooks, "restored-session", "omg-restored")
+
+    const second = await createHooks({
+      stateDirectory: state,
+      ready: { "omg-restored": '[{"id":"work"}]' },
+    })
+    await Bun.sleep(10)
+
+    expect(second.commands.some((command) => command.startsWith("bd ready"))).toBe(false)
+    expect(second.prompts).toHaveLength(0)
+
+    await idle(second.hooks, "restored-session")
+
+    expect(second.prompts).toHaveLength(1)
+    expect(second.prompts[0].sessionID).toBe("restored-session")
+  })
+
+  it("transfers an epic to a fresh session and aborts the previous owner", async () => {
+    const fixture = await createHooks({ ready: { "omg-transfer": '[{"id":"work"}]' } })
+    await runBuild(fixture.hooks, "old-session", "omg-transfer")
+    await runBuild(fixture.hooks, "new-session", "omg-transfer")
+    await idle(fixture.hooks, "old-session")
+    await idle(fixture.hooks, "new-session")
+
+    expect(fixture.aborts).toEqual(["old-session"])
+    expect(fixture.prompts).toHaveLength(1)
+    expect(fixture.prompts[0].sessionID).toBe("new-session")
+  })
+
+  it("removes ownership when its session is deleted", async () => {
+    const state = await stateDirectory()
+    const first = await createHooks({ stateDirectory: state })
+    await runBuild(first.hooks, "deleted-session", "omg-deleted")
+    await first.hooks.event!({
+      event: { type: "session.deleted", properties: { info: { id: "deleted-session" } } },
+    } as any)
+
+    const second = await createHooks({
+      stateDirectory: state,
+      ready: { "omg-deleted": '[{"id":"work"}]' },
+    })
+    await Bun.sleep(10)
+    await idle(second.hooks, "deleted-session")
+    expect(second.prompts).toHaveLength(0)
+  })
+
+  it("flushes on idle and treats flush errors as warnings", async () => {
+    const fixture = await createHooks({ commitError: new Error("commit failed") })
+    await idle(fixture.hooks, "plain-session")
+    expect(fixture.commands).toContain("bd dolt commit")
+    expect(fixture.logs.some((log) => log.message.includes("idle flush failed"))).toBe(true)
+  })
+
+  describe("collectBeadsEnv", () => {
+    it("collects only defined BEADS_* values", () => {
+      expect(
+        collectBeadsEnv({
+          BEADS_DOLT_SERVER_HOST: "beads.example.com",
+          BEADS_DOLT_PASSWORD: "secret",
+          PATH: "/usr/bin",
+          BEADS_UNSET: undefined,
+        }),
+      ).toEqual({
+        BEADS_DOLT_SERVER_HOST: "beads.example.com",
+        BEADS_DOLT_PASSWORD: "secret",
+      })
     })
   })
 
-  describe("error handling", () => {
-    it("does not throw when bd commands fail", async () => {
-      const { client, logCalls } = createMockClient()
-      const failingShell = ((_strings: TemplateStringsArray) => {
-        return {
-          quiet: () => Promise.reject(new Error("bd not found")),
-          text: () => Promise.reject(new Error("bd not found")),
-        }
-      }) as unknown as PluginInput["$"]
-
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $: failingShell,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      // system.transform should not throw
-      const system: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system },
-      )
-      // Nothing appended since bd failed
-      expect(system.length).toBe(0)
-
-      // idle event should not throw
-      const logCountBefore = logCalls.length
-      await hooks.event!({
-        event: {
-          type: "session.idle",
-          properties: { sessionID: "s1" },
-        },
-      } as any)
-
-      // idle handler should log a warning when bd dolt commit fails
-      const idleLogs = logCalls.slice(logCountBefore)
-      const warnings = idleLogs.filter((l) => l.level === "warn")
-      expect(warnings.length).toBeGreaterThan(0)
-      expect(warnings[0].message).toContain("idle flush failed")
-    })
-
-    it("caches empty result on failure to avoid retrying every call", async () => {
-      const { client } = createMockClient()
-      let callCount = 0
-      const failingShell = ((_strings: TemplateStringsArray) => {
-        callCount++
-        return {
-          quiet: () => Promise.reject(new Error("bd not found")),
-          text: () => Promise.reject(new Error("bd not found")),
-        }
-      }) as unknown as PluginInput["$"]
-
-      const plugin = BeadsPlugin()
-      const hooks = await plugin({
-        client,
-        $: failingShell,
-        directory: "/tmp",
-      } as unknown as PluginInput)
-
-      const system1: string[] = []
-      const system2: string[] = []
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system1 },
-      )
-      const callsAfterFirst = callCount
-      await hooks["experimental.chat.system.transform"]!(
-        { sessionID: "s1" } as any,
-        { system: system2 },
-      )
-
-      // Second call should not invoke shell again (cached empty)
-      expect(callCount).toBe(callsAfterFirst)
-    })
+  it("forwards BEADS_* values without overwriting existing shell values", async () => {
+    const { hooks } = await createHooks()
+    const original = process.env.BEADS_DOLT_SERVER_HOST
+    try {
+      process.env.BEADS_DOLT_SERVER_HOST = "from-process"
+      const env = { BEADS_DOLT_SERVER_HOST: "already-set" }
+      await hooks["shell.env"]!({ cwd: "/tmp" }, { env })
+      expect(env.BEADS_DOLT_SERVER_HOST).toBe("already-set")
+    } finally {
+      if (original === undefined) delete process.env.BEADS_DOLT_SERVER_HOST
+      else process.env.BEADS_DOLT_SERVER_HOST = original
+    }
   })
 })

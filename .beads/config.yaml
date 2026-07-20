@@ -22,3 +22,23 @@ export.auto: false
 # Routing: stay in the local repo (disable contributor auto-route to ~/.beads-planning)
 # so list/search commands read this project's own database.
 routing.mode: "maintainer"
+
+# Multi-repo configuration (experimental - bd-307)
+# Allows hydrating from multiple repositories and routing writes to the correct JSONL
+# repos:
+#   primary: "."  # Primary repo (where this database lives)
+#   additional:   # Additional repos to hydrate from (read-only)
+#     - ~/beads-planning  # Personal planning repo
+#     - ~/work-planning   # Work planning repo
+
+# Integration settings (access with 'bd config get/set')
+# These are stored in the database, not in this file:
+# - jira.url
+# - jira.project
+# - linear.url
+# - linear.api-key
+# - github.org
+# - github.repo
+
+no-push: true
+backup.enabled: false

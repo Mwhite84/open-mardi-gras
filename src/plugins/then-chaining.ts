@@ -42,6 +42,14 @@ export const ThenChainingPlugin = (config?: ThenChainingConfig): Plugin => {
     const logger = createPluginLogger(client)
     const executor = new ChainExecutor(client, stateManager, logger)
 
+    async function advanceChain(sessionID: string): Promise<void> {
+      const dispatched = await executor.processNext(sessionID)
+      if (!dispatched) {
+        coordinator.notifyChainComplete(sessionID)
+        await logger("info", "Then chain: completed")
+      }
+    }
+
     await logger("info", "ThenChainingPlugin initialized")
 
     // Commands live in `.opencode/commands/` as markdown files
@@ -169,11 +177,20 @@ export const ThenChainingPlugin = (config?: ThenChainingConfig): Plugin => {
             return
           }
 
-          const dispatched = await executor.processNext(sessionID)
-          if (!dispatched) {
-            coordinator.notifyChainComplete(sessionID)
-            await logger("info", "Then chain: completed")
+          if (coordinator.isChainBlocked(sessionID)) {
+            coordinator.onChainUnblocked(sessionID, () => {
+              void advanceChain(sessionID).catch((err) =>
+                logger(
+                  "error",
+                  `Then chain: failed after gate opened: ${err instanceof Error ? err.message : String(err)}`,
+                ),
+              )
+            })
+            await logger("info", "Then chain: waiting for session gate")
+            return
           }
+
+          await advanceChain(sessionID)
         }
       },
 

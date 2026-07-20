@@ -1,25 +1,24 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "disabled_providers": ["amazon-bedrock", "synthetic"],
-  "agent": {
-    "build": {
-      "model": "openai/gpt-5.3-codex"
-    },
-    "plan": {
-      "model": "anthropic/claude-opus-4-6"
-    },
-    "omg-build": {
-      "model": "openai/gpt-5.3-codex"
-    },
-    "omg-decomposer": {
-      "model": "anthropic/claude-opus-4-6"
-    },
-    "omg-reviewer": {
-      "model": "openai/gpt-5.4"
-    },
-    "omg-spec-writer": {
-      "model": "anthropic/claude-opus-4-6"
+  "permission": {
+    "external_directory": {
+      "~/code/clones/opencode/**": "allow",
+      "/Users/brandondennis/code/clones/opencode/**": "allow"
     }
+  },
+  "agent": {
+    "build":                         {"model": "openai/gpt-5.6-terra-fast"},
+    "plan":                          {"model": "openai/gpt-5.6-sol-fast"},
+    "oc-smith":                      {"model": "openai/gpt-5.6-sol-fast"},
+    "omg-builder":                   {"model": "openai/gpt-5.6-terra-fast"},
+    "omg-decomposer":                {"model": "openai/gpt-5.6-sol-fast"},
+    "omg-foreman":                   {"model": "openai/gpt-5.6-terra-fast"},
+    "omg-implementation-writer":     {"model": "openai/gpt-5.6-sol-fast"},
+    "omg-product-manager":           {"model": "openai/gpt-5.6-sol-fast"},
+    "omg-reviewer":                  {"model": "openai/gpt-5.6-sol-fast"},
+    "omg-technical-program-manager": {"model": "openai/gpt-5.6-sol-fast"},
+    "omg-test-planner":              {"model": "openai/gpt-5.6-sol-fast"}
   }
 }
 

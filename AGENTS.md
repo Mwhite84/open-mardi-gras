@@ -1,14 +1,73 @@
 # Agent Instructions
 
-This project has a slight meta or recursive side to it that all agents should
-be aware of. The development of this opencode plugin, represented in this code
-base, is being done with the aid of opencode. In this opencode environment,
-there are plugins installed via `.opencode/plugins/`. These have nothing to do
-with the plugin we are building. Do not confused development tools and plugins
-in the `.opencode` directory with the purpose of the plugin we are building in
-this repo. This plugin under development will be installed via npm pacakge.
+**Important** ask me at the beginning of every session if I want to discuss how/when to ship the centralized repo docs to the git remote.
+
+This repo is the **source of the OMG family of opencode instruments** — the
+agents, skills, and commands that make up the OMG workflow — together with the
+supporting beads and then-chaining plugins. Producing those instruments is the
+entire point of the repo. It is published as an npm package.
+
+## `opencode/` vs `.opencode/` — read this before touching either
+
+This repo has a meta/recursive character: it both **produces** opencode
+instruments and **dogfoods** them. Two directories look alike and are not. Do
+not confuse them.
+
+- **`opencode/` (no leading dot) is the PRODUCT.** It is the source of truth for
+  the OMG agents, skills, commands, scripts, templates, and reference files this
+  repo ships. This repo also dogfoods the product directly by setting
+  `OPENCODE_CONFIG_DIR` to this directory, so a shipped instrument should exist
+  here and only here.
+- **`.opencode/` (leading dot) is the LOCAL HARNESS.** It contains repo-local
+  configuration, development plugins, dependencies, and helper instruments used
+  only to work on this repo. Examples include the `oc-smith` agent, the `/craft`
+  command, the `authoring-opencode` skill, `.opencode/opencode.json`, and the dev
+  plugins under `.opencode/plugins/`.
+
+Consequences worth internalizing:
+
+- Do not mirror shipped OMG instruments into `.opencode/`. If an agent, skill,
+  command, script, template, or reference file is part of the package users get,
+  edit it under `opencode/`.
+- Do not move harness-only helpers into `opencode/`. A change to `oc-smith`,
+  `/craft`, `authoring-opencode`, local config, package files, or dev plugins is
+  repo-local and must not leak into the npm package.
+- Some product resources execute from shell snippets. Those snippets must resolve
+  `${OPENCODE_CONFIG_DIR:-.opencode}` first and fall back to `.opencode` when the
+  resource is not there, so this repo's direct dogfooding and normal installed
+  repos both work.
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
+
+## Beads / Dolt Pitfalls
+
+- The remote Dolt server (`beads.brandondennis.me:3307`) is **multi-tenant**:
+  it hosts several databases for different repos — `beads_omg` (this repo),
+  `beads_monolith` (a monolith app), and `beads_tf` (a terraform repo), among
+  possibly others. These are all **legitimate, active databases**, not cruft.
+- `bd doctor` reports the sibling databases (`beads_monolith`, `beads_tf`) under
+  a **"Phantom Databases"** warning and suggests "Restart Dolt server to flush
+  phantom entries" (GH#2051). This is a **false positive**: bd assumes one
+  database per server and misclassifies legitimate siblings as phantoms. Do NOT
+  act on this warning — never delete those databases, and never restart the
+  shared remote server to "flush" them. Restarting would disrupt the other
+  repos that depend on it.
+- `bd` resolves its Dolt backend by precedence: `BEADS_DOLT_*` env vars →
+  `metadata.json` → `config.yaml`. The connection (host/port/password) lives in
+  `BEADS_*` environment variables, NOT in committed config. If those env vars
+  are absent, `bd` falls back to `127.0.0.1:0` (a non-existent local server) and
+  every command fails — historically with confusing schema errors like
+  `no such column: replacement_seq` when an old local standalone store existed.
+  `BeadsPlugin`'s `shell.env` hook forwards all `BEADS_*` vars into every shell
+  OpenCode spawns (primary and subagent) so dispatched subagents resolve the
+  same backend the primary does. Without it, subagent `bd` calls fail.
+- `BeadsPlugin` persists one `/omg-build` owner per epic outside the repo under
+  `${XDG_STATE_HOME:-~/.local/state}/open-mardi-gras/beads/`, keyed by the
+  project directory. A fresh `/omg-build <epic>` session transfers ownership;
+  deleting the owning session removes it. Restoring this state must never start
+  a background turn at plugin initialization; it only enables later idle-event
+  nudges after the user resumes that session. Do not move this runtime state
+  into `.opencode/` or inject it into agent prompts.
 
 ## Quick Reference
 
@@ -17,9 +76,13 @@ bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --claim  # Claim work
 bd close <id>         # Complete work
-bd dolt commit        # Commit pending beads changes
-bd dolt push          # Push beads to remote (if configured)
 ```
+
+## bd Sync
+
+- Do not run `bd dolt push` for this repo's normal workflow. This project no
+  longer uses embedded Dolt server sync for beads; commit bead metadata and use
+  the normal `git push` path instead.
 
 ## Landing the Plane (Session Completion)
 
@@ -33,7 +96,6 @@ bd dolt push          # Push beads to remote (if configured)
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd dolt push || true  # push beads to Dolt remote if configured
    git push
    git status  # MUST show "up to date with origin"
    ```
