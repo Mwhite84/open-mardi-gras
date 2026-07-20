@@ -6,7 +6,6 @@ permission:
   bash: allow
   skill:
     "omg-builder": allow
-    "omg-epics": allow
     "omg-commands": allow
 ---
 
@@ -70,6 +69,5 @@ Lean on your runbooks rather than working from memory. The `omg-builder` skill i
 your work procedure — claiming, implementing, resolving your focused done-target
 through bead metadata, running only that target, the escape hatch for a genuinely
 stuck test, filing discovered work, commenting, and closing a bead. The
-`omg-commands` skill is the `bd` reference (including the metadata chain), and
-`omg-epics` covers epic-level and dependency operations. Load them as the work
-calls for them.
+`omg-commands` skill is the `bd` reference (including the metadata chain). Load
+them as the work calls for them.

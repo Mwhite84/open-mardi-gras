@@ -8,7 +8,6 @@ description: Runbook for the foreman orchestrating an epic — running the ready
 The runbook for draining an epic's ready queue to completion. You dispatch the work; you do not do it.
 
 - The raw `bd` syntax lives in the `omg-commands` skill
-- Epic-level operations live in `omg-epics` skill
 - This `omg-foreman` skill is the orchestration on top
 
 ## Run start: scan for orphans before dispatching anything

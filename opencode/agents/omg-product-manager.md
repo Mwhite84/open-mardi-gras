@@ -72,12 +72,13 @@ human deliberately invokes the docs→Hindsight sync command; it never ships as 
 side effect of your deciding. A product decision you genuinely cannot make is a
 clean pause for a human, not a guess you force through.
 
-When a ruling has to reshape the beads graph, you shape it through `bd` and reach
-for the `omg-epics` verification-wiring section for the exact topology rather than
-improvising it. Working an adjudication bead, you honor the dispatch-lifecycle
-contract: a dispatch is a single turn, and you return the bead **closed** (you
-ruled) or **held by a human gate** — your one bounded exception — never
-`in_progress`, never reopened-unblocked.
+When a ruling has to reshape the beads graph, you shape it through `bd`. An
+adjudication bead you are dispatched carries its own work order — the exact
+commands for each ruling — so you execute what it says rather than improvising
+topology. Working one, you honor the dispatch-lifecycle contract: a dispatch is
+a single turn, and you return the bead **closed** (you ruled) or **held by a
+human gate** — your one bounded exception — never `in_progress`, never
+reopened-unblocked.
 
 ## Boundaries
 

@@ -8,8 +8,7 @@ description: Runbook for building a single bead in the OMG workflow — claiming
 The runbook for building one bead the foreman handed you. You own this bead's
 lifecycle from claim to close; the foreman owns dispatch and the epic. The raw
 `bd` syntax lives in `omg-commands` — load it for the exact claim/comment/close/
-discovered-work flags. For dependency operations, load `omg-epics`. This skill is
-the per-bead procedure on top of them.
+discovered-work flags. This skill is the per-bead procedure on top of it.
 
 The foreman hands you a **bead id**. That is your bead to build, claim to close.
 
@@ -69,33 +68,53 @@ non-negotiable shape** because your bead is already claimed (`in_progress`) and
 
 **Classify the failure by run output, never by reading the test.** Match the
 failing test's selector (as the runner reports it) against this epic's planned
-test beads' `run_selector`s (visible via `bd dep tree --direction up <epic>` and the `z` beads'
-metadata):
+test beads' `run_selector`s (visible via `bd dep tree --direction up <epic>` and
+the test beads' metadata):
 
-- **Mode 1 — the failing test is one of *this epic's* planned tests** (its selector
-  is in this epic's `z`-bead `run_selector`s) and it is wrong or impossible. Route
-  to the confidence planner.
-- **Mode 2 — the failing test is *outside* this epic's planned set** — a
-  pre-existing test your change broke. Route to the PM.
+- **A wrong planned test** — the failing test is one of *this epic's* planned
+  tests (its selector is in those `run_selector`s) and it is wrong or
+  impossible. Escalate to the confidence planner.
+- **A broken promise** — the failing test is *outside* this epic's planned set: a
+  pre-existing test from an earlier epic that your change broke. Escalate to the
+  product manager.
 
-**File the escalation — all four steps, in order:**
+**A wrong planned test — file the escalation yourself, all four steps in order:**
 
-1. **File the summons bead**, `--parent <epic> --no-inherit-labels`,
-   `discovered-from:<x>` (`<x>` is your own bead):
-   - Mode 1 → `w₁`, `agent=omg-test-planner`.
-   - Mode 2 → `w₂`, `agent=omg-product-manager`.
-2. **Wire the summons to block your bead:** `bd dep add <x> <w₁-or-w₂>` — your fix
-   waits on the resolution.
+1. **File the summons bead** for the confidence planner:
+   `agent=omg-test-planner`, `--parent <epic> --no-inherit-labels`,
+   `discovered-from:<your-bead>`.
+2. **Wire the summons to block your bead:** `bd dep add <your-bead> <summons>` —
+   your fix waits on the resolution.
 3. **Reset your own bead to the ready queue — mandatory:**
-   `bd update <x> --status open --assignee ""`. You had *claimed* `x`
-   (`in_progress`); `bd ready` excludes `in_progress` beads, so without this reset
-   `x` never re-enters `bd ready` after the summons closes, and the epic wedges.
-   `--status open` is what `bd ready` keys on; clearing the assignee keeps a
-   reset-but-still-assigned bead from re-importing a milder version of the wedge.
+   `bd update <your-bead> --status open --assignee ""`. You had *claimed* it
+   (`in_progress`); `bd ready` excludes `in_progress` beads, so without this
+   reset your bead never re-enters `bd ready` after the summons closes, and the
+   epic wedges. `--status open` is what `bd ready` keys on; clearing the assignee
+   keeps a reset-but-still-assigned bead from re-importing a milder version of
+   the wedge.
 4. **Stop.** Do not touch the test, do not keep hacking at the code. The foreman
-   dispatches your summons to the planner (Mode 1) or PM (Mode 2), which resolves
-   it and closes it; your `x`, now `open` and unblocked, re-enters `bd ready` and
-   the foreman re-dispatches it to a builder with the resolution in hand.
+   dispatches your summons to the planner, which resolves and closes it; your
+   bead, now `open` and unblocked, re-enters `bd ready` and the foreman
+   re-dispatches it to a builder with the resolution in hand.
+
+**A broken promise — run the adjudication script and stop.** The script
+assembles the adjudication bead for the product manager from its canonical body,
+wires your bead to wait on the ruling, and resets your bead to the ready queue —
+every mandatory graph step in one call. Pipe the failing run's output in on
+stdin:
+
+```bash
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -x "$OMG_CONFIG_DIR/skills/omg-misc/scripts/file-adjudication.sh" ] || OMG_CONFIG_DIR=".opencode"
+"$OMG_CONFIG_DIR/skills/omg-misc/scripts/file-adjudication.sh" build <epic> <your-bead> <failing-test-selector> <<'EOF'
+<the failing run's output>
+EOF
+```
+
+Note the printed adjudication bead id, then **stop** — do not touch the test, do
+not keep hacking at the code. The foreman dispatches the adjudication to the PM;
+once the ruling lands, your bead re-enters `bd ready` and the foreman
+re-dispatches it to a builder with the ruling in hand.
 
 This is not a special one-off — it is the **dispatch-lifecycle contract** applied
 to a pre-claimed bead: every bead you are dispatched, you leave **closed** (done)
@@ -127,8 +146,9 @@ or the escape hatch's reopen-and-block).
   test file — so your bead still works once the test-directory read-deny lands.
 - **Running the whole suite per bead.** You run only your focused target; the full
   suite runs once at the review bead, not once per implementation bead.
-- **Escalating without the `x`-reset.** See step 3 of the escape hatch — the
-  reset is mandatory; the epic wedges without it.
+- **Escalating without the reset.** Step 3 of the wrong-planned-test escalation
+  is mandatory (on the broken-promise path the adjudication script performs the
+  reset for you); the epic wedges without it.
 - **A thin record.** The report-writer bead writes the build report from your
   comments. A deviation, discovery, or decision you leave only in your head is lost
   when your session ends — comment it before you close.

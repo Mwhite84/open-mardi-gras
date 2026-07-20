@@ -1,7 +1,8 @@
 This is the terminal report-writer bead for the epic. When you execute it:
 
 1. **Read every child bead's comments** (`bd comments <id>`) — the workers'
-   deviations, discoveries, decisions, and any Mode-2 adjudications recorded there.
+   deviations, discoveries, decisions, and any broken-promise adjudications
+   recorded there.
    This is your source; do not report from memory.
 2. **Synthesize the build report** — the delta between plan and what was built —
    using the `doc-templates` `build-report` template. Mint its `id` with
