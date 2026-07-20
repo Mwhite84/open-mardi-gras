@@ -24,7 +24,7 @@ The foreman hands you a **bead id**. That is your bead to build, claim to close.
    your bead must make pass. Do this through `bd` metadata only (see the **Bead
    metadata** section of `omg-commands`); you do **not** open a test file. If your
    bead carries no `test_beads` reference, it has no focused target — build to the
-   description and rely on the review-bead full-suite run as the backstop.
+   description and rely on the review bead as the backstop.
 4. **Implement what the description says** — no more, no less. You write only
    implementation; you author, alter, and read no test.
 5. **Run only your focused target, and iterate red → green.** Run *only* the
