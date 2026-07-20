@@ -114,8 +114,7 @@ If you discover an **epic-related** issue **while executing the review bead**:
 ## ADR Beads
 
 A spec may have architectural decisions recorded as ADR documents alongside it.
-At decomposition, each ADR becomes its own bead linked to the epic — see
-`omg-epics` for where this sits in the decomposition flow.
+At decomposition, each ADR becomes its own bead linked to the epic.
 
 Find the ADRs for a spec by scanning the shared docs tree (the resolver's
 `docs_root`) for ADR files — `id` starting `adr.` — whose `produced_for`

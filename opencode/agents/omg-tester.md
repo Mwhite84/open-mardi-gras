@@ -11,7 +11,6 @@ permission:
   skill:
     "test-writing": "allow"
     "omg-commands": "allow"
-    "omg-epics": "allow"
 ---
 # Testing Agent
 
