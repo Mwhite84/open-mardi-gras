@@ -27,8 +27,16 @@ bd create "Title" -d "description" --type task --priority 2 --json
   `--no-inherit-labels --labels <a,b>`.
 - 4 rich-text fields: description (`-d`), design (`--design`),
   acceptance criteria (`--acceptance`), notes (`--notes`)
-- Priority: 0-4 or P0-P4 (0=critical, 2=medium, 4=backlog).
-  NOT "high"/"medium"/"low"
+- Priority: 0-4 or P0-P4, as a number — NOT "high"/"medium"/"low":
+  - **P0** — critical: security, data loss, a broken build, a crash in the
+    happy path. Drop other work.
+  - **P1** — high: work the deliverable cannot honestly ship without — a
+    correctness bug in behavior the spec promises, or a failure that destroys
+    something expensive to recover.
+  - **P2** — medium, the default when unstated: real improvements that can
+    wait their turn.
+  - **P3** — low: polish, minor refactoring, documentation gaps.
+  - **P4** — backlog: ideas and nice-to-haves, recorded so they aren't lost.
 - Types: `task`, `bug`, `feature`, `epic`, `chore`, `decision`
   - `task` — default; discrete unit of work (implementation, research, setup)
   - `bug` — defect or regression in existing behavior
@@ -86,30 +94,24 @@ Adjust `--type` and `--priority` to match the nature and urgency of the issue.
 When you discover work while executing an epic, decide where the new bead
 lives before you create it:
 
-- **Related to the epic** — it is in the epic's scope, or the epic cannot
-  honestly ship without it:
+- **The epic cannot honestly ship without it** — a P0/P1 discovery inside the
+  epic's scope:
   1. Create it as a child of the epic with `--parent <epic-id> --no-inherit-labels`
      (the flag keeps it off the epic's `hindsight:pending` — see **Creating
      Issues** above).
   2. Add a dependency from the review bead to the new bead so the review
      cannot close until the new work is done:
      `bd dep add <review-bead-id> <new-bead-id>`
-- **Unrelated to the epic** — pre-existing tech debt, a bug in code the epic
-  does not touch: create it standalone, with no `--parent` and no review-bead
-  dependency. The `discovered-from` link preserves the trail; an unrelated
-  finding must not hold the epic hostage.
+- **Everything else** — pre-existing tech debt, a bug in code the epic does not
+  touch, or a P2–P4 improvement the epic can ship without: create it
+  standalone, with no `--parent` and no review-bead dependency. The
+  `discovered-from` link preserves the trail. A child bead holds its epic open
+  no matter how it is wired, so work that should not block must not be a child.
 
-If you discover an **epic-related** issue **while executing the review bead**:
-
-1. Create the child bead, stamp its `agent` label (`bd set-state <id>
-   agent=omg-builder`), and wire the dependency as above.
-2. Stop the review immediately — the review bead is now blocked by the
-   new bead and cannot be closed anyway.
-3. Set the review bead back to open: `bd update <review-bead-id> --status open`
-4. Hand back so the foreman's ready-queue loop can dispatch and finish the new
-   bead.
-5. When the review bead appears in the ready queue again, the foreman dispatches
-   it back to you; restart the review from scratch.
+Discovering an issue **while executing the review bead** is a review
+**finding** — the review bead's own body carries the filing and wiring rules
+(priority decides whether it blocks; blocking findings reopen the review).
+Follow that body, not this section.
 
 ## ADR Beads
 

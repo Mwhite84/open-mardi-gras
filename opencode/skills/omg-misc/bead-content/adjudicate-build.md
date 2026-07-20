@@ -34,15 +34,17 @@ bd close {{THIS_BEAD}} --reason "Promise stands: <one-line ruling>"
 
 The implementation bead comes ready again carrying your ruling.
 
-**The promise is stale** — the old test asserts behavior the product no longer
-wants. Mint the test-update, wire it so the implementation waits on it, then
-close:
+**The promise is stale, or not worth its defense** — the old test asserts
+behavior the product no longer wants, or defends something that costs less to
+recover from than the defense costs to keep. Mint the test-update — updating
+the assertion to current intent, or retiring it outright — wire it so the
+implementation waits on it, then close:
 
 ```bash
 TEST_UPDATE="$(bd create "Update stale test: <the promise, in one line>" -t task -p 1 \
   --parent {{EPIC}} --no-inherit-labels \
   --deps discovered-from:{{THIS_BEAD}} \
-  -d "Update {{SELECTOR}} to assert the current intent: <what the behavior should now be, and why the old assertion is stale>" \
+  -d "Update {{SELECTOR}} to assert the current intent — or retire it: <what the behavior should now be, or why it is not worth defending>" \
   --silent)"
 bd set-state "$TEST_UPDATE" agent=omg-tester --reason "Test-update bead"
 bd dep add {{BLOCKED_BEAD}} "$TEST_UPDATE"

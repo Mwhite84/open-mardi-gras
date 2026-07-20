@@ -3,10 +3,15 @@ When you execute this review bead, in addition to reading every changed file:
 1. **Run the full test suite** (infer the runner from the repo's tooling). Do this
    here, at the review bead, each time this review fires — not per implementation
    bead.
-2. **File a finding for every red test and every review finding.** Each finding is
-   a bead with `discovered-from:<this-review-bead>` (your own bead's id), stamped
-   with its own `agent` label, and it **always blocks** this review bead. Your
-   change-locality judgment sets the label, and the label selects the wiring:
+2. **File a bead for every finding; its priority sets its wiring.** Each finding
+   is a bead typed to what you found (`bug` for a defect, `chore` for debt or
+   polish), with `discovered-from:<this-review-bead>` (your own bead's id) and
+   a priority from the `omg-review` skill's scale. A red suite test is never
+   below P1 — red means undiagnosed, so you cannot weigh what it costs; the fix
+   loop diagnoses it, not you.
+
+   **A P0/P1 finding blocks this review bead.** Stamp its `agent` label; your
+   change-locality judgment sets it, and the label selects the wiring:
 
    - **Builder-bound** — the failure should be fixed *in this epic* (a defect in
      the changed code). The finding **is** the fix bead: `agent=omg-builder`,
@@ -17,7 +22,7 @@ When you execute this review bead, in addition to reading every changed file:
         `agent=omg-test-planner`, `discovered-from:<this-review-bead>`.
      b. Wire the summons to block the fix: `bd dep add <fix> <summons>`.
      c. Wire the fix to block this review bead:
-                 `bd dep add <this-review-bead> <fix>`.
+        `bd dep add <this-review-bead> <fix>`.
 
    - **PM-bound** — this epic's change reddened a **prior-epic** guarantee. File
      it with the adjudication script, which assembles the adjudication bead for
@@ -37,8 +42,13 @@ When you execute this review bead, in addition to reading every changed file:
      the PM decides one is warranted, so the builder-bound hard rules above must
      **not** be applied to it.
 
-3. **Reopen this review bead** if you filed any epic-scoped finding:
+   **A P2–P4 finding is filed standalone, outside the epic:** no `--parent`, no
+   review-bead dependency; the `discovered-from` link preserves the trail. A
+   child bead holds this epic open no matter how it is wired, so a finding that
+   should not block must not be a child.
+
+3. **Reopen this review bead** if you filed any blocking finding:
    `bd update <this-review-bead> --status open`.
 
-(Out-of-scope findings unrelated to this epic are filed standalone, with no
-review-bead dependency.)
+(Findings genuinely unrelated to this epic are filed standalone whatever their
+priority.)
