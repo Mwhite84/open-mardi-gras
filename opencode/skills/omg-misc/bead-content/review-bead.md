@@ -2,8 +2,17 @@ When you execute this review bead, in addition to reading every changed file:
 
 1. **Run the full test suite** (infer the runner from the repo's tooling). Do this
    here, at the review bead, each time this review fires — not per implementation
-   bead. Exception: if this repo's `.workflow.yaml` sets `test: false`, the repo
-   opts out of verification — run no suite, and note the opt-out in the review.
+   bead. First resolve whether this repo plans verification at all:
+
+   ```bash
+   OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+   [ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+   "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" test
+   ```
+
+   `true` — run the suite. `false` — the repo opts out of verification: run no
+   suite, and note the opt-out in the review. Keep that answer; step 2 branches on
+   it as well.
 2. **File a bead for every finding; its priority sets its wiring.** Each finding
    is a bead typed to what you found (`bug` for a defect, `chore` for debt or
    polish), with `discovered-from:<this-review-bead>` (your own bead's id) and
@@ -25,9 +34,8 @@ When you execute this review bead, in addition to reading every changed file:
      c. Wire the fix to block this review bead:
         `bd dep add <this-review-bead> <fix>`.
 
-     When the repo opts out of verification (`test: false` in `.workflow.yaml`),
-     skip the summons — no verification gets planned for the fix — and apply
-     step c only.
+     When step 1 resolved `test` to `false`, skip the summons — there is no
+     verification to plan for the fix — and apply step c only.
 
    - **PM-bound** — this epic's change reddened a **prior-epic** guarantee. File
      it with the adjudication script, which assembles the adjudication bead for
