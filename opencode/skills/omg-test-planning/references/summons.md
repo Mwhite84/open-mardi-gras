@@ -2,6 +2,28 @@
 
 You were dispatched onto a **child bead that exists only to summon you** for one decision. It arrives long after your plan pass ended, so it carries a link back to the bead it came from — that source bead is the fix (or the stuck test) you are being summoned about.
 
+## First: is there a decision to make at all?
+
+Every summons asks the same underlying question — what verification does this need? A repo that opts out of verification has already answered it, repo-wide, and nothing you decide here can change that answer. Check before you read anything else:
+
+```bash
+OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+[ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+"$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" test
+```
+
+`false` — close the summons and stop. Skip the rest of this file:
+
+```bash
+bd close <summons> --reason "No verification planned: this repo sets test: false in .workflow.yaml."
+```
+
+That one close is a complete and correct dispatch. Two things not to do on the way out: do not re-derive the opt-out by reading the epic and its comments — the resolver is the authority and the epic only records what it already said; and do not substitute hand-verification for the tests you are not planning. Probing the code by hand is unbudgeted work nobody wired, it covers whatever you happen to reach rather than what matters, and it leaves no durable artifact — only comment volume the report-writer must digest. If the opt-out is leaving real risk uncovered, that is a question about the repo's policy, not a gap for you to close one summons at a time.
+
+`true` — continue below.
+
+## Read the summons
+
 Read the summons bead and its comments:
 
 ```bash

@@ -2,34 +2,66 @@ When you execute this review bead, in addition to reading every changed file:
 
 1. **Run the full test suite** (infer the runner from the repo's tooling). Do this
    here, at the review bead, each time this review fires — not per implementation
-   bead. Exception: if this repo's `.workflow.yaml` sets `test: false`, the repo
-   opts out of verification — run no suite, and note the opt-out in the review.
-2. **File a finding for every red test and every review finding.** Each finding is
-   a bead with `discovered-from:<R>` (`<R>` is this review bead's id), stamped with
-   its own `agent` label, and it **always blocks** `R`. Your change-locality
-   judgment sets the label, and the label selects the wiring:
+   bead. First resolve whether this repo plans verification at all:
+
+   ```bash
+   OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+   [ -f "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" ] || OMG_CONFIG_DIR=".opencode"
+   "$OMG_CONFIG_DIR/skills/doc-templates/scripts/resolve-workflow.sh" test
+   ```
+
+   `true` — run the suite. `false` — the repo opts out of verification: run no
+   suite, and note the opt-out in the review. Keep that answer; step 2 branches on
+   it as well.
+2. **File a bead for every finding; its priority sets its wiring.** Each finding
+   is a bead typed to what you found (`bug` for a defect, `chore` for debt or
+   polish), with `discovered-from:<this-review-bead>` (your own bead's id) and
+   a priority from the `omg-review` skill's scale. A red suite test is never
+   below P1 — red means undiagnosed, so you cannot weigh what it costs; the fix
+   loop diagnoses it, not you.
+
+   **A P0/P1 finding blocks this review bead.** Stamp its `agent` label; your
+   change-locality judgment sets it, and the label selects the wiring:
 
    - **Builder-bound** — the failure should be fixed *in this epic* (a defect in
-     the changed code). The finding **is** the fix bead `x`, `agent=omg-builder`,
-     `--parent <epic> --no-inherit-labels`, `discovered-from:<R>`. Arm its
-     verification before it is built:
-     a. File the summons bead `y`, **a real bead — `--parent <epic>
-        --no-inherit-labels`, NO `--ephemeral`** — `agent=omg-test-planner`,
-        `discovered-from:<R>`.
-     b. Wire `y` blocks `x`: `bd dep add <x> <y>`.
-     c. Wire `R` depends on `x`: `bd dep add <R> <x>`.
+     the changed code). The finding **is** the fix bead: `agent=omg-builder`,
+     `--parent <epic> --no-inherit-labels`, `discovered-from:<this-review-bead>`.
+     Arm its verification before it is built:
+     a. File a summons bead for the confidence planner — **a real bead,
+        `--parent <epic> --no-inherit-labels`, NO `--ephemeral`** —
+        `agent=omg-test-planner`, `discovered-from:<this-review-bead>`.
+     b. Wire the summons to block the fix: `bd dep add <fix> <summons>`.
+     c. Wire the fix to block this review bead:
+        `bd dep add <this-review-bead> <fix>`.
 
-     When the repo opts out of verification (`test: false` in `.workflow.yaml`),
-     skip `y` — no verification gets planned for the fix — and apply step c only.
+     When step 1 resolved `test` to `false`, skip the summons — there is no
+     verification to plan for the fix — and apply step c only.
 
-   - **PM-bound** — this epic's change reddened a **prior-epic** guarantee (a
-     Mode-2 collision). File an adjudication bead `m`, `agent=omg-product-manager`,
-     `--parent <epic> --no-inherit-labels`, `discovered-from:<R>`, and wire **`m`
-     blocks `R`**: `bd dep add <R> <m>`. File **no** `y` summons and **no** fix
-     `x` — there is no fix until the PM decides one is warranted, so the
-     builder-bound hard rules above must **not** be applied to it.
+   - **PM-bound** — this epic's change reddened a **prior-epic** guarantee. File
+     it with the adjudication script, which assembles the adjudication bead for
+     the product manager from its canonical body, wires this review bead to wait
+     on the ruling, and sets this review bead back to open. Pipe the failing
+     run's output in on stdin:
 
-3. **Reopen `R`** if you filed any epic-scoped finding: `bd update <R> --status open`.
+     ```bash
+     OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
+     [ -x "$OMG_CONFIG_DIR/skills/omg-misc/scripts/file-adjudication.sh" ] || OMG_CONFIG_DIR=".opencode"
+     "$OMG_CONFIG_DIR/skills/omg-misc/scripts/file-adjudication.sh" review <epic> <this-review-bead> <failing-test-selector> <<'EOF'
+     <the failing run's output>
+     EOF
+     ```
 
-(Out-of-scope findings unrelated to this epic are filed standalone, with no
-review-bead dependency.)
+     File **no** summons and **no** fix bead yourself — there is no fix until
+     the PM decides one is warranted, so the builder-bound hard rules above must
+     **not** be applied to it.
+
+   **A P2–P4 finding is filed standalone, outside the epic:** no `--parent`, no
+   review-bead dependency; the `discovered-from` link preserves the trail. A
+   child bead holds this epic open no matter how it is wired, so a finding that
+   should not block must not be a child.
+
+3. **Reopen this review bead** if you filed any blocking finding:
+   `bd update <this-review-bead> --status open`.
+
+(Findings genuinely unrelated to this epic are filed standalone whatever their
+priority.)

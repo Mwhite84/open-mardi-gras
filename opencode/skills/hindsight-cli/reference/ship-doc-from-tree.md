@@ -93,26 +93,77 @@ jq -n \
        ( { content: $content, document_id: $id, tags: $tags }
          + ( if $strategy == "" then {} else { strategy: $strategy } end ) )
      ],
-     async: false
+     async: true
    }' > "$TMP/retain.json"
 ```
-
-For a large document, set `async: true` to queue background processing.
 
 ### 4. POST it
 
 ```bash
-curl -sS -X POST "$URL/v1/default/banks/$BANK/memories" \
+CURL_AUTH=()
+[ -z "${HINDSIGHT_API_KEY:-}" ] || CURL_AUTH=(-H "Authorization: Bearer $HINDSIGHT_API_KEY")
+
+if ! HTTP_CODE="$(curl -sS -X POST "$URL/v1/default/banks/$BANK/memories" \
   -H "Content-Type: application/json" \
+  "${CURL_AUTH[@]}" \
   --data-binary @"$TMP/retain.json" \
-  -w '\nHTTP %{http_code}\n'
+  -o "$TMP/retain-response.json" \
+  -w '%{http_code}')"; then
+  echo "$ID: retain request failed" >&2
+  exit 1
+fi
+
+if [[ "$HTTP_CODE" != 2* ]]; then
+  echo "$ID: retain returned HTTP $HTTP_CODE" >&2
+  jq . "$TMP/retain-response.json" >&2
+  exit 1
+fi
+
+jq -r '[.operation_id, ((.operation_ids // [])[])]
+       | map(select(. != null)) | unique[]' \
+  "$TMP/retain-response.json" > "$TMP/operation-ids"
+[ -s "$TMP/operation-ids" ] || { echo "$ID: retain returned no operation id" >&2; exit 1; }
 ```
 
-If the server requires auth, add `-H "Authorization: Bearer $HINDSIGHT_API_KEY"`
-(source the token from the environment; never hardcode it). A success response is
-`{"success":true,...,"items_count":1}` with HTTP 200.
+The API can return multiple operation IDs when a request contains multiple retain
+strategies. Track every returned ID. Source an auth token from the environment;
+never hardcode it.
 
-### 5. Verify
+### 5. Wait for every operation
+
+An accepted request is queued, not shipped. Poll each operation until it reaches a
+terminal state. Do not resubmit while it is `pending` or `processing`.
+
+```bash
+while IFS= read -r OP; do
+  while true; do
+    if ! curl -sS "${CURL_AUTH[@]}" \
+      "$URL/v1/default/banks/$BANK/operations/$OP" > "$TMP/operation.json"; then
+      echo "$ID: could not read operation $OP; resume polling it later" >&2
+      exit 1
+    fi
+
+    STATUS="$(jq -r '.status // empty' "$TMP/operation.json")"
+    case "$STATUS" in
+      completed) break ;;
+      failed|cancelled)
+        echo "$ID: operation $OP ended $STATUS" >&2
+        jq '{status, error_message, retry_count, next_retry_at, progress}' \
+          "$TMP/operation.json" >&2
+        exit 1
+        ;;
+      pending|processing) sleep 2 ;;
+      *) echo "$ID: operation $OP returned invalid status: $STATUS" >&2; exit 1 ;;
+    esac
+  done
+done < "$TMP/operation-ids"
+```
+
+If polling is interrupted, keep the operation IDs and resume polling. Submitting
+the document again would create more work while the original operation may still
+complete.
+
+### 6. Verify
 
 ```bash
 hindsight -o json document list "$BANK" > "$TMP/docs.json" 2>/dev/null
@@ -145,7 +196,7 @@ cannot tag memory facts at the item level (see above), so a "fallback" would
 produce memory that looks shipped but is invisible to tag-filtered recall — a
 silent, surprising corruption that is worse than not shipping.
 
-If the `POST` fails (non-200, or a verify in step 5 shows untagged facts),
+If submission fails, an operation fails, or verification shows untagged facts,
 **surface the error to the user** with the response body and the document `id`.
 Do not work around it. A failed ship is a clean, recoverable state; a half-shipped
 mis-tagged document is not.

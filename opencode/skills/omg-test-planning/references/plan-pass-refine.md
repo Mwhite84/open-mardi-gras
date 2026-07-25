@@ -9,8 +9,10 @@ Read the spec the epic carries, then pull the two records of your prior work —
 ```bash
 bd show <epic> --long --json     # the spec — your source of truth for what must be verified
 
-# your prior test beads
-bd children <epic> --json | jq -r '.[] | select(.labels[]? == "agent:omg-tester") | "\(.id)\t\(.title)"'
+# your prior test beads. Closed ones are excluded: bd children lists all
+# statuses, and a closed test bead is settled history, not part of the plan —
+# a behavior whose only test bead is closed reads as having no test bead.
+bd children <epic> --json | jq -r '.[] | select(.status != "closed") | select(.labels[]? == "agent:omg-tester") | "\(.id)\t\(.title)"'
 
 # your prior no-test decisions
 bd comments <epic>

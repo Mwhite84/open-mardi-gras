@@ -77,20 +77,20 @@ idiomatic single-test invocation for its stack, use that form for the selector.
 
 ## Working a dispatched test bead (OMG workflow)
 
-When the foreman dispatches you onto a test bead — a planned `z`, a Mode-1 re-plan
-`z′`, or a stale prior-epic test-update `u` — follow this procedure. It applies to
-`z`, `z′`, and `u` **alike**.
+When the foreman dispatches you onto a test bead — one planned at decomposition,
+a re-planned replacement for a test a builder was stuck on, or an update to a
+stale prior-epic test — follow this procedure. It applies to all three **alike**.
 
 ### 1. Write the test the bead's wiring intends
 
-Honor the bead's Case, do not re-decide scope:
+Honor the bead's wiring, do not re-decide scope:
 
-- **Case-A bead** (the code does not exist yet; the test bead blocks the
-  implementation bead): write the **failing** test. It must fail red until the
-  implementer's code makes it pass — that red is the point of ordering the test
-  first.
-- **Case-B bead** (the code already exists; the test is ordered after it): author
-  and run the **post-fix** test, confirming it passes against the existing code.
+- **Your test bead blocks an implementation bead** (the code does not exist
+  yet): write the **failing** test. It must fail red until the implementer's
+  code makes it pass — that red is the point of ordering the test first.
+- **An implementation bead blocks your test bead** (the code already exists):
+  author and run the **post-fix** test, confirming it passes against the
+  existing code.
 
 ### 2. Stamp the run-selector onto the bead (the second metadata hop)
 
@@ -103,12 +103,13 @@ the test directory).
 
 The `bd` write itself lives in `omg-commands` §"Bead metadata" — reach for it for
 the authoritative form (`bd update <bead> --set-metadata
-"run_selector=<file>:<name-or-filter>"`). Stamp it for `z`, `z′`, and `u` alike; a
-bead closed without its `run_selector` costs the implementer its focused fast path.
+"run_selector=<file>:<name-or-filter>"`). Stamp it for all three kinds of test
+bead alike; a bead closed without its `run_selector` costs the implementer its
+focused fast path.
 
-### 3. Leave the bead terminal (the dispatch-lifecycle contract, R17)
+### 3. Leave the bead terminal (the dispatch-lifecycle contract)
 
-The foreman holds no state, so before you return control you leave your `z`/`z′`/`u`
+The foreman holds no state, so before you return control you leave your test
 bead in **exactly one** of two states, never `in_progress` and never
 reopened-unblocked:
 
@@ -119,7 +120,7 @@ reopened-unblocked:
   dispatch is a single turn; you finish or you file-and-block — you never hand a
   half-written bead back expecting a nudge.
 
-### 4. Recovery: a bead carrying a reclamation comment (R18)
+### 4. Recovery: a bead carrying a reclamation comment
 
 If you are dispatched onto a bead carrying a **reclamation comment** (a prior worker
 was interrupted mid-write and the foreman handed you the bead fresh), first check
