@@ -102,32 +102,72 @@ jq -n \
   --argjson tags "$TAGS_JSON" \
   '{ items: [ ( { content: $content, document_id: $id, tags: $tags }
        + ( if $strategy == "" then {} else { strategy: $strategy } end ) ) ],
-     async: false }' > "$TMP/retain.json"
+     async: true }' > "$TMP/retain.json"
 
-curl -sS -X POST "$URL/v1/default/banks/$BANK/memories" \
+CURL_AUTH=()
+[ -z "${HINDSIGHT_API_KEY:-}" ] || CURL_AUTH=(-H "Authorization: Bearer $HINDSIGHT_API_KEY")
+
+if ! HTTP_CODE="$(curl -sS -X POST "$URL/v1/default/banks/$BANK/memories" \
   -H "Content-Type: application/json" \
+  "${CURL_AUTH[@]}" \
   --data-binary @"$TMP/retain.json" \
-  -w '\nHTTP %{http_code}\n'
+  -o "$TMP/retain-response.json" \
+  -w '%{http_code}')"; then
+  echo "$BEAD ($ID): retain request failed" >&2
+  exit 1
+fi
+
+if [[ "$HTTP_CODE" != 2* ]]; then
+  echo "$BEAD ($ID): retain returned HTTP $HTTP_CODE" >&2
+  jq . "$TMP/retain-response.json" >&2
+  exit 1
+fi
+
+jq -r '[.operation_id, ((.operation_ids // [])[])]
+       | map(select(. != null)) | unique[]' \
+  "$TMP/retain-response.json" > "$TMP/operation-ids"
+[ -s "$TMP/operation-ids" ] \
+  || { echo "$BEAD ($ID): retain returned no operation id" >&2; exit 1; }
 ```
 
-As in the tree-doc reference: if the POST is non-200, or a verify shows untagged
-facts, **surface the error** with the bead id, document id, and response body. Do
-not fall back to the CLI retain commands — there is no safe fallback.
+The API can return multiple operation IDs when a request contains multiple retain
+strategies. Track every returned ID. Source an auth token from the environment;
+never hardcode it.
 
-### 4. Advance the bead's state
+### 4. Wait for every operation
 
-A successful ship is the **freeze point**. Record it by moving the state label
-from `pending` to `shipped`:
+An accepted request is queued, not shipped. Poll each operation until it reaches a
+terminal state. Do not resubmit while it is `pending` or `processing`.
 
 ```bash
-bd -C "$MONOREPO" set-state "$BEAD" hindsight=shipped \
-  --reason "Shipped $ID to Hindsight bank $BANK"
+while IFS= read -r OP; do
+  while true; do
+    if ! curl -sS "${CURL_AUTH[@]}" \
+      "$URL/v1/default/banks/$BANK/operations/$OP" > "$TMP/operation.json"; then
+      echo "$BEAD ($ID): could not read operation $OP; resume polling it later" >&2
+      exit 1
+    fi
+
+    STATUS="$(jq -r '.status // empty' "$TMP/operation.json")"
+    case "$STATUS" in
+      completed) break ;;
+      failed|cancelled)
+        echo "$BEAD ($ID): operation $OP ended $STATUS" >&2
+        jq '{status, error_message, retry_count, next_retry_at, progress}' \
+          "$TMP/operation.json" >&2
+        exit 1
+        ;;
+      pending|processing) sleep 2 ;;
+      *) echo "$BEAD ($ID): operation $OP returned invalid status: $STATUS" >&2; exit 1 ;;
+    esac
+  done
+done < "$TMP/operation-ids"
 ```
 
-`set-state` is atomic and event-backed (it writes an audit event and swaps the
-label). Only do this **after** a confirmed 200 — the label is the record that the
-bead is now immutable memory. If the ship failed, leave the bead `pending` so the
-next run retries it.
+If polling is interrupted, keep the operation IDs and resume polling. Submitting
+the document again would create more work while the original operation may still
+complete. If submission or an operation fails, surface the bead ID, document ID,
+and response; do not fall back to the CLI retain commands.
 
 ### 5. Verify
 
@@ -138,6 +178,21 @@ jq --arg id "$ID" '(.items // .)[] | select(.id==$id) | {id, tags}' "$TMP/docs.j
 
 The document should be present with its tags; a tag-filtered recall (see the
 tree-doc reference) should return its facts.
+
+### 6. Advance the bead's state
+
+A completed and verified ship is the **freeze point**. Record it by moving the
+state label from `pending` to `shipped`:
+
+```bash
+bd -C "$MONOREPO" set-state "$BEAD" hindsight=shipped \
+  --reason "Shipped $ID to Hindsight bank $BANK"
+```
+
+`set-state` is atomic and event-backed (it writes an audit event and swaps the
+label). Only do this after the operation completes and verification passes. If
+shipping fails, leave the bead `pending`; resume a queued operation rather than
+submitting it again.
 
 ## Bead-sourced vs. tree-sourced
 
