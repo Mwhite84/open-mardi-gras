@@ -37,6 +37,42 @@ Consequences worth internalizing:
   resource is not there, so this repo's direct dogfooding and normal installed
   repos both work.
 
+## The workflow flowcharts must not drift
+
+`omg_flowchart.md` is a descriptive map of what the OMG instruments actually do —
+the plan phase, the foreman's loop, the builder and tester flows, the summons and
+adjudication paths, the review loop. `omg_flowchart.html` is a self-contained,
+offline-openable rendering of it with the Mermaid diagrams drawn live.
+
+**Any change to the logic of the workflow must update both files in the same
+change as the instrument edit.** This includes a new or removed bead, a changed
+dependency edge, a new decision branch or resolution, a changed agent
+assignment, a new or retired human gate, and any change to how a phase begins or
+ends. If you changed how the workflow *behaves*, the flowcharts are part of that
+change — not follow-up work, and not somebody else's.
+
+The Markdown is the source of truth; the HTML is generated from it and is never
+hand-edited. After editing `omg_flowchart.md`:
+
+```
+node .opencode/scripts/build-flowchart-html.mjs   # regenerate the HTML
+node .opencode/scripts/verify-flowchart-html.mjs  # prove it is correct and current
+```
+
+One-time setup for the harness dependencies: `npm install --prefix .opencode`.
+
+The verifier checks that every diagram parses and renders, that the HTML carries
+no external references (it must open from `file://` with no network), that the
+diagram sources are byte-identical to the Markdown, and that the HTML is not
+stale relative to the Markdown. **A commit that changes `omg_flowchart.md`
+without a regenerated `omg_flowchart.html` is incomplete.** The render check
+needs the optional `puppeteer` dependency and skips cleanly without it; the
+static checks always run.
+
+Both files live at the repo root and are repo-local documentation, not part of
+the shipped package. Their build tooling therefore lives under `.opencode/`, and
+must never be moved into `opencode/`.
+
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
 ## Beads / Dolt Pitfalls
