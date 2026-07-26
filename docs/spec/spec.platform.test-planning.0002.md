@@ -3,7 +3,7 @@ schema_version: 1
 id: spec.platform.test-planning.0002
 type: spec
 title: "Verification Ownership Across the OMG Plan/Build Phases — Instruments"
-status: draft
+status: deprecated
 domain: platform
 supersedes: spec.platform.test-planning.0001
 created_at: 2026-07-02T04:56:45Z
