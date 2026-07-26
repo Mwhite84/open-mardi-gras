@@ -39,7 +39,7 @@ The PRD's remaining requirements — fix-round convergence (R6), ruling write-ba
 (R7), and the repo-local tooling inventory (R11) — need real mechanism and are
 out of scope here (see Non-Goals).
 
-**Ten files change, all Markdown, all under `opencode/`.**
+**Twelve files change, all Markdown, all under `opencode/`.**
 
 ## Requirements
 
@@ -76,16 +76,26 @@ type checker, linter, validator, schema check, policy check), a **review
 obligation** (a reading against a stated standard), and a **recorded
 no-verification decision**. Each is a first-class outcome; none is a fallback.
 The planner produces confidence by the cheapest sufficient means, which is often
-not a test. (PRD R2.)
+not a test.
+
+**Reconcile the whole persona, not one paragraph.** The binary framing appears
+more than once — a separate paragraph declares the planner "as willing to plan
+**no** test … as to plan one" and calls a no-test decision "a first-class
+outcome," which contradicts a four-outcome vocabulary wherever it survives. Every
+sentence in the file that presents the choice as test-or-nothing must be brought
+to the four outcomes. A file asserting both is worse than a file asserting
+either. (PRD R2.)
 
 ### R3 — The plan-pass references carry the expanded vocabulary and record proportionality
 
 **Files:** `opencode/skills/omg-test-planning/references/plan-pass-fresh.md`,
-`opencode/skills/omg-test-planning/references/plan-pass-refine.md`
+`opencode/skills/omg-test-planning/references/plan-pass-refine.md`,
+`opencode/skills/omg-test-planning/references/plan-pass-concern.md`
 
-Both currently offer a single mint action plus a no-test comment whose reason
-menu is "covered elsewhere / mechanical / low-risk / a deterministic gate already
-covers it." Two changes:
+All three plan-pass references — the planner has three, one per mode, and all
+three carry the binary — currently offer a single mint action plus a no-test
+comment whose reason menu is "covered elsewhere / mechanical / low-risk / a
+deterministic gate already covers it." Two changes:
 
 1. The recorded decision must state the proportionality reasoning from R1 — what
    the verification would cost against what its absence would cost — not only a
@@ -97,7 +107,16 @@ covers it." Two changes:
 
 The asymmetry is deliberate to remove: today minting is an action with a code
 block and declining is a comment, so the gradient runs one way. All four
-outcomes should read as equally available. (PRD R1, R2.)
+outcomes should read as equally available.
+
+**Concern mode needs resolutions for the concerns R9 sends it.** The
+concern-mode reference resolves only unverified behaviors, dropped behaviors, and
+mis-aimed tests. R9 now routes two more from the decomposer — verification out of
+proportion to what it protects, and verification whose mechanism does not fit its
+artifact — and neither has a named procedure, so the planner would improvise.
+Give each one: the disproportionate case retires the verification or re-plans it
+by a cheaper mechanism, and the mismatched case re-plans it as the mechanism that
+fits. (PRD R1, R2, R4.)
 
 ### R4 — Automated tests target code only, using the ecosystem's own tools
 
@@ -209,11 +228,19 @@ Add the mirror: verification planned out of proportion to what it protects, and
 verification whose mechanism does not fit its artifact. The decomposer flags it
 and sends it back to the confidence planner exactly as it does any other
 test-planner concern — it mints and rewires nothing itself, per the section's
-existing discipline. (PRD Problem §4; PRD R1, R4.)
+existing discipline.
+
+**Also bring the existing bullets to the four outcomes.** The survey currently
+looks for "no test and no recorded no-test decision" and reads the planner's
+comments as "no-test decisions." Under R2 a spec obligation may legitimately be
+covered by a gate or a review obligation, so a survey that recognizes only tests
+and no-test decisions will report a false gap against a behavior that was
+properly handled. (PRD Problem §4; PRD R1, R2, R4.)
 
 ### R10 — Disproportionate verification is escapable at build time
 
 **Files:** `opencode/skills/omg-test-planning/references/summons-stuck-builder.md`,
+`opencode/skills/omg-test-planning/references/summons.md`,
 `opencode/skills/test-writing/SKILL.md` (§3, the reopen-and-block branch)
 
 Plan-time proportionality (R1) is judged without the artifact in hand. R10 is the
@@ -222,8 +249,7 @@ R6 somewhere to send a tester who finds no conventional tooling.
 
 The resolution machinery already exists and already reasons about cost — the
 retire branch reads "what the test guards costs less to recover from than the
-defense costs to keep." Two gaps to close, both in the trigger rather than the
-resolution:
+defense costs to keep." Four gaps to close:
 
 1. **Widen the situation.** It currently fires only when a *builder* is stuck on
    a planned test. It must also fire when the *tester*, while writing a planned
@@ -236,9 +262,43 @@ resolution:
    yours to the queue, and stop — the existing dispatch-lifecycle path, applied
    to this trigger.
 
-The three resolutions stand as written, with one addition: **re-plan** may now
-re-plan the verification as a deterministic gate or a review obligation, not only
-as a corrected test, per R2. (PRD R8.)
+3. **Repair the triage that routes a summons.** `summons.md` sorts an incoming
+   summons into two situations: one asking the planner to plan verification for a
+   fix, and one reporting a builder stuck on a planned test. R8 kills the first
+   for review findings, and gap 1 above creates an arrival the triage cannot
+   classify — a tester-filed escalation. A summons that matches no branch strands
+   the bead that waits on it. The triage must route the tester's escalation, and
+   must not present a branch that R8 has retired.
+
+4. **Bring the three resolutions to the widened trigger.** They assume a builder
+   on the other end and no longer hold universally. **Uphold** ("the builder must
+   satisfy it") and **retire** ("the builder is right") must name whoever
+   escalated. **Retire** mints a *removal* bead to strip the assertion from the
+   suite — correct when a builder is stuck on an existing test, wrong when a
+   tester escalates before authoring one, where there is nothing to remove and
+   retiring means closing the test bead with the reason recorded instead.
+   **Re-plan** gains one option: re-plan the verification as a deterministic gate
+   or a review obligation, not only as a corrected test, per R2.
+
+5. **Stop overloading one placeholder for two roles.** The reference names a
+   single `<fix>` meaning "the bead waiting on your decision — the builder's fix
+   bead, or, when a tester escalated, the tester's own test bead." Those are
+   opposite roles: for a builder it is a bead that stays open and waits, and for
+   a tester it is the bead being resolved. One name for both is why each branch
+   needs a special case and why two were written wrong. Name the two distinctly —
+   the bead that waits on the ruling, and the test bead whose verification is in
+   dispute — and have each branch say which it operates on. This is the same
+   defect the naming conventions in `doc-templates` exist to prevent.
+
+**The invariant every branch must satisfy.** After the planner closes the
+summons, no bead involved may be left open with nothing that will ever close it,
+and none may be left waiting on a bead that will never come. Two current branches
+violate it, both only in the tester case: re-planning as a gate never closes the
+tester's test bead, so it blocks its dependant forever; and re-planning as a
+corrected test leaves the disputed bead waiting on its own replacement, so a
+tester is eventually re-dispatched to write the test just ruled wrong. **Trace
+both escalation paths through all three resolutions and confirm the invariant
+holds in each of the six.** (PRD R8.)
 
 ## Inputs and Outputs
 
@@ -262,7 +322,7 @@ direction changes.
   decomposed keep the body they were stamped with; `ensure-terminal-beads.sh`
   does not replace an existing terminal bead's body. R8 therefore applies to
   epics decomposed after it ships, and no migration is required or attempted.
-- No instrument outside the nine files named here needs to change for this spec.
+- No instrument outside the twelve files named here needs to change for this spec.
   Notably the foreman is untouched: routing stays label-only, and R8's
   replacement bead routes by its label like any other.
 
@@ -304,12 +364,16 @@ Each maps to one requirement and is checkable by reading the changed file.
 - **AC-1** — `omg-test-planner.md` states the proportionality judgment, and its
   anti-ceremony paragraph rejects test-type taxonomies and numeric scoring while
   permitting reasoned criteria. Neither the judgment nor the restraint is absent.
-- **AC-2** — `omg-test-planner.md` names four outcomes, and no sentence remains
-  asserting the vocabulary is a test bead or a no-test decision "and nothing
-  more."
-- **AC-3** — Both plan-pass references let the planner record a gate or a review
-  obligation as a planned outcome, and their recorded decisions carry
-  proportionality reasoning rather than a bare menu selection.
+- **AC-2** — `omg-test-planner.md` names four outcomes, and **no sentence
+  anywhere in the file still frames the choice as test-or-nothing.** Read the
+  whole file and confirm the property, not the absence of one phrase: a file that
+  names four outcomes in one paragraph and calls a no-test decision "a first-class
+  outcome" in another has not met this criterion.
+- **AC-3** — All three plan-pass references let the planner record a gate or a
+  review obligation as a planned outcome, and their recorded decisions carry
+  proportionality reasoning rather than a bare menu selection. No reference still
+  offers only the mint-or-decline pair. Concern mode carries a resolution for
+  each concern type R9 routes to it, including the two new ones.
 - **AC-4** — `omg-tester.md` forbids inventing test tooling and restricts
   automated tests to code using conventional ecosystem runners.
 - **AC-5** — `omg-tester.md`'s "Do Not Test" list names documentation, runbooks,
@@ -328,11 +392,21 @@ Each maps to one requirement and is checkable by reading the changed file.
   agrees with it. No `agent=omg-test-planner` summons remains on the
   review-finding path.
 - **AC-9** — `omg-decompose/SKILL.md`'s seam hunt names over-verification and
-  artifact-mechanism mismatch, routed back to the confidence planner.
+  artifact-mechanism mismatch, routed back to the confidence planner, **and its
+  pre-existing bullets recognize a gate or a review obligation as covering a spec
+  obligation** — so a properly handled behavior is not reported as a gap.
 - **AC-10** — `summons-stuck-builder.md` fires on disproportionate verification
-  as well as on a wrong or impossible test, its re-plan branch admits a gate or a
-  review obligation, and `test-writing/SKILL.md` names the tester's route into
+  as well as on a wrong or impossible test; its three resolutions name whoever
+  escalated rather than assuming a builder; retire handles the
+  nothing-yet-authored case; its re-plan branch admits a gate or a review
+  obligation; `summons.md`'s triage routes a tester-filed escalation and offers
+  no branch R8 retired; and `test-writing/SKILL.md` names the tester's route into
   it.
+- **AC-10b** — `summons-stuck-builder.md` uses no placeholder that means a
+  different bead depending on the branch, and all six combinations of two
+  escalation paths against three resolutions leave every bead in a state the epic
+  can progress from — none open with nothing to close it, none waiting on a bead
+  that never comes.
 - **AC-11** — No file under `.opencode/` is added or modified. No script,
   template, or `bd` command changes.
 
