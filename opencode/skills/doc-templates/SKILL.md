@@ -197,6 +197,29 @@ These conventions apply to whoever fills them, for any doc type:
   or other historical values you cannot verify — imprecise real history beats a
   confident guess.
 
+## Naming conventions
+
+These apply to whoever writes any doc type, and they exist because both have gone
+wrong badly enough to need a purge:
+
+- **Name things in words, never in single letters or symbols.** Write "the review
+  bead", "the implementation bead", "the fix", "the test bead", "the summons" —
+  never `R`, `x`, `z`, `y`, `w₁`, or a subscripted variable. Compact notation
+  feels precise while you hold the mapping in your head, and it is unreadable to
+  everyone who does not, including you in three months. It is worse in this repo
+  than most, because documents here become agent instructions: notation in a
+  document propagates into the instruments built from it, where no reader can
+  resolve it. If a concept needs naming often enough to tempt a symbol, give it a
+  short noun phrase and reuse that.
+- **Do not invent numbered modes for named cases.** "Mode 1 / Mode 2" forces every
+  reader to hold an arbitrary mapping. Name the cases for what they are — "a wrong
+  planned test", "a broken promise" — so a sentence carries its own meaning
+  wherever it is quoted.
+
+Naming is form, not judgment, which is why it lives here rather than in an
+agent's reference: it applies identically to a PRD, a spec, a design doc, and an
+ADR.
+
 ## The line this skill holds
 
 A template states **what a section holds** — intrinsic to the document's purpose,
