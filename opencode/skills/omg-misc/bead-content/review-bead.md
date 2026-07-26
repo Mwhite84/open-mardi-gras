@@ -14,15 +14,26 @@ When you execute this review bead, in addition to reading every changed file:
    change-locality judgment sets it, and the label selects the wiring:
 
    - **Builder-bound** — the failure should be fixed *in this epic* (a defect in
-     the changed code). The finding **is** the fix bead: `agent=omg-builder`,
-     `--parent <epic> --no-inherit-labels`, `discovered-from:<this-review-bead>`.
-     Arm its verification before it is built:
-     a. File a summons bead for the confidence planner — **a real bead,
-        `--parent <epic> --no-inherit-labels`, NO `--ephemeral`** —
-        `agent=omg-test-planner`, `discovered-from:<this-review-bead>`.
-     b. Wire the summons to block the fix: `bd dep add <fix> <summons>`.
-     c. Wire the fix to block this review bead:
-        `bd dep add <this-review-bead> <fix>`.
+     the changed code). The finding **is** the fix bead, and when its subject is
+     code it is armed with a regression test authored *before* the fix, so the
+     test is observed failing against the reproducible defect:
+
+     ```bash
+     FIX=$(bd create "<the defect, and where>" --type <bug|chore> --priority <0|1> \
+       --parent <epic> --no-inherit-labels --deps discovered-from:<this-review-bead> --silent)
+     bd set-state "$FIX" agent=omg-builder --reason "Fix bead"
+
+     # Only when the finding's subject is code:
+     TEST=$(bd create "<the defect this test must catch>" \
+       --parent <epic> --no-inherit-labels --deps discovered-from:<this-review-bead> --silent)
+     bd set-state "$TEST" agent=omg-tester --reason "Regression test bead"
+     bd dep add "$FIX" "$TEST"
+
+     bd dep add <this-review-bead> "$FIX"
+     ```
+
+     **When the subject is prose or a declarative artifact**, skip the test bead
+     entirely — the fix and this review's next pass are the verification.
 
    - **PM-bound** — this epic's change reddened a **prior-epic** guarantee. File
      it with the adjudication script, which assembles the adjudication bead for
@@ -38,13 +49,20 @@ When you execute this review bead, in addition to reading every changed file:
      EOF
      ```
 
-     File **no** summons and **no** fix bead yourself — there is no fix until
-     the PM decides one is warranted, so the builder-bound hard rules above must
-     **not** be applied to it.
+     File **no** fix bead and **no** regression test bead yourself — there is no
+     fix until the PM decides one is warranted, so the builder-bound hard rules
+     above must **not** be applied to it.
 
-   **A P2–P4 finding is filed standalone, outside the epic:** no `--parent`, no
-   review-bead dependency; the `discovered-from` link preserves the trail. A
-   child bead holds this epic open no matter how it is wired, so a finding that
+   **A P2–P4 finding is filed standalone, outside the epic** — no `--parent`, no
+   review-bead dependency, no `agent` label, since nothing in this epic dispatches
+   it; the `discovered-from` link preserves the trail:
+
+   ```bash
+   bd create "<the finding, and where>" --type <bug|chore> --priority <2|3|4> \
+     --deps discovered-from:<this-review-bead> --silent
+   ```
+
+   A child bead holds this epic open no matter how it is wired, so a finding that
    should not block must not be a child.
 
 3. **Reopen this review bead** if you filed any blocking finding:

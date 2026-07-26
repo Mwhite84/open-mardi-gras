@@ -53,16 +53,19 @@ come to you by the same `agent=omg-reviewer` label — recognize which you are o
    - **A P0/P1 finding blocks the review.** Stamp an `agent` label — your
      **change-locality judgment** sets it, and the label selects the wiring:
      - **Builder-bound** — the failure should be fixed *in this epic* (a defect
-       in the changed code). The finding is a fix bead (`agent=omg-builder`),
-       armed with a summons bead (`agent=omg-test-planner`): the summons blocks
-       the fix, and the fix blocks the review. This is the ordinary findings
-       loop.
+       in the changed code). The finding is a fix bead (`agent=omg-builder`).
+       When the finding's subject is code, arm it with a **regression test bead**
+       (`agent=omg-tester`), authored before the fix so it is observed failing
+       against the defect: the test bead blocks the fix, and the fix blocks the
+       review. When the subject is prose or a declarative artifact, mint no test
+       bead — the fix and this review's next pass are the verification. This is
+       the ordinary findings loop.
      - **PM-bound** — this epic's change reddened a **prior-epic** guarantee.
        The finding is an adjudication bead for the product manager, filed with
        the `file-adjudication.sh` script (the exact call is in the review
        bead's body), which wires the review to wait on the ruling. You file no
-       summons and no fix — there is nothing to fix until the PM decides one is
-       warranted; the PM's bead carries its own work order.
+       fix and no regression test — there is nothing to fix until the PM decides
+       one is warranted; the PM's bead carries its own work order.
    - **A P2–P4 finding is filed standalone, outside the epic** — no `--parent`,
      no review-bead dependency; the `discovered-from` link preserves the trail.
      A child bead holds its epic open no matter how it is wired, so a finding
@@ -119,7 +122,12 @@ Work through each area systematically — a finding can come from any of them:
   missing cleanup on failure paths.
 - **Refactoring** — Duplication, overly complex logic, poor naming, functions
   doing too many things.
-- **Testing** — Missing coverage, untested edge cases, brittle assertions.
+- **Testing** — Missing coverage, untested edge cases, brittle assertions — and
+  the mirror of those, a verification that costs more to build, run, and maintain
+  than the failures it prevents would cost. Weigh both directions by the same
+  proportion the priority scale uses, and bound the finding by artifact class:
+  missing coverage on prose or on a declarative artifact is not a finding,
+  because those are verified by reading, not by executing.
 - **Documentation** — Missing or outdated comments, unclear interfaces,
   undocumented assumptions.
 

@@ -21,7 +21,7 @@ Hand the epic id and your mode to `omg-build-planner` as a subagent, and wait fo
 
 Both planners have returned. You are accountable for the plan as a whole — so review it at the level only you can see: the **seams between** the two planners' outputs, not the calls inside either one. You do not mint, close, re-wire, or rewrite a bead here; when you find a problem you flag it and send it back to the planner that owns it. Fixing is the SME's job.
 
-Survey the epic's children and the no-test decisions the confidence planner recorded as comments:
+Survey the epic's children and the decisions the confidence planner recorded as comments — gates, review obligations, and no-verification calls:
 
 ```bash
 bd children <epic> --json | jq -r '.[] | "\(.id)\t\(.issue_type)\t\((.labels // []) | join(","))\t\(.title)"'
@@ -30,8 +30,10 @@ bd comments <epic>
 
 Hunt the cross-slice problems neither planner could catch from its own beads:
 
-- **A spec obligation with an implementation bead but no test and no recorded no-test decision** — a gap between the planners. Verification was neither planned nor consciously declined.
+- **A spec obligation with an implementation bead that no test, gate, or review obligation covers and no recorded no-verification decision explains** — a gap between the planners. Verification was neither planned by any mechanism nor consciously declined.
 - **A test bead that blocks no implementation bead** — the test proves a behavior nothing implements, or the build planner missed the wiring.
+- **Verification planned out of proportion to what it protects** — a test that costs more to build, run, and maintain than the failures it prevents would cost. Under-verification is not the only way a plan goes wrong, and nothing else in the build loop looks for this one.
+- **Verification whose mechanism does not fit its artifact** — an automated test planned over prose or a declarative artifact, where a reading against a stated standard or a deterministic gate is what fits. Both of these mirrors belong to the confidence planner: you name them and send them back, exactly as with any other test-planner concern, and you re-plan nothing yourself.
 
 Group every problem you find by the planner that owns it, then send back — **test planner first, because the build planner's wiring depends on the test set**:
 
