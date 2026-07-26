@@ -39,7 +39,7 @@ The PRD's remaining requirements — fix-round convergence (R6), ruling write-ba
 (R7), and the repo-local tooling inventory (R11) — need real mechanism and are
 out of scope here (see Non-Goals).
 
-**Twelve files change, all Markdown, all under `opencode/`.**
+**Thirteen files change, all Markdown, all under `opencode/`.**
 
 ## Requirements
 
@@ -300,6 +300,37 @@ tester is eventually re-dispatched to write the test just ruled wrong. **Trace
 both escalation paths through all three resolutions and confirm the invariant
 holds in each of the six.** (PRD R8.)
 
+### R11 — The adjudicated-fix runbook carries the four outcomes and records on the epic
+
+**File:** `opencode/skills/omg-test-planning/references/summons-plan-verification.md`
+
+This is the runbook for the one summons R8 leaves standing: after the product
+manager rules that a prior guarantee still holds and mints a fix, the planner is
+summoned to decide how that fix gets verified. **The summons stays** — unlike a
+review finding, an adjudicated fix has no reliably reproducible defect to pin a
+regression test to, since the fix may restore prior behavior, move a boundary, or
+reconcile two guarantees that now conflict. The judgment is not predictable
+enough to default. Its *vocabulary*, however, is now the last binary left in the
+planner's runbook, and it is the only thing this path can express.
+
+Two changes:
+
+1. **Four outcomes, per R2.** Today the branches are design-a-test-before-the-fix,
+   run-a-test-after-the-fix, and no test. The before/after distinction is real and
+   must survive — it is about ordering against the fix, not about mechanism — so
+   the automated-test outcome keeps both forms. Add the deterministic gate and the
+   review obligation alongside them, and carry the proportionality reasoning of R1
+   into whichever is recorded.
+
+2. **Record the decision on the epic, not only in the summons close reason.**
+   Every branch here currently terminates in `bd close <summons> --reason`, and a
+   close reason is not what the decomposer reads — its survey is
+   `bd comments <epic>`. A no-verification decision made on this path is therefore
+   invisible to the pass that hunts unverified obligations, which will report it as
+   a gap. Match the sibling plan-pass references, which comment the epic in the
+   `Test for` / `Gate for` / `Review obligation for` / `No verification for` forms.
+   (PRD R1, R2; PRD R9.)
+
 ## Inputs and Outputs
 
 These instruments consume and produce beads, not data. The only shape changes:
@@ -322,7 +353,7 @@ direction changes.
   decomposed keep the body they were stamped with; `ensure-terminal-beads.sh`
   does not replace an existing terminal bead's body. R8 therefore applies to
   epics decomposed after it ships, and no migration is required or attempted.
-- No instrument outside the twelve files named here needs to change for this spec.
+- No instrument outside the thirteen files named here needs to change for this spec.
   Notably the foreman is untouched: routing stays label-only, and R8's
   replacement bead routes by its label like any other.
 
@@ -407,7 +438,12 @@ Each maps to one requirement and is checkable by reading the changed file.
   escalation paths against three resolutions leave every bead in a state the epic
   can progress from — none open with nothing to close it, none waiting on a bead
   that never comes.
-- **AC-11** — No file under `.opencode/` is added or modified. No script,
+- **AC-11** — `summons-plan-verification.md` offers all four outcomes, keeps the
+  before-the-fix and after-the-fix ordering for an automated test, records every
+  outcome as a comment on the epic in the same forms the plan-pass references
+  use, and still closes the summons in every branch. No binary test/no-test
+  framing remains anywhere in the planner's runbook.
+- **AC-12** — No file under `.opencode/` is added or modified. No script,
   template, or `bd` command changes.
 
 ## Open Questions
