@@ -157,8 +157,8 @@ Hard rules bounding the top of this diagram:
   to warrant executable verification, that is a signal the procedure should be a
   script — a design finding to raise, not a reason to test the prose.
 
-See §12 for why the two "NOT ENFORCED" outcomes are a live problem rather than a
-cosmetic one.
+See section 12, *What these diagrams expose*, for why the two "NOT ENFORCED"
+outcomes are a live problem rather than a cosmetic one.
 
 ---
 
@@ -199,7 +199,8 @@ flowchart TD
   bead, and the builder falls back to the description plus the review bead's
   full-suite run.
 - **A child bead blocks its epic regardless of wiring.** This is why non-blocking
-  findings must never be filed as children (§10).
+  findings must never be filed as children — see section 10, *Review, findings,
+  and the fix loop*.
 
 ---
 
@@ -491,7 +492,8 @@ flowchart TD
 
 ### The PM path keeps its planner summons — deliberately
 
-Regression-by-default (§10) applies to review findings and **not** here. The
+Regression-by-default — section 10, *Review, findings, and the fix loop* —
+applies to review findings and **not** here. The
 asymmetry is the point: **default where the judgment is predictable, dispatch where it
 is not.** A review finding is a confirmed defect in code this epic changed, and the
 reviewer already did the blast-radius work. A broken-promise ruling is not that — the
@@ -526,7 +528,8 @@ the review waits on the test.
 Drawing the whole thing makes two gaps visible that are hard to see while reading any
 single instrument. Both are recorded here as observations, not as decisions.
 
-**Two of the four verification outcomes are recorded and never discharged.** §3 traces
+**Two of the four verification outcomes are recorded and never discharged.**
+Section 3, *The confidence planner's four outcomes*, traces
 it: a deterministic gate and a review obligation each produce a comment on the epic
 and nothing else. Nothing mints a bead for a gate, nothing checks at review that it
 ran, nothing confirms it exists. The review bead runs "the full test suite," which
@@ -535,15 +538,18 @@ nothing — it is that they **claim** something. "Gate for X: `terraform validat
 catches it" reads as coverage. That is manufactured confidence, which is precisely
 what the confidence planner exists to prevent.
 
-Drawing §4 alongside §10 sharpens it further: those decisions are recorded as comments
+Drawing section 4, *Canonical bead topology*, alongside section 10, *Review,
+findings, and the fix loop*, sharpens it further: those decisions are recorded as comments
 **on the epic**, and the report-writer bead reads "every *child* bead's comments." The
 epic is not its own child. So a gate or review obligation chosen at plan time is read
 once — by the decomposer's own re-review pass — and then by nothing else, ever. It
 does not reach the build report either.
 
-**Nothing bounds the review-fix cycle.** §10's loop — review finds a blocking finding,
+**Nothing bounds the review-fix cycle.** The loop in section 10, *Review,
+findings, and the fix loop* — review finds a blocking finding,
 mints a fix, reopens itself, runs again — has no termination condition other than a
-review pass that finds nothing. §2's decomposer re-review loop has the same shape.
+review pass that finds nothing. The decomposer's re-review loop in section 2,
+*Plan phase*, has the same shape.
 Fix-round convergence is specified in the PRD and is not built.
 
 ---

@@ -429,8 +429,8 @@ embedded code fences</strong>. If a prose procedure&#39;s correctness is load-be
 to warrant executable verification, that is a signal the procedure should be a
 script — a design finding to raise, not a reason to test the prose.</li>
 </ul>
-<p>See §12 for why the two &quot;NOT ENFORCED&quot; outcomes are a live problem rather than a
-cosmetic one.</p>
+<p>See section 12, <em>What these diagrams expose</em>, for why the two &quot;NOT ENFORCED&quot;
+outcomes are a live problem rather than a cosmetic one.</p>
 <hr>
 <h2 id="4-canonical-bead-topology">4. Canonical bead topology</h2>
 <p>The shape every epic converges on, before findings perturb it.</p>
@@ -465,7 +465,8 @@ decision and its <code>hindsight</code> state, not to be worked.</li>
 bead, and the builder falls back to the description plus the review bead&#39;s
 full-suite run.</li>
 <li><strong>A child bead blocks its epic regardless of wiring.</strong> This is why non-blocking
-findings must never be filed as children (§10).</li>
+findings must never be filed as children — see section 10, <em>Review, findings,
+and the fix loop</em>.</li>
 </ul>
 <hr>
 <h2 id="5-build-phase-the-foreman-s-loop">5. Build phase — the foreman&#39;s loop</h2>
@@ -741,7 +742,8 @@ is a product judgment, not a build defect for someone else to patch around.</p>
     S4 --&gt; CL
     S2 --&gt; SPV["The SUMMONS routes to&lt;br/&gt;summons-plan-verification — see below"]</pre><div class="mermaid-out" id="mermaid-out-12"></div></figure>
 <h3 id="the-pm-path-keeps-its-planner-summons-deliberately">The PM path keeps its planner summons — deliberately</h3>
-<p>Regression-by-default (§10) applies to review findings and <strong>not</strong> here. The
+<p>Regression-by-default — section 10, <em>Review, findings, and the fix loop</em> —
+applies to review findings and <strong>not</strong> here. The
 asymmetry is the point: <strong>default where the judgment is predictable, dispatch where it
 is not.</strong> A review finding is a confirmed defect in code this epic changed, and the
 reviewer already did the blast-radius work. A broken-promise ruling is not that — the
@@ -768,7 +770,8 @@ the review waits on the test.</p>
 <h2 id="12-what-these-diagrams-expose">12. What these diagrams expose</h2>
 <p>Drawing the whole thing makes two gaps visible that are hard to see while reading any
 single instrument. Both are recorded here as observations, not as decisions.</p>
-<p><strong>Two of the four verification outcomes are recorded and never discharged.</strong> §3 traces
+<p><strong>Two of the four verification outcomes are recorded and never discharged.</strong>
+Section 3, <em>The confidence planner&#39;s four outcomes</em>, traces
 it: a deterministic gate and a review obligation each produce a comment on the epic
 and nothing else. Nothing mints a bead for a gate, nothing checks at review that it
 ran, nothing confirms it exists. The review bead runs &quot;the full test suite,&quot; which
@@ -776,14 +779,17 @@ does not necessarily include a validator or a linter. The danger is not that the
 nothing — it is that they <strong>claim</strong> something. &quot;Gate for X: <code>terraform validate</code>
 catches it&quot; reads as coverage. That is manufactured confidence, which is precisely
 what the confidence planner exists to prevent.</p>
-<p>Drawing §4 alongside §10 sharpens it further: those decisions are recorded as comments
+<p>Drawing section 4, <em>Canonical bead topology</em>, alongside section 10, <em>Review,
+findings, and the fix loop</em>, sharpens it further: those decisions are recorded as comments
 <strong>on the epic</strong>, and the report-writer bead reads &quot;every <em>child</em> bead&#39;s comments.&quot; The
 epic is not its own child. So a gate or review obligation chosen at plan time is read
 once — by the decomposer&#39;s own re-review pass — and then by nothing else, ever. It
 does not reach the build report either.</p>
-<p><strong>Nothing bounds the review-fix cycle.</strong> §10&#39;s loop — review finds a blocking finding,
+<p><strong>Nothing bounds the review-fix cycle.</strong> The loop in section 10, <em>Review,
+findings, and the fix loop</em> — review finds a blocking finding,
 mints a fix, reopens itself, runs again — has no termination condition other than a
-review pass that finds nothing. §2&#39;s decomposer re-review loop has the same shape.
+review pass that finds nothing. The decomposer&#39;s re-review loop in section 2,
+<em>Plan phase</em>, has the same shape.
 Fix-round convergence is specified in the PRD and is not built.</p>
 <hr>
 <h2 id="related-documents">Related documents</h2>
