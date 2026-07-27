@@ -55,23 +55,37 @@ The Markdown is the source of truth; the HTML is generated from it and is never
 hand-edited. After editing `omg_flowchart.md`:
 
 ```
-node .opencode/scripts/build-flowchart-html.mjs   # regenerate the HTML
-node .opencode/scripts/verify-flowchart-html.mjs  # prove it is correct and current
+just docs-setup    # once: bun install --cwd tools/docs
+just docs-build    # regenerate the HTML
 ```
 
-One-time setup for the harness dependencies: `npm install --prefix .opencode`.
+If `just` is unavailable, the recipe is a thin wrapper and the underlying command
+works directly:
 
-The verifier checks that every diagram parses and renders, that the HTML carries
-no external references (it must open from `file://` with no network), that the
-diagram sources are byte-identical to the Markdown, and that the HTML is not
-stale relative to the Markdown. **A commit that changes `omg_flowchart.md`
-without a regenerated `omg_flowchart.html` is incomplete.** The render check
-needs the optional `puppeteer` dependency and skips cleanly without it; the
-static checks always run.
+```
+node tools/docs/build-flowchart-html.mjs
+```
+
+The build is deterministic and idempotent — running it when nothing changed
+rewrites the same bytes — so **when in doubt, just run it.** There is
+deliberately no verifier: everything one could check is already guaranteed by the
+builder, which copies the diagram sources verbatim and inlines the Mermaid bundle
+so the page needs no network.
+
+**A commit that changes `omg_flowchart.md` without a regenerated
+`omg_flowchart.html` is incomplete.** Nothing detects that automatically, and a
+stale HTML is the one failure here that does not announce itself — it renders
+perfectly and is quietly wrong. Regenerating is one command; run it.
+
+**Never hand-edit `omg_flowchart.html`.** It is generated, and the next build
+discards any edit.
 
 Both files live at the repo root and are repo-local documentation, not part of
-the shipped package. Their build tooling therefore lives under `.opencode/`, and
-must never be moved into `opencode/`.
+the shipped package. Their tooling lives in **`tools/docs/`**, with its own
+manifest and lockfile — deliberately not in the root `package.json`, whose
+dependencies every contributor installs, and deliberately not in `.opencode/`,
+whose `package.json` is gitignored plugin scaffolding. It must never be moved
+into `opencode/`.
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
