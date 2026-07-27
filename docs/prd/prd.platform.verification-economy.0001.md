@@ -6,7 +6,7 @@ title: "Verification Economy in the OMG Delivery Workflow"
 status: draft
 domain: platform
 created_at: 2026-07-26T03:59:09Z
-updated_at: 2026-07-26T03:59:09Z
+updated_at: 2026-07-27T00:10:00Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -476,10 +476,54 @@ At the level of capability; the mechanism is the design doc's territory.
    0002 R13, which makes it the natural holder — but "is this artifact wrong?"
    may be an architectural judgment instead. Unresolved.
 
-5. **Does the review obligation (R2) need a recorded outcome?** A reading that
-   finds nothing produces no artifact. Whether that reading should leave a record
-   — and if so, whether it is distinguishable from the reviewer's ordinary pass —
-   affects whether R9's register can be complete.
+5. **How do the non-test outcomes of R2 get discharged, and where are they
+   recorded so the record survives?** R2 widened what the confidence planner may
+   *say* without widening what the system *does* about it, and the gap is
+   load-bearing rather than cosmetic. Of the four outcomes, only the automated
+   test has an executor: it mints a bead, the bead is dispatched, and it closes.
+   A **deterministic gate** and a **review obligation** each produce a comment on
+   the epic and nothing else. Nothing mints a bead to run the gate, nothing
+   confirms at review that it ran, nothing confirms it exists at all; the review
+   bead runs the test suite, which need not include a validator or a linter. The
+   danger is not that these outcomes do nothing — it is that they **claim**
+   something. "Gate for X: `terraform validate` catches it" reads as coverage, and
+   unjustified confidence is precisely what the confidence planner exists to
+   prevent.
+
+   Two properties of the current recording make this worse than "unenforced," and
+   both were found by diagramming the workflow rather than by reading any single
+   instrument:
+
+   - **The record is written where nothing downstream reads it.** These decisions
+     are comments on the *epic*. The report-writer bead reads "every *child*
+     bead's comments," and the epic is not its own child. So a gate or review
+     obligation chosen at plan time is read once, by the decomposer's own
+     re-review pass, and then by nothing — not the reviewer, not the build report.
+   - **That makes them unauditable, not merely unenforced.** R9 requires a
+     residual-risk register that is complete against the spec's obligations. Two
+     of the four outcomes currently leave no trace any downstream reader can
+     assemble a register from, so R9 cannot be satisfied on top of this recording
+     scheme. This is a constraint on the design, not a preference.
+
+   The options are real and they trade off differently: mint a bead for a gate the
+   way a test gets one, which buys enforcement at the cost of a dispatch for
+   something no agent needs to *decide*; have the review bead read the epic's
+   recorded obligations and discharge them, which adds no dispatch because the
+   reviewer is already running but widens the reviewer's job; move the record onto
+   an artifact the report writer already reads, which fixes auditability without
+   touching enforcement; or accept the outcomes as recorded-but-unenforced and
+   change the comment's wording so no reader mistakes a plan for coverage.
+
+   This subsumes the narrower question this entry previously asked — whether a
+   review obligation that finds nothing should leave a record distinguishable from
+   the reviewer's ordinary pass. It is the same problem seen from the reporting
+   end, and answering the general question answers it.
+
+   **Whose defect this is:** mine, in R2. Naming that matters, because it is the
+   same failure this PRD was written to correct — the prior PRD made economy a
+   goal, implemented it in no requirement, measured it with no metric, and it
+   evaporated. R2 widened a vocabulary and specified no discharge for three
+   quarters of it.
 
 6. **How is the R11 inventory named, shaped, and kept honest?** Its location
    (repo root), its authorship (onboarding), and its precedence over shipped
@@ -498,6 +542,11 @@ At the level of capability; the mechanism is the design doc's territory.
 
 ## Related Documents
 
+- `omg_flowchart.md` (repo root) — a descriptive map of what the instruments
+  actually do, drawn after the Tier 1 changes shipped. Open Question 5's recording
+  problem was found there rather than in any instrument: it is visible only when
+  the plan phase's outcomes and the report writer's inputs are drawn on the same
+  page. It also records that nothing bounds the review-fix cycle, which is R6.
 - `prd.platform.test-planning.0002` — **amended by this PRD.** Owns verification
   ownership, phasing, the dispatch lifecycle contract, crash recovery, and the
   memory-shipping boundary. This document narrows its anti-rubric Non-Goal,
