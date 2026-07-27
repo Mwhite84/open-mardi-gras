@@ -6,7 +6,7 @@ title: "Verification Economy in the OMG Delivery Workflow"
 status: draft
 domain: platform
 created_at: 2026-07-26T03:59:09Z
-updated_at: 2026-07-27T00:10:00Z
+updated_at: 2026-07-27T00:20:00Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -229,9 +229,9 @@ would have tripped it.
 - **No automated test targets a non-code artifact.** *Signal:* no test bead's
   subject is prose, documentation, a runbook, or a code fence within one.
 - **The loop converges.** *Signal:* no artifact in an epic enters a third fix
-  round; one that would produces an explicit ruling on the artifact instead of
-  another fix. *Would have caught:* seventy-five beads of successive corrections
-  to one runbook section, at roughly the sixth.
+  round; findings past the bound are filed outside the epic, blocking nothing, and
+  the count reaches the build report. *Would have caught:* seventy-five beads of
+  successive corrections to one runbook section, at roughly the sixth.
 - **No decision is re-derived.** *Signal:* no bead re-escalates a question already
   ruled on, and no dispatch independently re-reaches a ruling that already exists
   on unchanged inputs. (A deliberate refinement pass reconsidering a decision
@@ -310,28 +310,50 @@ At the level of capability; the mechanism is the design doc's territory.
    0002 R11's guarantee that findings-driven work does not escape verification,
    and strengthens it from a per-finding judgment to a default.
 
-6. **The findings loop converges: repeated fix rounds on one artifact force a
-   ruling.** Each time a blocking finding sends work back to material the epic has
-   already produced, that is a **fix round** against the artifact that produced
-   it, attributable through the discovered-from trail back to the original work
-   bead. Rounds accumulate **per artifact**, and successive findings need not be
-   related to one another — the signal being detected is *this artifact keeps
-   generating work*, not *this fix keeps breaking*. **When an artifact would enter
-   a third fix round, the workflow does not mint that fix.** It produces an
-   explicit ruling on whether the artifact itself is wrong, because an artifact
-   that has already required two rounds of correction is evidence about the
-   artifact rather than about the latest finding. The ruling may permit the work
-   to continue; what it may not do is happen by default. Past the bound, further
-   findings against that artifact are filed outside the epic regardless of
-   priority.
+6. **The findings loop converges: an artifact that keeps generating work stops
+   blocking the epic.** Each time a blocking finding sends work back to material
+   the epic has already produced, that is a **fix round** against the artifact
+   that produced it. Rounds accumulate **per artifact**, counted on the bead that
+   produced it and reached through the discovered-from trail — **never on the bead
+   that raises the finding.** That distinction is the whole rule, and it matters
+   because of a structural fact about the review bead: **an epic has exactly one,
+   and it is reopened and re-dispatched for every pass.** A count taken there is
+   therefore cumulative over the epic's entire life, not per pass. Two blocking
+   findings in — against any files, however unrelated — the reviewer would be
+   filing everything afterward outside the epic, *including a P0*, no matter how
+   much the epic touched. That is a budget on how much reviewing an epic is
+   allowed to produce, which is not the thing being bounded. Churn is. Successive
+   findings against one artifact need not be related to one another — the signal
+   being detected is *this artifact keeps generating work*, not *this fix keeps
+   breaking*.
+
+   **At the bound of two, the finding is still filed — but outside the epic,
+   blocking nothing, regardless of priority.** The epic finishes with what it has.
+   No ruling is dispatched and no agent is asked to judge whether the artifact is
+   wrong: the count and the findings are carried into the build report (R10), and
+   the human reads *this file generated five findings* and decides. This is a
+   human gate by reporting rather than by dispatch, and it is deliberately cheaper
+   than an adjudication round — the judgment lands with the person who has the
+   context, and costs the workflow nothing while it runs.
+
+   The bound is **two, uniform across artifact classes**, including prose. R4
+   already damps the prose case by denying it test beads, and a class-specific
+   bound is a threshold to tune before there is any evidence to tune it with.
+   Revisit if it bites.
 
    The count is **mechanical and requires no attribution judgment**. Deliberately
    so: a rule asking an agent whether one finding descends from another would
    drift toward "unrelated" — the reading that removes the bound and lets work
    continue — and an uninstrumented judgment is the failure this whole document
-   exists to correct. The ruling's routing is the design doc's to specify; the
-   bound and the property — convergence, not merely termination — are required
-   here.
+   exists to correct. The count is **derived from the discovered-from links, not
+   stamped as a counter on the bead**: a stamped count is a second source of truth
+   that drifts, while the links already carry the answer. Whether the bead tool
+   can query dependents cheaply is the design doc's to confirm.
+
+   The cost of this choice, stated plainly: **an epic can close with known-suspect
+   material in it.** That is accepted, because it is visible. An artifact that
+   quietly ground through eleven fix rounds inside a closed epic is worse than one
+   that closed at two with three findings filed against it in the open.
 
 7. **A ruling reaches the bead it governs.** When any agent resolves a question
    another agent's bead depends on, the resolution is recorded on the bead that
@@ -390,6 +412,32 @@ At the level of capability; the mechanism is the design doc's territory.
       Shipped guides keep their own job: the craft of writing a good test in a
       given language, which is genuinely generic.
 
+12. **The reviewer reads the epic's recorded verification decisions, and
+    discharges the ones addressed to it.** Every non-test outcome of R2 is
+    recorded against the epic. The reviewer reads that record as part of its pass,
+    and it does two things with it. It **performs each review obligation** — the
+    readings the confidence planner assigned, against the standards it named —
+    because the reviewer was always the agent those obligations were addressed to
+    and until now was never told they existed. And it **does not re-litigate a
+    settled decision**: an obligation the planner covered with a deterministic gate
+    or declined with recorded reasoning is not a missing-coverage finding, and
+    filing one is itself the over-verification R7 asks the reviewer to bound.
+    Where the reviewer believes a recorded decision is *wrong*, that is a finding
+    against the decision with its own reasoning — not a silent re-derivation of a
+    question already answered with more context than the reviewer has.
+
+    The reviewer records what it discharged. Because the review bead is a **child**
+    of the epic, that record lands exactly where the report writer already
+    looks — "every child bead's comments" — which is what makes R9's residual-risk
+    register assemblable at all.
+
+    One change closes three failures that share a root cause. The decisions become
+    **enforced**, because review obligations are finally performed by the agent
+    they name. They become **auditable**, because the outcome reaches the build
+    report. And they stop **generating rework**, because agents downstream of the
+    planner can see what was already settled instead of re-deriving it from less
+    context and manufacturing test demand the planner deliberately declined.
+
 ## Scope
 
 ### In
@@ -403,8 +451,10 @@ At the level of capability; the mechanism is the design doc's territory.
   prose-needing-execution design finding.
 - Regression-by-default on blocking code findings, and retirement of the
   review-finding summons.
-- Per-artifact fix-round bounding, and the artifact ruling that replaces a third
-  fix.
+- Per-artifact fix-round bounding, counted on the artifact's producing bead, with
+  findings past the bound filed outside the epic and the count carried into the
+  build report for a human to judge.
+- The reviewer reading and discharging the epic's recorded verification decisions.
 - Ruling write-back onto the re-dispatched bead.
 - Widening the build-time escape from "impossible test" to "disproportionate
   verification."
@@ -458,26 +508,44 @@ At the level of capability; the mechanism is the design doc's territory.
 
 3. **How is the loop bounded, and at what value?** *Resolved:* by counting **fix
    rounds per artifact**, traced through discovered-from to the originating work
-   bead, with the ruling replacing a third round. An earlier draft counted depth
+   bead, with findings past the bound filed outside the epic. An earlier draft
+   counted depth
    along a causal chain of related findings; that was rejected because successive
    findings against one artifact are frequently *unrelated to each other* — a
    verify pass re-reading a long runbook keeps surfacing fresh, independent
    problems — so a chain-depth counter reads zero while the artifact grinds on.
    It was also rejected for requiring an attribution judgment ("does this finding
    descend from that fix?") that would predictably drift toward the permissive
-   answer. The remaining open point: whether the bound of two is uniform, or
-   tighter for prose, whose surface grows with every fix. Note R4 already damps
-   the prose case by denying it test beads, which may make a uniform bound
-   sufficient.
+   answer.
 
-4. **Who rules when an artifact reaches the bound?** R6 requires an explicit
-   ruling on the artifact rather than another fix. The product manager holds
-   product intent and already adjudicates broken-prior-guarantee collisions under
-   0002 R13, which makes it the natural holder — but "is this artifact wrong?"
-   may be an architectural judgment instead. Unresolved.
+   Two later points also resolved, and R6 now carries both. **The bound is two,
+   uniform across artifact classes** — a prose-specific bound is a threshold to
+   tune before there is evidence to tune it with, and R4 already damps the prose
+   case. **The count is taken on the bead that produced the artifact, never on the
+   bead raising the finding.** Since an epic has exactly one review bead and it is
+   re-dispatched for every pass, a count taken there is cumulative over the epic's
+   life: after two blocking findings the reviewer would file everything else
+   outside the epic, including a P0. That bounds how much reviewing an epic may
+   produce, not the churn the bound exists to catch.
+
+4. **Who rules when an artifact reaches the bound?** *Dissolved by the resolution
+   of Question 3.* R6 no longer produces a ruling, so there is no ruler to choose.
+   At the bound the finding is simply filed outside the epic and the count reaches
+   the build report, where a human reads it and decides. The question presupposed
+   an adjudication round that the cheaper design removed — worth recording rather
+   than deleting, because "who decides this?" is the reflex that added the round in
+   the first place, and the better answer was to need no decision at all while the
+   epic runs.
 
 5. **How do the non-test outcomes of R2 get discharged, and where are they
-   recorded so the record survives?** R2 widened what the confidence planner may
+   recorded so the record survives?** *Resolved: R12.* The reviewer reads the
+   epic's recorded decisions, performs the review obligations addressed to it,
+   declines to re-litigate the ones already settled, and records what it
+   discharged on the review bead — a child bead, and therefore inside the sweep
+   the report writer already makes. The problem and the rejected alternatives are
+   kept below, because the reasoning is what makes R12 legible.
+
+   R2 widened what the confidence planner may
    *say* without widening what the system *does* about it, and the gap is
    load-bearing rather than cosmetic. Of the four outcomes, only the automated
    test has an executor: it mints a bead, the bead is dispatched, and it closes.
@@ -505,19 +573,36 @@ At the level of capability; the mechanism is the design doc's territory.
      assemble a register from, so R9 cannot be satisfied on top of this recording
      scheme. This is a constraint on the design, not a preference.
 
-   The options are real and they trade off differently: mint a bead for a gate the
-   way a test gets one, which buys enforcement at the cost of a dispatch for
-   something no agent needs to *decide*; have the review bead read the epic's
-   recorded obligations and discharge them, which adds no dispatch because the
-   reviewer is already running but widens the reviewer's job; move the record onto
-   an artifact the report writer already reads, which fixes auditability without
-   touching enforcement; or accept the outcomes as recorded-but-unenforced and
-   change the comment's wording so no reader mistakes a plan for coverage.
+   **There is a third consequence, and it is what settled the choice.** The gap
+   does not merely lose information — it *generates work*. An agent downstream of
+   the planner cannot see that a question was already answered, so it answers it
+   again from less context. The reviewer's Testing category hunts missing
+   coverage; a behavior the planner covered with a gate or declined with recorded
+   cost reasoning looks, to the reviewer, exactly like an oversight. It files for
+   the test the planner deliberately did not plan. That is the over-verification
+   this entire document exists to prevent, re-entering through the one door nobody
+   was watching. Two protections shipped in the first tier limit the blast radius —
+   missing coverage on prose or a declarative artifact is already not a finding,
+   and missing tests are P2, so they are filed outside the epic and start no
+   loop — but neither covers a *code* obligation with a recorded gate or
+   no-verification decision.
 
-   This subsumes the narrower question this entry previously asked — whether a
+   Four options were weighed. **Mint a bead for the gate** the way a test gets
+   one: buys enforcement, but spends a dispatch on something no agent needs to
+   *decide*, and leaves the rework leak open. **Move the record onto an artifact
+   the report writer already reads**: fixes auditability alone, and leaves both
+   enforcement and rework untouched. **Accept the outcomes as
+   recorded-but-unenforced** and reword the comment so no reader mistakes a plan
+   for coverage: honest, cheapest, and fixes nothing. **Have the reviewer read and
+   discharge the record**: adds no dispatch, because the reviewer is already
+   running and already reads the epic's scope; assigns the review obligations to
+   the agent they were always addressed to; and is the only option that closes all
+   three failures at once. It widens the reviewer's job, which is its real cost.
+
+   This also subsumes the narrower question this entry previously asked — whether a
    review obligation that finds nothing should leave a record distinguishable from
-   the reviewer's ordinary pass. It is the same problem seen from the reporting
-   end, and answering the general question answers it.
+   the reviewer's ordinary pass. Under R12 it does: the reviewer records what it
+   discharged, which is what a register is assembled from.
 
    **Whose defect this is:** mine, in R2. Naming that matters, because it is the
    same failure this PRD was written to correct — the prior PRD made economy a
