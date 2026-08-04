@@ -41,6 +41,12 @@ What happens on invalid input, failure, timeout, or limit.
 
 What the system is explicitly not required to do.
 
+## Relocated Requirements
+
+Requirements that left this spec and where each one went. Unlike a non-goal,
+which is not being done at all, a relocated requirement must still happen — just
+not here.
+
 ## Acceptance Criteria
 
 How each requirement is confirmed satisfied.
