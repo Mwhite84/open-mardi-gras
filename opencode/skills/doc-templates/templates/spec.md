@@ -43,9 +43,9 @@ What the system is explicitly not required to do.
 
 ## Relocated Requirements
 
-Requirements that left this spec and where each one went. Unlike a non-goal,
-which is not being done at all, a relocated requirement must still happen — just
-not here.
+Requirements that left this spec: what moved, where it went, and what this
+repository still supplies for it. Unlike a non-goal, which is not being done at
+all, a relocated requirement must still happen — just not here.
 
 ## Acceptance Criteria
 
@@ -53,4 +53,5 @@ How each requirement is confirmed satisfied.
 
 ## Open Questions
 
-Unresolved points and dependencies.
+Unresolved points and dependencies. A question that gets answered stays here,
+marked resolved and carrying its answer — it does not become a requirement.

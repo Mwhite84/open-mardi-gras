@@ -54,14 +54,25 @@ its sections:
    not a deployment of the code, while inducing a failure in a deployed service
    is out.
 
-   Resolve every requirement that fails the test with me. Either it moves to a
-   named destination — another spec, a backlog item, a placeholder document —
-   recorded in the spec's Relocated Requirements section, or I confirm it leaves.
-   Never strip a requirement silently. If it has no destination, stop and surface
-   it to me: a requirement with no home is a hole in the system decomposition,
-   not something to invent a place for — and not an open question, since an open
-   question is unresolved where this is resolved and merely in the wrong
-   document.
+   Resolve every requirement that fails the test with me. Either we agree it
+   leaves outright, or it moves to a named destination — a backlog item, or a
+   document — recorded in the spec's Relocated Requirements section. Never strip
+   a requirement silently.
+
+   When the destination is a document, you do not author it. You write for the
+   coding agent; an operational handoff has a different reader, and one agent
+   holding both audiences is how documents blur. So once we have agreed the
+   destination: reference it if it already exists; if it does not exist and
+   `doc-templates` has a template for its type, dispatch the agent that owns that
+   type to author it — a spec is the omg-product-manager's, a design doc or ADR
+   the omg-architect's; if `doc-templates` has no template for its type, it has
+   no canonical form yet, so tell me oc-smith can author one and stop there. Do
+   not invent a form to get past this.
+
+   If a requirement has no destination at all, stop and surface it to me: a
+   requirement with no home is a hole in the system decomposition, not something
+   to invent a place for — and not an open question, since an open question is
+   unresolved where this is resolved and merely in the wrong document.
 7. **Open questions** — drive every unresolved item to resolution with me, or to
    explicit deferral with my agreement. A spec that still carries open questions
    is not ready for handoff.
