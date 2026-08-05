@@ -1,7 +1,7 @@
 # The OMG Workflow — Flowcharts
 
 A descriptive map of what the instruments in `opencode/` actually do, drawn from
-their current text as of `0fec5b5`.
+their current text.
 
 **This document is derived, not authoritative.** The instruments are the source of
 truth. If a diagram and an instrument disagree, the instrument is right and this
@@ -39,6 +39,8 @@ flowchart TD
         SPEC["/omg-spec<br/>omg-product-manager"]
         SREV["/omg-spec-review<br/>omg-architect"]
         SHARD["/omg-spec-harden<br/>omg-implementation-writer"]
+        SDEST["Author a relocation's destination<br/>omg-product-manager — handoff, spec<br/>omg-architect — design doc, ADR"]
+        SNOF{{"HUMAN GATE<br/>destination type has no template —<br/>oc-smith authors one"}}
     end
 
     PLAN["/omg-decompose spec-path<br/>omg-decomposer"]
@@ -54,6 +56,10 @@ flowchart TD
     SREV -->|"findings change product scope"| SPEC
     SREV -->|"buildable; ADRs written"| SHARD
     SHARD -->|"repeatable pass"| SHARD
+    SHARD -->|"a relocation needs a destination<br/>that does not exist yet"| SDEST
+    SDEST -->|"pass resumes"| SHARD
+    SHARD -->|"that destination's type<br/>has no template"| SNOF
+    SNOF -.->|"template authored; re-run"| SHARD
     SHARD --> PLAN
     PLAN --> G1
     G1 --> BUILD
@@ -63,8 +69,8 @@ flowchart TD
 
 Two things worth noticing here:
 
-- **The spec, not the epic, is the handoff.** `/omg-spec` explicitly creates no
-  bead. The epic is minted at decomposition, once the spec and its ADRs are settled.
+- **Decomposition is handed a spec, not an epic.** `/omg-spec` explicitly creates
+  no bead. The epic is minted at decomposition, once the spec and its ADRs are settled.
 - **Nothing reaches durable memory automatically.** The docs→Hindsight sync is a
   human-invoked command, and a document ships only if it carries a `hindsight`
   frontmatter block. Everything else stays Git-only.

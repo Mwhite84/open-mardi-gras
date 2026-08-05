@@ -279,7 +279,7 @@ figure.diagram {
 <p class="derived">A derived, read-only view of <code>omg_flowchart.md</code>, rendered with its diagrams inline. The Markdown file is the source of truth.</p>
 </header>
 <p>A descriptive map of what the instruments in <code>opencode/</code> actually do, drawn from
-their current text as of <code>0fec5b5</code>.</p>
+their current text.</p>
 <p><strong>This document is derived, not authoritative.</strong> The instruments are the source of
 truth. If a diagram and an instrument disagree, the instrument is right and this
 file is stale. It is a reading aid and a review surface — not a spec, and nothing
@@ -325,6 +325,8 @@ backwards is the single most common wiring error in these instruments.</p>
         SPEC["/omg-spec&lt;br/&gt;omg-product-manager"]
         SREV["/omg-spec-review&lt;br/&gt;omg-architect"]
         SHARD["/omg-spec-harden&lt;br/&gt;omg-implementation-writer"]
+        SDEST["Author a relocation's destination&lt;br/&gt;omg-product-manager — handoff, spec&lt;br/&gt;omg-architect — design doc, ADR"]
+        SNOF{{"HUMAN GATE&lt;br/&gt;destination type has no template —&lt;br/&gt;oc-smith authors one"}}
     end
 
     PLAN["/omg-decompose spec-path&lt;br/&gt;omg-decomposer"]
@@ -340,6 +342,10 @@ backwards is the single most common wiring error in these instruments.</p>
     SREV --&gt;|"findings change product scope"| SPEC
     SREV --&gt;|"buildable; ADRs written"| SHARD
     SHARD --&gt;|"repeatable pass"| SHARD
+    SHARD --&gt;|"a relocation needs a destination&lt;br/&gt;that does not exist yet"| SDEST
+    SDEST --&gt;|"pass resumes"| SHARD
+    SHARD --&gt;|"that destination's type&lt;br/&gt;has no template"| SNOF
+    SNOF -.-&gt;|"template authored; re-run"| SHARD
     SHARD --&gt; PLAN
     PLAN --&gt; G1
     G1 --&gt; BUILD
@@ -347,8 +353,8 @@ backwards is the single most common wiring error in these instruments.</p>
     DONE --&gt; G2</pre><div class="mermaid-out" id="mermaid-out-0"></div></figure>
 <p>Two things worth noticing here:</p>
 <ul>
-<li><strong>The spec, not the epic, is the handoff.</strong> <code>/omg-spec</code> explicitly creates no
-bead. The epic is minted at decomposition, once the spec and its ADRs are settled.</li>
+<li><strong>Decomposition is handed a spec, not an epic.</strong> <code>/omg-spec</code> explicitly creates
+no bead. The epic is minted at decomposition, once the spec and its ADRs are settled.</li>
 <li><strong>Nothing reaches durable memory automatically.</strong> The docs→Hindsight sync is a
 human-invoked command, and a document ships only if it carries a <code>hindsight</code>
 frontmatter block. Everything else stays Git-only.</li>

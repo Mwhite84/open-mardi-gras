@@ -7,7 +7,7 @@ status: accepted
 domain: platform
 produced_for: spec.platform.verification-economy.0001
 created_at: 2026-08-04T06:20:28Z
-updated_at: 2026-08-04T06:20:28Z
+updated_at: 2026-08-05T03:33:25Z
 hindsight:
   strategy: spec-or-adr
   tags:
@@ -64,13 +64,16 @@ agent capability makes them its work.
 
 **1. Absorb it at plan time.** Give the confidence planner a fifth outcome
 alongside test, gate, review obligation, and no-verification: *"out of scope,
-recorded as a handoff."* The planner meets an unverifiable obligation, records it,
-mints no bead, and the build report carries it downstream.
+recorded and passed downstream."* The planner meets an unverifiable obligation,
+records it, mints no bead, and the build report carries it onward.
 
 Rejected. It accommodates a badly scoped input rather than rejecting it, and
 graceful accommodation is the mechanism by which every failure above happened —
 nothing complained, everything adapted. It also puts the workflow's boundary
-inside the workflow, where a spec author never sees it.
+inside the workflow, where a spec author never sees it. (The handoff document
+named in rule 2 below is not this option revived: it removes the requirement from
+the spec at authoring time, where this one keeps it inside the epic and records it
+at plan time.)
 
 **2. Instruct agents to ignore out-of-scope items, and have the build report
 document them as follow-ups.** Cheap, and it keeps the spec whole.
@@ -126,10 +129,11 @@ Three rules follow.
    outside that boundary do not belong in it.
 
 2. **Out-of-scope requirements are relocated, never deleted.** They move to a
-   named destination — another spec, a backlog item, a placeholder document. The
-   value is not a tidy spec; it is that relocation **forces the owner to be
-   named**. A requirement with no home is a hole in the system decomposition, and
-   that is worth surfacing rather than absorbing.
+   named destination — another system's spec, a **handoff** document, or a backlog
+   item. The value is not a tidy spec; it is that relocation **forces the owner to
+   be named**. A requirement with no home is a hole in the system decomposition,
+   and that is worth surfacing rather than absorbing — never a cue to invent a
+   stub to relocate into.
 
 3. **A misfit found downstream is a complaint, not an outcome.** If a planner
    meets an obligation it cannot verify within this bound, that is a **spec
@@ -166,10 +170,11 @@ elsewhere. Ownership of the code is not ownership of its operational proof.
   systems; requirements of this shape will keep arriving. Instrumenting the
   scoping judgment is the immediate follow-up to this decision, and until it
   exists the boundary depends on care.
-- **The downstream half is undesigned, deliberately.** What happens to relocated
-  requirements — who runs them, how they report — is out of scope for OMG today.
-  Designing that handoff now would mean designing against a stage nobody has run.
-  Build the first segment, gain experience, then extend.
+- **The downstream half is undesigned, deliberately.** OMG records a relocated
+  requirement and names the party that owns it; how that obligation is executed,
+  tracked, or reported back is out of scope for OMG today. Designing that stage
+  now would mean designing against something nobody has run. Build the first
+  segment, gain experience, then extend.
 
 **What this constrains.**
 
@@ -198,3 +203,11 @@ elsewhere. Ownership of the code is not ownership of its operational proof.
 - `architect-docs` spec reference — corrected so it stops manufacturing the
   material this decision excludes. Its example of a well-formed requirement was
   a latency figure under load, which is verifiable only against a running system.
+- `doc-templates` handoff template and `pm-docs` handoff reference — the canonical
+  form of a relocation destination, added after this decision's first live run left
+  seven relocated requirements pointing at a document type OMG had no form for. The
+  omg-product-manager authors it; the omg-implementation-writer dispatches rather
+  than writing it, because its bias toward exhaustive pinning for a coding agent
+  produces exactly the procedure the type forbids. A handoff records obligations
+  and their owners and never how to discharge them — that line is what lets OMG
+  name an owner without designing the operations it declined to own.

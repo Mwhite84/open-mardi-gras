@@ -49,6 +49,7 @@ the file named below, but mint the id with the type segment named below.
 | Design doc | `templates/design-doc.md` | `design` | `docs/design/` |
 | ADR | `templates/adr.md` | `adr` | `docs/adr/` |
 | Build report | `templates/build-report.md` | `build-report` | `docs/build-report/` |
+| Handoff | `templates/handoff.md` | `handoff` | `docs/handoff/` |
 
 Note the design doc: its template file is `design-doc.md`, but its id type
 segment is the **bare type `design`**, so it lands in `docs/design/` — never
@@ -167,6 +168,7 @@ inherits the central bank in a satellite), and the `document_id` is the top-leve
 | Design doc | draft, proposed | final | superseded, deprecated | final = the design of record |
 | ADR | draft, proposed | final | superseded, deprecated | final is the classic ADR "Accepted"; superseded pairs with the `superseded_by:` frontmatter id |
 | Build report | draft | final | superseded | a record: final at epic close; changed only by supersession |
+| Handoff | draft | final | superseded, deprecated | final = every obligation carries a named owner, i.e. Unowned Obligations is empty |
 
 Three rules govern the field:
 

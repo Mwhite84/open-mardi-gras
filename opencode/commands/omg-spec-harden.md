@@ -60,14 +60,15 @@ its sections:
    a requirement silently.
 
    When the destination is a document, you do not author it. You write for the
-   coding agent; an operational handoff has a different reader, and one agent
+   coding agent; a relocation's destination has a different reader, and one agent
    holding both audiences is how documents blur. So once we have agreed the
    destination: reference it if it already exists; if it does not exist and
    `doc-templates` has a template for its type, dispatch the agent that owns that
-   type to author it — a spec is the omg-product-manager's, a design doc or ADR
-   the omg-architect's; if `doc-templates` has no template for its type, it has
-   no canonical form yet, so tell me oc-smith can author one and stop there. Do
-   not invent a form to get past this.
+   type to author it, handing it the relocations we agreed so it does not
+   re-derive them from the spec — a spec or handoff is the omg-product-manager's,
+   a design doc or ADR the omg-architect's; if `doc-templates` has no template for
+   its type, it has no canonical form yet, so tell me oc-smith can author one and
+   stop there. Do not invent a form to get past this.
 
    If a requirement has no destination at all, stop and surface it to me: a
    requirement with no home is a hole in the system decomposition, not something
