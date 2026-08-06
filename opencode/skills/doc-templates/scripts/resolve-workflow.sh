@@ -20,11 +20,6 @@
 #   hindsight.bank  -> the Hindsight bank id (inherited from central for satellite)
 #   hindsight.guidance -> ABSOLUTE path to hindsight.md (central for satellite)
 #   central_repo    -> ABSOLUTE path to the central repo (satellite only)
-#   test            -> true | false — whether this repo plans verification.
-#                      false ONLY when this repo's own file sets 'test: false';
-#                      absent or any other value means true. LOCAL-ONLY: never
-#                      inherited from central, because testability is a property
-#                      of the code repo.
 #
 # All paths are emitted ABSOLUTE so callers never re-resolve relative-to-what.
 # The script fails loud (non-zero, message on stderr) rather than emitting a
@@ -124,16 +119,6 @@ case "$key" in
   central_repo)
     [ "$MODE" = "satellite" ] || die "central_repo is only defined for satellite mode (this repo is $MODE)"
     printf '%s\n' "$CENTRAL_DIR" ;;
-  test)
-    # Read from $WORKFLOW, not $AUTHORITY_WORKFLOW: the opt-out is local-only,
-    # so a central docs repo cannot switch verification off for its satellites.
-    # Raw yq, not yq_get: its '// ""' default treats boolean false as falsy and
-    # would swallow exactly the value this key exists to carry.
-    if [ "$(yq -r '.test' "$WORKFLOW" 2>/dev/null || true)" = "false" ]; then
-      printf 'false\n'
-    else
-      printf 'true\n'
-    fi ;;
   hindsight.url)   emit_hindsight url ;;
   hindsight.bank)  emit_hindsight bank ;;
   hindsight.guidance)

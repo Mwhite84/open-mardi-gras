@@ -10,8 +10,9 @@ that is a different lens, in `pm-docs`.)
 ## What the architect checks
 
 - **Every requirement is verifiable.** Each states an observable behavior or
-  property someone could test. "The system should be fast" is not a requirement;
-  "responses return within 200ms at p99 under 1k rps" is.
+  property someone could test. "Retries should be sensible" is not a requirement;
+  "a retryable failure is retried at most three times with exponential backoff,
+  and a non-retryable failure is never retried" is.
 - **Inputs and outputs are defined.** For every behavior, what goes in, what comes
   out, and the shape of each. Undefined data shapes are gaps.
 - **Preconditions are stated.** The conditions under which the behavior holds and
@@ -28,6 +29,12 @@ that is a different lens, in `pm-docs`.)
   measurable criterion. Flag each and ask for the testable form.
 - **Ambiguous quantifiers.** "Fast," "soon," "large," "most" — replace with
   numbers or defined thresholds.
+- **Sharpening that needs the system running.** Both fixes above fork: "scalable"
+  becomes either "handles 10k rps," which belongs to whoever operates the system,
+  or "the handler holds no in-process session state, so any replica can serve any
+  request," which two instances and a fake can test. Prefer the reading that
+  captures what was meant — usually the second. Sharpened the wrong way, the
+  requirement is relocated out of the spec and the real one goes with it.
 - **Happy-path-only.** No error cases, no limits, no failure behavior.
 - **Implementation leaking in.** A spec says *what*, not *how*. Prescribing the
   internal design over-constrains the builder; flag it unless the mechanism is

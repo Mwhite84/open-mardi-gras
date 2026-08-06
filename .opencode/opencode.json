@@ -4,21 +4,25 @@
   "permission": {
     "external_directory": {
       "~/code/clones/opencode/**": "allow",
-      "/Users/brandondennis/code/clones/opencode/**": "allow"
+      "/Users/brandondennis/code/clones/opencode/**": "allow",
+      "~/code/personal/open-mardi-gras/master/**": "allow"
     }
   },
   "agent": {
-    "build":                         {"model": "openai/gpt-5.6-terra-fast"},
-    "plan":                          {"model": "openai/gpt-5.6-sol-fast"},
-    "oc-smith":                      {"model": "openai/gpt-5.6-sol-fast"},
-    "omg-builder":                   {"model": "openai/gpt-5.6-terra-fast"},
-    "omg-decomposer":                {"model": "openai/gpt-5.6-sol-fast"},
-    "omg-foreman":                   {"model": "openai/gpt-5.6-terra-fast"},
-    "omg-implementation-writer":     {"model": "openai/gpt-5.6-sol-fast"},
-    "omg-product-manager":           {"model": "openai/gpt-5.6-sol-fast"},
-    "omg-reviewer":                  {"model": "openai/gpt-5.6-sol-fast"},
-    "omg-technical-program-manager": {"model": "openai/gpt-5.6-sol-fast"},
-    "omg-test-planner":              {"model": "openai/gpt-5.6-sol-fast"}
+    "build":                         {"model": "{env:OPENCODE_BUILD_MODEL}"},
+    "plan":                          {"model": "{env:OPENCODE_PLAN_MODEL}"},
+    "oc-smith":                      {"model": "{env:OPENCODE_OC_SMITH_MODEL}"},
+    "omg-architect":                 {"model": "{env:OPENCODE_OMG_ARCHITECT_MODEL}"},
+    "omg-builder":                   {"model": "{env:OPENCODE_OMG_BUILDER_MODEL}"},
+    "omg-build-planner":             {"model": "{env:OPENCODE_OMG_BUILD_PLANNER_MODEL}"},
+    "omg-decomposer":                {"model": "{env:OPENCODE_OMG_DECOMPOSER_MODEL}"},
+    "omg-foreman":                   {"model": "{env:OPENCODE_OMG_FOREMAN_MODEL}"},
+    "omg-implementation-writer":     {"model": "{env:OPENCODE_OMG_IMPLEMENTATION_WRITER_MODEL}"},
+    "omg-product-manager":           {"model": "{env:OPENCODE_OMG_PRODUCT_MANAGER_MODEL}"},
+    "omg-reviewer":                  {"model": "{env:OPENCODE_OMG_REVIEWER_MODEL}"},
+    "omg-technical-program-manager": {"model": "{env:OPENCODE_OMG_TECHNICAL_PROGRAM_MANAGER_MODEL}"},
+    "omg-test-planner":              {"model": "{env:OPENCODE_OMG_TEST_PLANNER_MODEL}"}
+
   }
 }
 

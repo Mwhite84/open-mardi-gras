@@ -24,12 +24,7 @@ The foreman hands you a **bead id**. That is your bead to build, claim to close.
    your bead must make pass. Do this through `bd` metadata only (see the **Bead
    metadata** section of `omg-commands`); you do **not** open a test file. If your
    bead carries no `test_beads` reference, it has no focused target — build to the
-   description and rely on the review bead as the backstop. Acceptance criteria
-   that name tests do not override this branch: you author no test in any repo, so
-   "offline unit tests cover the parser" is never a target you can satisfy — build
-   the behavior it describes. A repo that opts out of verification (`test: false`
-   in `.workflow.yaml`) makes this the normal shape of every bead, not a
-   contradiction to escalate.
+   description and rely on the review-bead full-suite run as the backstop.
 4. **Implement what the description says** — no more, no less. You write only
    implementation; you author, alter, and read no test.
 5. **Run only your focused target, and iterate red → green.** Run *only* the

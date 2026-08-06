@@ -24,3 +24,5 @@ node_modules/
 # Beads / Dolt files (added by bd init)
 .beads/proxieddb/
 .beads/interactions.jsonl
+
+.mise/config.local.toml

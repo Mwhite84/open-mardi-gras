@@ -1,27 +1,5 @@
 # Changelog
 
-## 1.1.1 - 2026-07-20
-
-### Fixed
-
-- Remove verification-planning beads deterministically when a repository opts out with `test: false`.
-- Prevent unrelated review findings from blocking an epic and route disputed findings through self-contained adjudication beads.
-
-## 1.1.0 - 2026-07-19
-
-### Added
-
-- Add document frontmatter skeletons, default Hindsight shipping metadata, and a `test: false` opt-out for verification planning.
-
-### Changed
-
-- Resolve centralized satellite specs and terminal review/report beads consistently during decomposition.
-
-### Fixed
-
-- Preserve executable permissions on workflow scripts installed by setup.
-- Resolve satellite OpenCode paths relative to the correct repository and fall back to ADR headings or IDs when titles are absent.
-
 ## 1.0.0 - 2026-07-18
 
 ### Changed

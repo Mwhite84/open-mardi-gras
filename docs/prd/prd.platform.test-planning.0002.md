@@ -242,7 +242,7 @@ instruments — not a dashboard.
   mechanics.
 - **Stuck tests surface, never hide.** *Signal:* every un-passable test produces a
   filed, routed bead; none is resolved by an implementer altering a test or
-  closing work silently. A cross-epic (Mode 2) resolution is recorded in the build
+  closing work silently. A cross-epic broken-promise resolution is recorded in the build
   report the report-writer bead authors, and reaches Hindsight only when the
   deliberate docs→Hindsight sync command is later invoked — never automatically.
 - **The foreman has no closing ceremony.** *Signal:* the foreman skill carries no
@@ -361,10 +361,10 @@ or code.** Writing happens at build time, by the writing agents.
    whole suite, which would cost full-suite time and tokens once per bead. The
    **full test suite runs at the review bead** (each time the review fires, per
    R15 — the point is that it runs *there*, not per implementation bead), and is the
-   systematic catch for two things: any prior-epic test this epic broke (Mode 2,
+   systematic catch for two things: any prior-epic test this epic broke (a broken promise,
    R13), and any hole left by a broken R7 metadata chain (a planned test that never
    got wired to a focused run). When the review-bead suite goes red, the reviewer
-   files a bead in real time — a Mode-2 finding to the PM, or a fix finding for a
+   files a bead in real time — a broken-promise finding to the PM, or a fix finding for a
    missed test — consistent with its existing "file findings, don't fix" discipline. The run command itself is
    **not** onboarding-configured: the agent infers the runner from the repo's
    tooling (and may consult the web), so no brittle per-repo run-command config is
@@ -381,7 +381,7 @@ or code.** Writing happens at build time, by the writing agents.
 10. **The review bead has exactly one author.** The decomposer creates and fully
     authors the review bead — including the findings-loop instructions — **once,
     after both planning passes**, from a static canonical block owned by the
-    `omg-epics` skill. No other agent rewrites it. The findings-loop instruction
+    `omg-decompose` skill. No other agent rewrites it. The findings-loop instruction
     content is static skill text the decomposer composes; no second author, no
     sentinel, no convergence-detection.
 
@@ -407,23 +407,23 @@ or code.** Writing happens at build time, by the writing agents.
     impossible to satisfy, not merely unmet. When it does escalate, it never
     modifies the test, never forces it green, and never closes the work silently;
     it files a bead and the blocked work waits on resolution:
-    - **Mode 1 — a test planned for this epic is wrong or impossible to satisfy.**
+    - **A wrong planned test — a test planned for this epic is wrong or impossible to satisfy.**
       The bead is routed to the **test-planner** (the confidence authority), which
       upholds the test (kick back to the implementer with reasoning) or re-plans it
       (mint a corrected test bead for the test-writer). The implementer never edits
       the test.
-    - **Mode 2 — a pre-existing test from a prior epic breaks** because this change
+    - **A broken promise — a pre-existing test from a prior epic breaks** because this change
       altered behavior it pinned. Recognition keys on **test-run output and this
       epic's test-bead metadata**, never on reading the test source (so it survives
       the R6 read-deny): a failure outside this epic's planned test beads is a
-      Mode-2 signal. Systematically, Mode 2 is caught by the review-bead full-suite
+      broken-promise signal. Systematically, a broken promise is caught by the review-bead full-suite
       run (R8); an implementer may also surface it opportunistically. The bead is
       routed to the **PM agent**, which has the product-intent authority and the
       full Hindsight memory of why prior guarantees exist. The PM resolves it: the
       old behavior was intended (the change is wrong — kick back), the change is
       intended (the old test is stale — mint a test-update bead for the
       test-writer), or it is a genuine product decision (pause for a human — see
-      R15). **The PM's Mode-2 decision is captured as bead comments that the
+      R15). **The PM's broken-promise decision is captured as bead comments that the
       report-writer bead (R16) folds into the build report, and surfaces to the
       human** (who is informed, not gated). It enters Hindsight only when the
       deliberate docs→Hindsight sync command is later invoked (Goal 8, R16) — never
@@ -440,19 +440,19 @@ or code.** Writing happens at build time, by the writing agents.
     and its change-locality judgment sets the finding's **`agent` label**: a failure
     that should be fixed **in this epic** is labeled for the **builder**; a failure
     caused by this epic reddening a **prior** guarantee is labeled for the **PM**
-    (Mode 2). Either way the finding blocks the review bead and the foreman
+    (a broken promise). Either way the finding blocks the review bead and the foreman
     dispatches it by label; when it closes, the review re-fires from a fresh context.
     **The label does more than route — it selects the resolution wiring, which
     differs by handler** (the two are not interchangeable):
     - A **builder-bound** finding follows the standard fix path, including the R13
       guarantee that its fix's verification is planned before the fix is built.
-    - A **PM-bound** (Mode 2) finding is adjudicated by the PM (R13 Mode 2). Its
+    - A **PM-bound** finding is adjudicated by the PM (R13, the broken-promise case). Its
       resolutions have their own wiring, distinct from the builder path — a
       kick-back that mints a fix bead, a test-update, or a human pause — because the
       review-time finding blocks the review bead with **no open implementation bead
       to attach to** (the epic's work has all closed). **A fix the PM mints is still
       a fix: its verification is planned before it is built, on the same footing as
-      any other fix (R13 Mode 1 / R11)** — a PM-minted fix must not be the one path
+      any other fix (R13's wrong-planned-test case / R11)** — a PM-minted fix must not be the one path
       that escapes verification planning, since findings-driven work escaping
       verification is the exact gap this whole effort closes.
     When the PM cannot decide, it does **not** close the finding — it places a
@@ -501,7 +501,7 @@ or code.** Writing happens at build time, by the writing agents.
     planners **in their plan-time pass** (build-planner, test-planner), which *mint*
     beads rather than claim and close one. (Note the test-planner is only exempt in
     that plan-time pass: when it later works a foreman-dispatched summons bead at
-    build time — e.g. a Mode-1 `w₁` — it *is* a build-phase worker on its own bead
+    build time — e.g. a wrong-planned-test escalation — it *is* a build-phase worker on its own bead
     and the contract applies, which is exactly its mandatory-close discipline.)
 
 18. **A partially-built epic is recoverable by re-running the same command; a human
@@ -557,16 +557,16 @@ or code.** Writing happens at build time, by the writing agents.
   onto the implementation bead; test-writer writes the run-selector onto the test
   bead; implementer resolves it via metadata, never test source).
 - Focused per-bead done-checks plus a **single full-suite run at the review bead**
-  as the systematic catch for Mode 2 and for any broken metadata chain.
+  as the systematic catch for a broken promise and for any broken metadata chain.
 - **Retiring the `/omg-test-plan` command** (the operator-invoked surface that
   carried v1's optionality).
 - Sole authorship of the review bead by the decomposer, written once after both
-  passes, from a static `omg-epics` canonical block.
+  passes, from a static `omg-decompose` canonical block.
 - Making verification planning a standard, non-optional plan-phase step.
 - Structural independence via test-first ordering plus fresh-context test-writing
   dispatch in all build modes (extending looping mechanics only; routing invariant
   untouched).
-- The failing-test escape hatch, Modes 1 and 2, including the Mode-2 → PM →
+- The failing-test escape hatch, both branches, including the broken-promise → PM →
   build-report → Hindsight loop.
 - A red review-suite blocking the epic via the ordinary finding-and-reopen
   mechanism (change-locality sets the label; human gate for undecided PM cases).
@@ -623,7 +623,7 @@ or code.** Writing happens at build time, by the writing agents.
   and its onboarding configuration (framework-specific). Designed-for now (R6),
   built later.
 - **Systematic cross-epic verification confidence** — proactively re-checking
-  shipped epics' tests under later change. R13 Mode 2 (and the review-bead
+  shipped epics' tests under later change. R13's broken-promise path (and the review-bead
   full-suite run) handles the reactive case and seeds the memory trail; the
   systematic version is likely its own future PRD.
 - **A deliberate "skip verification" opt-out mode** for throwaway/spike work.
@@ -656,7 +656,7 @@ details the design left open.
    the implementer produces a test — which is why R5 requires removing the builder's
    existing test-writing charter outright.
 
-4. **Mode 2 recognition and re-entry.** *Resolved in principle* (see R7/R8/R13): the
+4. **Broken-promise recognition and re-entry.** *Resolved in principle* (see R7/R8/R13): the
    implementer classifies by this epic's test-bead metadata and run output, never by
    reading test source; the PM's decision re-enters as a kick-back, a test-update
    bead, or a human pause (R15), and is captured as bead comments the report-writer
@@ -675,9 +675,9 @@ details the design left open.
 6. **Terminal-work bead shape.** *Resolved by the design pass:* the build-report
    bead is labeled `agent=omg-reviewer` (the review agent is already the build-record
    synthesizer per `adr.platform.memory-lifecycle.0001` §5, so this adds no new
-   agent), minted by the decomposer at plan time from a static `omg-epics` block,
-   and is **blocked behind** the review bead (the report bead depends on `R`, so it
-   comes ready only after `R` is green and all findings have drained) — making the
+   agent), minted by the decomposer at plan time from a static `omg-decompose` block,
+   and is **blocked behind** the review bead (the report bead depends on the review bead, so it
+   comes ready only after the review bead is green and all findings have drained) — making the
    work-before-report ordering a dependency edge. The foreman's "Closing / build
    report / Shipping"
    sections are removed; it dispatches the terminal bead like any other. The
@@ -708,8 +708,8 @@ details the design left open.
   framing and decisions; preserved as the record of what was tried and dogfed.
 - `design.platform.test-planning.0001` / `spec.platform.test-planning.0001` — the
   v1 design and build contract; to be superseded by `.0002` counterparts.
-- `omg-decomposer` agent + `omg-epics` skill — the decomposer split into
-  orchestrator + build-planner; `omg-epics` gains the plan-phase sequence and the
+- `omg-decomposer` agent + `omg-decompose` skill — the decomposer split into
+  orchestrator + build-planner; `omg-decompose` gains the plan-phase sequence and the
   static review-bead canonical block.
 - `omg-tester` agent + `test-writing` skill — the test-writer, sole owner of the
   `test-writing` skill and sole test author.
@@ -728,6 +728,6 @@ details the design left open.
 - The docs→Hindsight **sync command** (new home for shipping; its full behavior,
   including superseded-doc handling, is deferred) — reconcile against
   `adr.platform.memory-lifecycle.0001`.
-- `omg-product-manager` agent — Mode-2 adjudicator, using Hindsight memory; its
+- `omg-product-manager` agent — broken-promise adjudicator, using Hindsight memory; its
   decision is captured as bead comments the report-writer bead folds into the build
   report (and reaches Hindsight only via the deliberate sync command).

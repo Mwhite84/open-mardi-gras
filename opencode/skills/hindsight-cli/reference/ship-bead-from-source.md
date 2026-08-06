@@ -31,9 +31,9 @@ The shipper's pending queue is beads in the `hindsight=pending` state:
 bd -C "$MONOREPO" list --label hindsight:pending --json | jq -r '.[].id'
 ```
 
-Ship each, then advance its state to `shipped` (the freeze point). The retract
-queue (`hindsight:tombstoned`) is a separate flow — supersession, covered in
-`omg-commands`.
+Ship one bead per request — never batch this queue — then advance its state to
+`shipped` (the freeze point). The retract queue (`hindsight:tombstoned`) is a
+separate flow — supersession, covered in `omg-commands`.
 
 > `bd` runs against the repo holding the `.beads` database — the satellite (or
 > solo) repo, **not** the centralized docs repo, which has no beads. Use
@@ -91,8 +91,8 @@ jq -e '(.spec_id == null) or (.metadata.id == null) or (.spec_id == .metadata.id
 
 ### 3. Assemble and POST
 
-Identical to the tree-doc reference — `jq --rawfile` embeds the body, `strategy`
-is included only when set:
+Identical to the tree-doc reference's single-document assembly — `jq --rawfile`
+embeds the body, `strategy` is included only when set:
 
 ```bash
 jq -n \

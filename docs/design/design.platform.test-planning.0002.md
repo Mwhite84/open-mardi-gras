@@ -3,7 +3,7 @@ schema_version: 1
 id: design.platform.test-planning.0002
 type: design
 title: "Verification Ownership Across the OMG Plan/Build Phases — Design"
-status: draft
+status: deprecated
 domain: platform
 supersedes: design.platform.test-planning.0001
 created_at: 2026-07-01T01:43:40Z

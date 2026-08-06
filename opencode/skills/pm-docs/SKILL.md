@@ -1,16 +1,17 @@
 ---
 name: pm-docs
-description: Runbook for producing, reviewing, and refining product documents — PRDs, specs, roadmaps, and user stories. Defines a doc from a problem, reviews an existing one with structured findings, or refines one on confirmation. Use when asked to define, write, review, critique, or improve any product requirements or planning document.
+description: Runbook for producing, reviewing, and refining product documents — PRDs, specs, roadmaps, user stories, and handoffs. Defines a doc from a problem, reviews an existing one with structured findings, or refines one on confirmation. Use when asked to define, write, review, critique, or improve any product requirements, planning, or handoff document.
 ---
 
 # PM Docs
 
 This is the product manager's runbook for the documents it owns — PRDs, specs,
-roadmaps, and user stories — across their whole life: writing one from a problem,
-reviewing one that exists, and refining one on request. It is intended for the
-**omg-product-manager** agent. If you are not the omg-product-manager, do not
-run this yourself — delegate the work to the `omg-product-manager` as a subagent
-via the Task tool, and pass along the problem or document and the user's intent.
+roadmaps, user stories, and handoffs — across their whole life: writing one from
+a problem, reviewing one that exists, and refining one on request. It is intended
+for the **omg-product-manager** agent. If you are not the omg-product-manager, do
+not run this yourself — delegate the work to the `omg-product-manager` as a
+subagent via the Task tool, and pass along the problem or document and the user's
+intent.
 
 ## Form and judgment
 
@@ -27,6 +28,7 @@ Two things govern every document, and they live in two places:
   - Spec → `reference/spec.md`
   - Roadmap → `reference/roadmap.md`
   - User story → `reference/user-story.md`
+  - Handoff → `reference/handoff.md`
 
 Identify the document type first, then load both the template (for form) and the
 reference (for the PM's judgment). If the type has no template, tell the user

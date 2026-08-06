@@ -120,6 +120,18 @@ reopened-unblocked:
   dispatch is a single turn; you finish or you file-and-block — you never hand a
   half-written bead back expecting a nudge.
 
+**When the blocker is the verification itself, the bead you file goes to the
+confidence planner.** This is the case when writing the planned verification
+shows it costs more — to build, to run, to maintain — than the failures it would
+prevent, including when making the artifact testable would mean building test
+tooling that does not exist, which you never do. File a bead labeled
+`agent=omg-test-planner` (`--parent <epic> --no-inherit-labels`,
+`discovered-from:<your-bead>`) stating what the verification costs and what it
+protects, wire it to block your own test bead, reset yours to the queue, and
+stop — the reopened-and-blocked path above, applied to this trigger. The planner
+upholds the verification, re-plans it (possibly as a deterministic gate or a
+review obligation rather than a test), or retires it.
+
 ### 4. Recovery: a bead carrying a reclamation comment
 
 If you are dispatched onto a bead carrying a **reclamation comment** (a prior worker
@@ -131,6 +143,21 @@ terminal state per steps 1–3.
 
 ## When No Guide Exists
 
+Two different gaps arrive under this name, and they do not resolve the same way.
+Establish which one you are in before you write a line.
+
+**The stack has conventional test tooling, but no guide here covers it.** Proceed:
+
 1. Inform the user that no guide exists for this ecosystem.
 2. Rely on the universal testing principles you already hold.
 3. Follow local conventions visible in the existing test suite.
+
+**The stack has no conventional test tooling at all.** Stop. You do not invent a
+methodology, a harness, an executor, or an assertion framework to fill the gap,
+and you do not reach for a tool from another ecosystem to stand in for one —
+an improvised harness costs more than everything it was built to catch. The
+verification must be met by a different mechanism: a deterministic gate the
+ecosystem already provides, or a re-planning by the confidence planner. Take the
+route in *Leave the bead terminal* above — file the bead labeled
+`agent=omg-test-planner`, block your own on it, reset yours to the queue, and
+report what you found.
