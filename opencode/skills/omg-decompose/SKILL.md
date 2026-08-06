@@ -5,23 +5,13 @@ description: The decomposer's runbook for driving an OMG epic's plan phase — d
 
 # Decompose
 
-You have been handed an **epic id** and a **mode** — a fresh mint or a refinement pass (a re-run over an epic you already decomposed). Drive the plan phase over that epic in the fixed order below. The epic carries the spec it was minted from and its ADR beads already exist — work entirely off the epic. Verification planning is standard; the one way out of it is explicit — the mint report carries a **Verification: opted out** line when the repo sets `test: false` in its `.workflow.yaml`, and steps 1 and 3 branch on that line.
+You have been handed an **epic id** and a **mode** — a fresh mint or a refinement pass (a re-run over an epic you already decomposed). Drive the plan phase over that epic in the fixed order below. The epic carries the spec it was minted from and its ADR beads already exist — work entirely off the epic. Verification planning is standard and non-optional.
 
 Pass the mode through to the planners, whose fresh and refinement procedures differ. Your own terminal-bead procedure does not branch on it: reconcile the graph from what actually exists so an interrupted prior run can resume safely.
 
 ## 1. Dispatch the confidence planner
 
 Hand the epic id and your mode to `omg-test-planner` as a subagent, and wait for it to return. It owns the test beads.
-
-**When the mint report says the repo opted out of verification**, do not dispatch the planner at all. Run the deterministic converger instead:
-
-```bash
-OMG_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-.opencode}"
-[ -x "$OMG_CONFIG_DIR/skills/omg-misc/scripts/ensure-test-opt-out.sh" ] || OMG_CONFIG_DIR=".opencode"
-"$OMG_CONFIG_DIR/skills/omg-misc/scripts/ensure-test-opt-out.sh" <epic>
-```
-
-It is idempotent: it records the blanket no-test decision once, deletes every test-planning child left from a pass before the repo opted out (dependency edges go with them, so nothing stays blocked by a deleted test), and strips the now-stale `test_beads` stamps from the surviving children. On failure it stops loud — surface the message rather than redoing its graph surgery by hand.
 
 ## 2. Dispatch the build planner
 
@@ -31,19 +21,19 @@ Hand the epic id and your mode to `omg-build-planner` as a subagent, and wait fo
 
 Both planners have returned. You are accountable for the plan as a whole — so review it at the level only you can see: the **seams between** the two planners' outputs, not the calls inside either one. You do not mint, close, re-wire, or rewrite a bead here; when you find a problem you flag it and send it back to the planner that owns it. Fixing is the SME's job.
 
-Survey the epic's children and the no-test decisions the confidence planner recorded as comments:
+Survey the epic's children and the decisions the confidence planner recorded as comments — gates, review obligations, and no-verification calls:
 
 ```bash
-bd children <epic> --json | jq -r '.[] | "\(.id)\t\(.issue_type)\t\(.status)\t\((.labels // []) | join(","))\t\(.title)"'
+bd children <epic> --json | jq -r '.[] | "\(.id)\t\(.issue_type)\t\((.labels // []) | join(","))\t\(.title)"'
 bd comments <epic>
 ```
 
 Hunt the cross-slice problems neither planner could catch from its own beads:
 
-- **A spec obligation with an implementation bead but no test and no recorded no-test decision** — a gap between the planners. Verification was neither planned nor consciously declined.
-- **An open test bead that blocks no implementation bead** — the test proves a behavior nothing implements, or the build planner missed the wiring. (A closed test bead is settled history, not a seam.)
-
-In an opted-out epic the blanket comment is the recorded no-test decision for every obligation, so the first seam cannot fire; the seam to hunt instead is **any test-planning child at all** — a bead labeled `agent:omg-tester` or `agent:omg-test-planner`, whatever its status. Step 1's converger should have deleted them, so re-run it rather than dispatching anyone.
+- **A spec obligation with an implementation bead that no test, gate, or review obligation covers and no recorded no-verification decision explains** — a gap between the planners. Verification was neither planned by any mechanism nor consciously declined.
+- **A test bead that blocks no implementation bead** — the test proves a behavior nothing implements, or the build planner missed the wiring.
+- **Verification planned out of proportion to what it protects** — a test that costs more to build, run, and maintain than the failures it prevents would cost. Under-verification is not the only way a plan goes wrong, and nothing else in the build loop looks for this one.
+- **Verification whose mechanism does not fit its artifact** — an automated test planned over prose or a declarative artifact, where a reading against a stated standard or a deterministic gate is what fits. Both of these mirrors belong to the confidence planner: you name them and send them back, exactly as with any other test-planner concern, and you re-plan nothing yourself.
 
 Group every problem you find by the planner that owns it, then send back — **test planner first, because the build planner's wiring depends on the test set**:
 

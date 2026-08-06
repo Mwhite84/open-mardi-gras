@@ -12,10 +12,8 @@ bd show <epic> --long --json     # the spec — your source of truth for what mu
 # your prior implementation beads
 bd children <epic> --json | jq -r '.[] | select(.labels[]? == "agent:omg-builder") | "\(.id)\t\(.title)"'
 
-# the test beads — what your implementation beads should be wired to. Closed
-# ones are excluded: bd children lists all statuses, and a closed test bead is
-# settled history, not a planned test to wire against.
-bd children <epic> --json | jq -r '.[] | select(.status != "closed") | select(.labels[]? == "agent:omg-tester") | .id'
+# the test beads — what your implementation beads should be wired to
+bd children <epic> --json | jq -r '.[] | select(.labels[]? == "agent:omg-tester") | .id'
 ```
 
 Hold the spec in one hand and your existing beads in the other. Everything below is a comparison between the two, not a fresh mint.
@@ -31,7 +29,7 @@ Hold the spec in one hand and your existing beads in the other. Everything below
 For the beads that remain:
 
 - **A test the confidence planner planned but no implementation bead is wired to** — add the edge: `bd dep add <impl> <test-bead>` (the test blocks the implementation).
-- **A `test_beads` stamp that is missing or stale.** Each implementation bead carries a `test_beads` metadata field holding the id(s) of the test bead(s) it must satisfy — the done-target the implementer reads to find its focused test without opening a test file. Set it on the *implementation* bead, valued with the *test* bead's id (comma-separated if several): `bd update <impl> --set-metadata "test_beads=<test-id>"`. A bead with no planned test carries no such stamp, and a stamp naming a test bead that is closed or no longer exists is stale — remove it (`bd update <impl> --unset-metadata test_beads`), or a builder will chase a done-target that resolves to nothing.
+- **A `test_beads` stamp that is missing or stale.** Each implementation bead carries a `test_beads` metadata field holding the id(s) of the test bead(s) it must satisfy — the done-target the implementer reads to find its focused test without opening a test file. Set it on the *implementation* bead, valued with the *test* bead's id (comma-separated if several): `bd update <impl> --set-metadata "test_beads=<test-id>"`. A bead with no planned test carries no such stamp.
 - **Two implementation beads that touch the same files but are not serialized** — wire one to block the other (`bd dep add <later> <earlier>`), so concurrent workers never clobber a shared file.
 
 ## Refine with fresh eyes

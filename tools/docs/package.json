@@ -1,0 +1,11 @@
+{
+  "name": "@omg/docs-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Repo-local tooling that renders omg_flowchart.md into a self-contained offline omg_flowchart.html. Not part of the shipped package.",
+  "dependencies": {
+    "marked": "15.0.12",
+    "mermaid": "11.16.0"
+  }
+}

@@ -1,13 +1,36 @@
 # Changelog
 
-## 1.1.1 - 2026-07-20
+## 1.2.0 - 2026-08-06
+
+### Added
+
+- Add frontmatter skeletons and default Hindsight shipping metadata to authored document templates.
+- Add self-contained adjudication beads and canonical handoff documents for requirements that move between repositories.
+
+### Changed
+
+- Replace all-or-nothing test planning with cost-based verification choices: automated tests, deterministic gates, review obligations, or an explicit no-verification decision.
+- Gate epic-blocking review findings by blast radius and keep unrelated findings outside the epic.
+- Bound requirements to work verifiable in a deployable repository, with explicit ownership and relocation tracking for out-of-scope work.
+- Make Hindsight document shipping asynchronous, operation-aware, safely resumable, and capable of batching documents from the tree.
+
+### Fixed
+
+- Preserve executable workflow scripts, resolve satellite paths from the correct repository, and fall back to ADR headings or IDs when titles are absent.
+- Fix frontmatter extraction and multi-document Hindsight shipping payload assembly.
+
+## 1.1.1 - 2026-07-20 [YANKED]
+
+Yanked because it built on the `test: false` opt-out from 1.1.0, which has since been removed.
 
 ### Fixed
 
 - Remove verification-planning beads deterministically when a repository opts out with `test: false`.
 - Prevent unrelated review findings from blocking an epic and route disputed findings through self-contained adjudication beads.
 
-## 1.1.0 - 2026-07-19
+## 1.1.0 - 2026-07-19 [YANKED]
+
+Yanked because the `test: false` opt-out it introduced made verification all-or-nothing and has since been removed. Everything else here is carried forward.
 
 ### Added
 

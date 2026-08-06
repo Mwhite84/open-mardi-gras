@@ -25,3 +25,5 @@ node_modules/
 .beads/proxieddb/
 .opencode/agents/omg-*.md
 .beads/interactions.jsonl
+
+.mise/config.local.toml
