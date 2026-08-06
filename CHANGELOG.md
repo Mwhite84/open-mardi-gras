@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.1.1 - 2026-07-20 [YANKED]
+
+Yanked because it built further on the `test: false` opt-out introduced in 1.1.0, which has since been removed. Do not upgrade to this version; the changes below are superseded.
+
+### Fixed
+
+- Remove verification-planning beads deterministically when a repository opts out with `test: false`.
+- Prevent unrelated review findings from blocking an epic and route disputed findings through self-contained adjudication beads.
+
+## 1.1.0 - 2026-07-19 [YANKED]
+
+Yanked because the `test: false` opt-out made verification all-or-nothing: the only escape from disproportionate testing was to abandon verification entirely. A dogfooding run with the opt-out enabled shipped a credential leak and two silent correctness defects in a nine-bead epic. The opt-out has been removed in favour of weighing what a failure costs against what the verification costs.
+
+Everything else this release shipped — the frontmatter skeletons, the satellite spec resolution, and both fixes below — is carried forward and is not affected by the yank.
+
+### Added
+
+- Add document frontmatter skeletons, default Hindsight shipping metadata, and a `test: false` opt-out for verification planning.
+
+### Changed
+
+- Resolve centralized satellite specs and terminal review/report beads consistently during decomposition.
+
+### Fixed
+
+- Preserve executable permissions on workflow scripts installed by setup.
+- Resolve satellite OpenCode paths relative to the correct repository and fall back to ADR headings or IDs when titles are absent.
+
 ## 1.0.0 - 2026-07-18
 
 ### Changed
