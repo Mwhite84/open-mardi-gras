@@ -56,8 +56,9 @@ between the two fences — parse the fields you need from it.
 # body = everything after the closing frontmatter fence
 awk 'f{print} /^---[[:space:]]*$/{c++} c==2 && !f{f=1}' "$DOC" > "$TMP/body.md"
 
-# frontmatter = the block between the first two fences
-awk 'c==1{print} /^---[[:space:]]*$/{c++}' "$DOC" > "$TMP/fm.yaml"
+# frontmatter = the block between the first two fences. Without the fence guard
+# the closing "---" lands in fm.yaml and yq reads it as a multi-document stream.
+awk 'c==1 && !/^---[[:space:]]*$/{print} /^---[[:space:]]*$/{c++}' "$DOC" > "$TMP/fm.yaml"
 ```
 
 ### 2. Read the retain fields from the frontmatter
@@ -97,6 +98,25 @@ jq -n \
    }' > "$TMP/retain.json"
 ```
 
+**Ship several documents in one call.** `items` is an array: build one element per
+document — each with its own `content`, `document_id`, `tags`, and `strategy` — and
+POST them together rather than looping one POST per document. Assemble the array
+incrementally, running steps 1–2 per document and appending its element with the
+same `--rawfile` construction:
+
+```bash
+jq -n '{items: [], async: true}' > "$TMP/retain.json"
+
+# per document, once steps 1–2 have set $TMP/body.md, $ID, $STRATEGY and $TAGS_JSON:
+jq --rawfile content "$TMP/body.md" \
+   --arg id "$ID" \
+   --arg strategy "$STRATEGY" \
+   --argjson tags "$TAGS_JSON" \
+   '.items += [ ( { content: $content, document_id: $id, tags: $tags }
+                  + ( if $strategy == "" then {} else { strategy: $strategy } end ) ) ]' \
+   "$TMP/retain.json" > "$TMP/retain.next" && mv "$TMP/retain.next" "$TMP/retain.json"
+```
+
 ### 4. POST it
 
 ```bash
@@ -125,9 +145,9 @@ jq -r '[.operation_id, ((.operation_ids // [])[])]
 [ -s "$TMP/operation-ids" ] || { echo "$ID: retain returned no operation id" >&2; exit 1; }
 ```
 
-The API can return multiple operation IDs when a request contains multiple retain
-strategies. Track every returned ID. Source an auth token from the environment;
-never hardcode it.
+The API can return multiple operation IDs when a request contains multiple
+documents or multiple retain strategies. Track every returned ID. Source an auth
+token from the environment; never hardcode it.
 
 ### 5. Wait for every operation
 
