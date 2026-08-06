@@ -2,7 +2,7 @@
 
 ## 1.1.1 - 2026-07-20 [YANKED]
 
-Yanked because it built further on the `test: false` opt-out introduced in 1.1.0, which has since been removed. Do not upgrade to this version; the changes below are superseded.
+Yanked because it built on the `test: false` opt-out from 1.1.0, which has since been removed.
 
 ### Fixed
 
@@ -11,9 +11,7 @@ Yanked because it built further on the `test: false` opt-out introduced in 1.1.0
 
 ## 1.1.0 - 2026-07-19 [YANKED]
 
-Yanked because the `test: false` opt-out made verification all-or-nothing: the only escape from disproportionate testing was to abandon verification entirely. A dogfooding run with the opt-out enabled shipped a credential leak and two silent correctness defects in a nine-bead epic. The opt-out has been removed in favour of weighing what a failure costs against what the verification costs.
-
-Everything else this release shipped — the frontmatter skeletons, the satellite spec resolution, and both fixes below — is carried forward and is not affected by the yank.
+Yanked because the `test: false` opt-out it introduced made verification all-or-nothing and has since been removed. Everything else here is carried forward.
 
 ### Added
 
